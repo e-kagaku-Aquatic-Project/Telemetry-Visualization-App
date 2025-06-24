@@ -15,6 +15,7 @@ export const MapContainer: React.FC = () => {
     mapCenter, 
     mapZoom, 
     getLatestDataPoint,
+    viewMode,
   } = useAppStore();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -26,9 +27,34 @@ export const MapContainer: React.FC = () => {
   });
 
 
-  // Auto-center on selected vehicle's latest position
+  // Auto-center logic based on view mode
   useEffect(() => {
-    if (selectedVehicleId && map) {
+    if (!map) return;
+
+    if (viewMode === 'all') {
+      // Fit bounds to show all vehicles
+      const bounds = new google.maps.LatLngBounds();
+      let hasPoints = false;
+
+      Object.values(vehicleTracks).forEach(track => {
+        if (track.length > 0) {
+          const latestPoint = track[track.length - 1];
+          bounds.extend({
+            lat: latestPoint.latitude,
+            lng: latestPoint.longitude,
+          });
+          hasPoints = true;
+        }
+      });
+
+      if (hasPoints) {
+        map.fitBounds(bounds);
+        // Add padding to ensure markers are not at the edge
+        const padding = { top: 50, right: 50, bottom: 50, left: 50 };
+        map.fitBounds(bounds, padding);
+      }
+    } else if (viewMode === 'individual' && selectedVehicleId) {
+      // Center on selected vehicle's latest position
       const latestPoint = getLatestDataPoint(selectedVehicleId);
       if (latestPoint) {
         const center = {
@@ -38,22 +64,7 @@ export const MapContainer: React.FC = () => {
         map.panTo(center);
       }
     }
-  }, [selectedVehicleId, map, getLatestDataPoint]);
-
-  // Auto-center on first vehicle when data loads
-  useEffect(() => {
-    if (!selectedVehicleId && Object.keys(vehicleTracks).length > 0 && map) {
-      const firstVehicleId = Object.keys(vehicleTracks)[0];
-      const latestPoint = getLatestDataPoint(firstVehicleId);
-      if (latestPoint) {
-        const center = {
-          lat: latestPoint.latitude,
-          lng: latestPoint.longitude,
-        };
-        map.panTo(center);
-      }
-    }
-  }, [vehicleTracks, selectedVehicleId, map, getLatestDataPoint]);
+  }, [viewMode, selectedVehicleId, vehicleTracks, map, getLatestDataPoint]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -94,6 +105,7 @@ export const MapContainer: React.FC = () => {
   return (
     <div className="card overflow-hidden w-full h-full relative">
       <GoogleMap
+        key={viewMode} // Force remount when viewMode changes
         mapContainerStyle={{ 
           width: '100%', 
           height: '100%',
@@ -105,15 +117,15 @@ export const MapContainer: React.FC = () => {
         onUnmount={onUnmount}
         options={DEFAULT_MAP_OPTIONS}
       >
-        {/* Render polylines for all vehicles */}
-        {Object.entries(vehicleTracks).map(([vehicleId, data]) => (
+        {/* Render polylines based on view mode */}
+        {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && (
           <TrackPolyline
-            key={vehicleId}
-            vehicleId={vehicleId}
-            data={data}
-            isSelected={vehicleId === selectedVehicleId}
+            key={selectedVehicleId}
+            vehicleId={selectedVehicleId}
+            data={vehicleTracks[selectedVehicleId]}
+            isSelected={true}
           />
-        ))}
+        )}
 
         {/* Render markers for latest positions only */}
         {Object.entries(vehicleTracks).map(([vehicleId, data]) => {
@@ -130,8 +142,8 @@ export const MapContainer: React.FC = () => {
           );
         })}
 
-        {/* Render additional waypoint markers for selected vehicle only */}
-        {selectedVehicleId && vehicleTracks[selectedVehicleId] && (
+        {/* Render additional waypoint markers for selected vehicle only (in individual mode) */}
+        {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && (
           vehicleTracks[selectedVehicleId]
             .slice(0, -1) // Exclude latest point (already shown by VehicleMarker)
             .map((dataPoint, index) => (
