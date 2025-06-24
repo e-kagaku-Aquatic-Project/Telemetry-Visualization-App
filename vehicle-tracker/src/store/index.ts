@@ -13,6 +13,7 @@ interface AppState {
   isPaused: boolean;
   currentView: 'map' | 'graphs';
   hasViewedGraphs: boolean;
+  viewMode: 'all' | 'individual'; // New: Tab mode for all vehicles or individual
   
   // Connection status
   connectionStatus: ConnectionStatus;
@@ -32,6 +33,7 @@ interface AppState {
   setMapCenter: (center: google.maps.LatLngLiteral) => void;
   setMapZoom: (zoom: number) => void;
   setCurrentView: (view: 'map' | 'graphs') => void;
+  setViewMode: (mode: 'all' | 'individual') => void; // New: Set tab mode
   
   // Computed getters
   getVehicleIds: () => string[];
@@ -49,6 +51,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isPaused: false,
   currentView: 'map',
   hasViewedGraphs: false,
+  viewMode: 'all', // Default to showing all vehicles
   connectionStatus: {
     isConnected: false,
     lastUpdate: null,
@@ -89,6 +92,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     currentView: view, 
     hasViewedGraphs: state.hasViewedGraphs || view === 'graphs' 
   })),
+  
+  setViewMode: (mode: 'all' | 'individual') => set({ viewMode: mode }),
   
   // Computed getters
   getVehicleIds: () => Object.keys(get().vehicleTracks),

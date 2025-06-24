@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a vehicle tracking visualization webapp that consists of two main components:
+This is a vehicle tracking visualization webapp (リアルタイム機体追跡 Web アプリケーション) that consists of two main components:
 1. **Google Apps Script backend** (`SpreadSheets_GAS.gs`) - Handles data storage in Google Sheets and provides REST API endpoints
 2. **React frontend** (`vehicle-tracker/`) - Real-time web application that visualizes vehicle telemetry data on Google Maps
 
@@ -15,8 +15,9 @@ The system receives sensor telemetry data via POST requests, stores it in Google
 ### Frontend Development (vehicle-tracker/)
 ```bash
 cd vehicle-tracker
+cp .env.example .env  # Create environment file (first time only)
 npm install          # Install dependencies
-npm run dev          # Start development server (uses webpack-dev-server)
+npm run dev          # Start development server on http://localhost:4000
 npm run build        # Build for production (uses webpack)
 npm run lint         # Run ESLint
 npm run preview      # Preview production build (uses serve)
@@ -40,12 +41,14 @@ npm run preview      # Preview production build (uses serve)
 - `doGet()`: Handles API requests (`getAllVehicles`, `getVehicle`, `getVehicleList`)
 - `doPost()`: Processes incoming telemetry data
 - Auto-creates vehicle sheets with standardized headers
+- Deploy by pasting `SpreadSheets_GAS.gs` into Google Sheets' Apps Script editor
 
 **Frontend Architecture**:
 - **State Management**: Zustand store (`src/store/index.ts`) for global app state
 - **Data Fetching**: SWR with custom hooks (`src/hooks/useVehicleData.ts`) for polling
 - **Map Integration**: Google Maps via `@react-google-maps/api`
 - **Component Structure**: Modular components for map, panels, and controls
+- **Animations**: Framer Motion for smooth UI transitions
 
 ### Environment Configuration
 Frontend requires these environment variables:
@@ -75,7 +78,18 @@ interface TelemetryDataPoint {
 - **Real-time Updates**: Configurable polling intervals (5s, 10s, 30s, 60s)
 - **Export Functionality**: CSV/JSON export via PapaParse
 - **Error Handling**: Custom `GASApiError` class with retry logic
-- **Keyboard Navigation**: Comprehensive shortcuts for power users
+- **Keyboard Navigation**: Comprehensive shortcuts (1-9: select vehicle, [/]: switch, P: pause, E: export, ESC: close)
+- **Dark Theme**: GitHub-style colors (#0d1117 background, #161b22 surface, #58a6ff accent)
+
+### Performance Optimizations
+- **Marker Limits**: Maximum 10 waypoint markers per vehicle to reduce rendering load
+- **Data Thinning**: Non-selected vehicles show every 10th data point only
+- **Memory Management**: Proper cleanup of event handlers in useEffect hooks
+
+### Responsive Design
+- **Desktop**: 1280px and above
+- **Tablet**: 1024px to 1279px
+- **Mobile**: Below 1024px
 
 ## Development Notes
 
@@ -94,19 +108,15 @@ Use `testFunction()` and `testWebAppAPI()` functions in the GAS editor for manua
 ## Build System
 
 The project uses **Webpack** (not Vite) for the build system:
-- **Development**: `webpack-dev-server` for hot reloading
+- **Development**: `webpack-dev-server` for hot reloading (port 4000)
 - **Production**: Standard webpack build with minification
 - **Configuration**: `webpack.config.js` handles TypeScript, PostCSS, and asset processing
 
-## Environment Setup
+## Deployment
 
-The frontend requires two environment variables in `vehicle-tracker/.env`:
-```
-VITE_GMAPS_API_KEY=your_google_maps_api_key
-VITE_GAS_ENDPOINT=your_google_apps_script_web_app_url
-```
-
-Note: Despite using webpack, environment variables still use the `VITE_` prefix for consistency.
+- **Frontend**: Supports Vercel, Netlify, or GitHub Pages deployment
+- **Backend**: Deploy GAS by pasting code into Google Sheets' Apps Script editor
+- **CI/CD**: GitHub Actions workflow (`workflows/deploy.yml`) for automated deployment
 
 ## Data Format Differences
 
