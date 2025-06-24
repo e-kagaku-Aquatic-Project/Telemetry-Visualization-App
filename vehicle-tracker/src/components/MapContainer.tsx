@@ -105,6 +105,7 @@ export const MapContainer: React.FC = () => {
   return (
     <div className="card overflow-hidden w-full h-full relative">
       <GoogleMap
+        key={viewMode} // Force remount when viewMode changes
         mapContainerStyle={{ 
           width: '100%', 
           height: '100%',
