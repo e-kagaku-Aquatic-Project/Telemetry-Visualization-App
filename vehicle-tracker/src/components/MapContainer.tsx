@@ -4,7 +4,8 @@ import { useAppStore } from '../store';
 import { DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from '../constants/map';
 import { VehicleMarker } from './VehicleMarker';
 import { WaypointMarker } from './WaypointMarker';
-import { TrackPolyline } from './TrackPolyline';
+import { GradientTrackPolyline } from './GradientTrackPolyline';
+import { GradientLegend } from './GradientLegend';
 
 const GOOGLE_MAPS_LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = [];
 
@@ -16,6 +17,7 @@ export const MapContainer: React.FC = () => {
     mapZoom, 
     getLatestDataPoint,
     viewMode,
+    gradientVisualization,
   } = useAppStore();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -119,11 +121,12 @@ export const MapContainer: React.FC = () => {
       >
         {/* Render polylines based on view mode */}
         {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && (
-          <TrackPolyline
+          <GradientTrackPolyline
             key={selectedVehicleId}
             vehicleId={selectedVehicleId}
             data={vehicleTracks[selectedVehicleId]}
             isSelected={true}
+            gradientParameter={gradientVisualization.isEnabled ? gradientVisualization.selectedParameter : null}
           />
         )}
 
@@ -157,6 +160,9 @@ export const MapContainer: React.FC = () => {
             ))
         )}
       </GoogleMap>
+      
+      {/* Gradient legend overlay */}
+      <GradientLegend />
     </div>
   );
 };

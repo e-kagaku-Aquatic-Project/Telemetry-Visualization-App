@@ -62,3 +62,16 @@ export interface ExportFormat {
   type: 'csv' | 'json';
   filename: string;
 }
+
+export type GradientParameter = 'altitude' | 'waterTemperature' | 'airPressure' | 'airTemperature' | 'satellites';
+
+export interface GradientSegment {
+  path: google.maps.LatLngLiteral[];
+  color: string;
+  value: number;
+}
+
+export interface GradientVisualizationState {
+  isEnabled: boolean;
+  selectedParameter: GradientParameter | null;
+}
