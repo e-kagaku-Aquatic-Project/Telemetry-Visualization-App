@@ -6,6 +6,7 @@ import { VehicleMarker } from './VehicleMarker';
 import { WaypointMarker } from './WaypointMarker';
 import { GradientTrackPolyline } from './GradientTrackPolyline';
 import { GradientLegend } from './GradientLegend';
+import { GradientMapOverlay } from './GradientMapOverlay';
 
 const GOOGLE_MAPS_LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = [];
 
@@ -160,6 +161,9 @@ export const MapContainer: React.FC = () => {
             ))
         )}
       </GoogleMap>
+      
+      {/* Gradient controls overlay */}
+      <GradientMapOverlay />
       
       {/* Gradient legend overlay */}
       <GradientLegend />

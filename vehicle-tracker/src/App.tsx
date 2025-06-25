@@ -6,7 +6,6 @@ import { MapContainer } from './components/MapContainer';
 import { SensorGraphs } from './components/SensorGraphs';
 import { SidePanel } from './components/SidePanel';
 import { StatusBar } from './components/StatusBar';
-import { GradientControls } from './components/GradientControls';
 import { useVehicleData } from './hooks/useVehicleData';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useAppStore } from './store';
@@ -32,7 +31,6 @@ function App() {
         {/* Header section */}
         <div className="flex-shrink-0 p-2 sm:p-4 pb-0">
           <TopBar />
-          <GradientControls />
           <div className="flex items-center justify-between mb-2 lg:mb-4">
             <div className="flex-1">
               <VehicleTabs />

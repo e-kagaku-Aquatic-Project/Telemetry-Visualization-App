@@ -60,16 +60,16 @@ export const GradientLegend: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.3 }}
-        className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none"
+        className="absolute bottom-4 left-4 right-80 z-10 pointer-events-none"
       >
-        <div className="max-w-md mx-auto">
+        <div className="max-w-sm">
           <div className="card p-3 bg-dark-surface/95 backdrop-blur-sm border border-dark-muted/20">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-xs font-medium text-dark-text">
                 {legendData.palette.name} ({legendData.palette.unit})
               </h4>
               <div className="text-xs text-dark-muted">
-                {vehicleData.length} データポイント
+                {vehicleData.length} data points
               </div>
             </div>
             
@@ -101,7 +101,7 @@ export const GradientLegend: React.FC = () => {
             
             {/* Additional info */}
             <div className="mt-2 text-xs text-dark-muted/70 text-center">
-              色が濃いほど値が大きい • 軌跡セグメント: {Math.max(0, vehicleData.length - 1)}
+              Darker colors indicate higher values • Track segments: {Math.max(0, (vehicleData.length - 1) * 5)}
             </div>
           </div>
         </div>

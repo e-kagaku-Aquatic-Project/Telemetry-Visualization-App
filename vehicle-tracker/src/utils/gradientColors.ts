@@ -14,28 +14,28 @@ export interface ColorPalette {
 export const COLOR_PALETTES: Record<GradientParameter, ColorPalette> = {
   altitude: {
     colors: ['#0066cc', '#00cc66', '#ffcc00', '#ff6600', '#cc0000'], // Blue -> Green -> Yellow -> Orange -> Red
-    name: '高度',
+    name: 'Altitude',
     unit: 'm'
   },
   waterTemperature: {
     colors: ['#0066ff', '#00ccff', '#00ff99', '#ffff00', '#ff6600', '#ff0000'], // Cold blue -> Warm red
-    name: '水温',
+    name: 'Water Temperature',
     unit: '°C'
   },
   airPressure: {
     colors: ['#6600cc', '#0066ff', '#00cc99', '#99cc00', '#ffcc00'], // Purple -> Blue -> Green -> Yellow
-    name: '気圧',
+    name: 'Air Pressure',
     unit: 'hPa'
   },
   airTemperature: {
     colors: ['#0066ff', '#00ccff', '#00ff99', '#ffff00', '#ff6600', '#ff0000'], // Cold blue -> Warm red
-    name: '気温',
+    name: 'Air Temperature',
     unit: '°C'
   },
   satellites: {
     colors: ['#ff0000', '#ff6600', '#ffcc00', '#66cc00', '#00cc00'], // Red (few) -> Green (many)
-    name: '衛星数',
-    unit: '個'
+    name: 'Satellites',
+    unit: 'count'
   }
 };
 

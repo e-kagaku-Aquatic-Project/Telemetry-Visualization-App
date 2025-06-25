@@ -31,7 +31,7 @@ export const GradientTrackPolyline: React.FC<GradientTrackPolylineProps> = ({
 }) => {
   const { getVehicleIds } = useAppStore();
   
-  // Create gradient segments
+  // Create gradient segments with smooth interpolation
   const gradientSegments = useMemo((): GradientSegment[] => {
     if (data.length < 2) return [];
 
@@ -40,20 +40,42 @@ export const GradientTrackPolyline: React.FC<GradientTrackPolylineProps> = ({
 
     const segments: GradientSegment[] = [];
     const range = getDataRange(data, gradientParameter);
-    const colors = generateGradientColors(data, gradientParameter, range);
+    
+    // Create multiple sub-segments between each data point for smooth gradient
+    const subsegmentsPerSegment = 5; // Number of sub-segments for smooth interpolation
 
     for (let i = 0; i < data.length - 1; i++) {
       const startPoint = data[i];
       const endPoint = data[i + 1];
-      
-      segments.push({
-        path: [
-          { lat: startPoint.latitude, lng: startPoint.longitude },
-          { lat: endPoint.latitude, lng: endPoint.longitude }
-        ],
-        color: colors[i],
-        value: startPoint[gradientParameter]
-      });
+      const startValue = startPoint[gradientParameter];
+      const endValue = endPoint[gradientParameter];
+
+      // Create multiple sub-segments between start and end points
+      for (let j = 0; j < subsegmentsPerSegment; j++) {
+        const ratio1 = j / subsegmentsPerSegment;
+        const ratio2 = (j + 1) / subsegmentsPerSegment;
+        
+        // Interpolate positions
+        const lat1 = startPoint.latitude + (endPoint.latitude - startPoint.latitude) * ratio1;
+        const lng1 = startPoint.longitude + (endPoint.longitude - startPoint.longitude) * ratio1;
+        const lat2 = startPoint.latitude + (endPoint.latitude - startPoint.latitude) * ratio2;
+        const lng2 = startPoint.longitude + (endPoint.longitude - startPoint.longitude) * ratio2;
+        
+        // Interpolate values for color calculation
+        const interpolatedValue = startValue + (endValue - startValue) * ratio1;
+        
+        // Generate color for this sub-segment
+        const color = generateGradientColors([{ [gradientParameter]: interpolatedValue }], gradientParameter, range)[0];
+        
+        segments.push({
+          path: [
+            { lat: lat1, lng: lng1 },
+            { lat: lat2, lng: lng2 }
+          ],
+          color,
+          value: interpolatedValue
+        });
+      }
     }
 
     return segments;
