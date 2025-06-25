@@ -9,7 +9,6 @@ export const GradientMapOverlay: React.FC = () => {
   const { 
     gradientVisualization,
     setGradientParameter,
-    toggleGradientVisualization,
     selectedVehicleId,
     vehicleTracks,
     viewMode,
@@ -36,16 +35,13 @@ export const GradientMapOverlay: React.FC = () => {
   };
 
   const handleToggle = () => {
-    if (gradientVisualization.isEnabled) {
-      toggleGradientVisualization();
-      setIsExpanded(false);
-    } else {
-      if (!gradientVisualization.selectedParameter) {
-        setIsExpanded(true);
-      } else {
-        toggleGradientVisualization();
-      }
-    }
+    // Toggle dropdown for parameter selection
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleDisableGradient = () => {
+    setGradientParameter(null);
+    setIsExpanded(false);
   };
 
   return (
@@ -65,17 +61,15 @@ export const GradientMapOverlay: React.FC = () => {
               ? parameters.find(p => p.key === gradientVisualization.selectedParameter)?.label || 'Gradient'
               : 'Gradient'}
           </span>
-          {!gradientVisualization.isEnabled && (
-            <ChevronDown 
-              size={14} 
-              className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-            />
-          )}
+          <ChevronDown 
+            size={14} 
+            className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          />
         </motion.button>
 
         {/* Parameter selection dropdown */}
         <AnimatePresence>
-          {isExpanded && !gradientVisualization.isEnabled && (
+          {isExpanded && (
             <motion.div
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -94,27 +88,54 @@ export const GradientMapOverlay: React.FC = () => {
               </div>
               
               <div className="space-y-1">
+                {/* None option to disable gradient */}
+                <button
+                  onClick={handleDisableGradient}
+                  className={`w-full text-left px-3 py-2 rounded hover:bg-dark-bg transition-colors
+                           flex items-center justify-between group ${
+                             !gradientVisualization.selectedParameter ? 'bg-dark-bg' : ''
+                           }`}
+                >
+                  <div>
+                    <div className="text-sm text-dark-text">None</div>
+                    <div className="text-xs text-dark-muted">Disable gradient</div>
+                  </div>
+                  {!gradientVisualization.selectedParameter && (
+                    <div className="w-2 h-2 bg-dark-accent rounded-full" />
+                  )}
+                </button>
+                
+                {/* Parameter options */}
                 {parameters.map(param => (
                   <button
                     key={param.key}
                     onClick={() => handleParameterSelect(param.key)}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-dark-bg transition-colors
-                             flex items-center justify-between group"
+                    className={`w-full text-left px-3 py-2 rounded hover:bg-dark-bg transition-colors
+                             flex items-center justify-between group ${
+                               gradientVisualization.selectedParameter === param.key ? 'bg-dark-bg' : ''
+                             }`}
                   >
                     <div>
                       <div className="text-sm text-dark-text">{param.label}</div>
                       <div className="text-xs text-dark-muted">({param.unit})</div>
                     </div>
                     
-                    {/* Color palette preview */}
-                    <div className="flex items-center space-x-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                      {COLOR_PALETTES[param.key].colors.slice(0, 4).map((color, index) => (
-                        <div
-                          key={index}
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
+                    <div className="flex items-center space-x-2">
+                      {/* Color palette preview */}
+                      <div className="flex items-center space-x-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                        {COLOR_PALETTES[param.key].colors.slice(0, 4).map((color, index) => (
+                          <div
+                            key={index}
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                      
+                      {/* Selected indicator */}
+                      {gradientVisualization.selectedParameter === param.key && (
+                        <div className="w-2 h-2 bg-dark-accent rounded-full" />
+                      )}
                     </div>
                   </button>
                 ))}
@@ -123,22 +144,6 @@ export const GradientMapOverlay: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Quick disable button when gradient is active */}
-        {gradientVisualization.isEnabled && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => {
-              toggleGradientVisualization();
-              setIsExpanded(false);
-            }}
-            className="btn btn-secondary p-2 shadow-lg backdrop-blur-sm"
-            title="Disable gradient"
-          >
-            <X size={14} />
-          </motion.button>
-        )}
       </div>
     </div>
   );
