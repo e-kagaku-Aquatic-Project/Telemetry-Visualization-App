@@ -123,7 +123,7 @@ export const MapContainer: React.FC = () => {
         {/* Render polylines based on view mode */}
         {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && (
           <GradientTrackPolyline
-            key={selectedVehicleId}
+            key={`${selectedVehicleId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.isEnabled}`}
             vehicleId={selectedVehicleId}
             data={vehicleTracks[selectedVehicleId]}
             isSelected={true}
