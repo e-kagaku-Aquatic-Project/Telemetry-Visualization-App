@@ -67,6 +67,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   gradientVisualization: {
     isEnabled: false,
     selectedParameter: null,
+    refreshKey: 0,
   },
   
   // Actions
@@ -108,7 +109,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     gradientVisualization: {
       ...state.gradientVisualization,
       selectedParameter: parameter,
-      isEnabled: parameter !== null
+      isEnabled: parameter !== null,
+      refreshKey: state.gradientVisualization.refreshKey + 1
     }
   })),
   
@@ -118,7 +120,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       isEnabled: !state.gradientVisualization.isEnabled,
       selectedParameter: !state.gradientVisualization.isEnabled ? 
         state.gradientVisualization.selectedParameter || 'altitude' : 
-        state.gradientVisualization.selectedParameter
+        state.gradientVisualization.selectedParameter,
+      refreshKey: state.gradientVisualization.refreshKey + 1
     }
   })),
   

@@ -74,4 +74,5 @@ export interface GradientSegment {
 export interface GradientVisualizationState {
   isEnabled: boolean;
   selectedParameter: GradientParameter | null;
+  refreshKey: number; // Force component refresh
 }

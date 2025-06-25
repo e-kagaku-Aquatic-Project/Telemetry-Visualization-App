@@ -123,7 +123,7 @@ export const GradientTrackPolyline: React.FC<GradientTrackPolylineProps> = ({
 
           return (
             <Polyline
-              key={`gradient-${vehicleId}-${gradientParameter}-${index}`}
+              key={`gradient-${vehicleId}-${gradientParameter}-${index}-${Date.now()}`}
               options={polylineOptions}
             />
           );

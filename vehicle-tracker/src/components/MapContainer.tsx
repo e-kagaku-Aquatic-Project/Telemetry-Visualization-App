@@ -7,6 +7,7 @@ import { WaypointMarker } from './WaypointMarker';
 import { GradientTrackPolyline } from './GradientTrackPolyline';
 import { GradientLegend } from './GradientLegend';
 import { GradientMapOverlay } from './GradientMapOverlay';
+import { GradientClearOverlay } from './GradientClearOverlay';
 
 const GOOGLE_MAPS_LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = [];
 
@@ -123,7 +124,7 @@ export const MapContainer: React.FC = () => {
         {/* Render polylines based on view mode */}
         {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && (
           <GradientTrackPolyline
-            key={`${selectedVehicleId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.isEnabled}`}
+            key={`${selectedVehicleId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.isEnabled}-${gradientVisualization.refreshKey}`}
             vehicleId={selectedVehicleId}
             data={vehicleTracks[selectedVehicleId]}
             isSelected={true}
@@ -161,6 +162,9 @@ export const MapContainer: React.FC = () => {
             ))
         )}
       </GoogleMap>
+      
+      {/* Gradient cleanup handler */}
+      <GradientClearOverlay />
       
       {/* Gradient controls overlay */}
       <GradientMapOverlay />
