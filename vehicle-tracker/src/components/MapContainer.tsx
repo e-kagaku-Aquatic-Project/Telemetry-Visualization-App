@@ -4,7 +4,9 @@ import { useAppStore } from '../store';
 import { DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from '../constants/map';
 import { VehicleMarker } from './VehicleMarker';
 import { WaypointMarker } from './WaypointMarker';
-import { TrackPolyline } from './TrackPolyline';
+import { DirectGradientPolyline } from './DirectGradientPolyline';
+import { GradientLegend } from './GradientLegend';
+import { GradientMapOverlay } from './GradientMapOverlay';
 
 const GOOGLE_MAPS_LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = [];
 
@@ -16,6 +18,7 @@ export const MapContainer: React.FC = () => {
     mapZoom, 
     getLatestDataPoint,
     viewMode,
+    gradientVisualization,
   } = useAppStore();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -117,15 +120,8 @@ export const MapContainer: React.FC = () => {
         onUnmount={onUnmount}
         options={DEFAULT_MAP_OPTIONS}
       >
-        {/* Render polylines based on view mode */}
-        {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && (
-          <TrackPolyline
-            key={selectedVehicleId}
-            vehicleId={selectedVehicleId}
-            data={vehicleTracks[selectedVehicleId]}
-            isSelected={true}
-          />
-        )}
+        {/* Render polylines managed outside React-Google-Maps */}
+        {/* This is handled by DirectGradientPolyline component outside GoogleMap */}
 
         {/* Render markers for latest positions only */}
         {Object.entries(vehicleTracks).map(([vehicleId, data]) => {
@@ -157,6 +153,24 @@ export const MapContainer: React.FC = () => {
             ))
         )}
       </GoogleMap>
+      
+      {/* Direct Google Maps polyline management */}
+      {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && map && (
+        <DirectGradientPolyline
+          key={`direct-${selectedVehicleId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.refreshKey}`}
+          map={map}
+          vehicleId={selectedVehicleId}
+          data={vehicleTracks[selectedVehicleId]}
+          isSelected={true}
+          gradientParameter={gradientVisualization.isEnabled ? gradientVisualization.selectedParameter : null}
+        />
+      )}
+      
+      {/* Gradient controls overlay */}
+      <GradientMapOverlay />
+      
+      {/* Gradient legend overlay */}
+      <GradientLegend />
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { TelemetryDataPoint, VehicleTracks, ConnectionStatus } from '../types';
+import { TelemetryDataPoint, VehicleTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
 
 interface AppState {
   // Vehicle data
@@ -22,6 +22,9 @@ interface AppState {
   mapCenter: google.maps.LatLngLiteral | null;
   mapZoom: number;
   
+  // Gradient visualization state
+  gradientVisualization: GradientVisualizationState;
+  
   // Actions
   setVehicleTracks: (tracks: VehicleTracks) => void;
   setSelectedVehicle: (vehicleId: string | null) => void;
@@ -34,6 +37,8 @@ interface AppState {
   setMapZoom: (zoom: number) => void;
   setCurrentView: (view: 'map' | 'graphs') => void;
   setViewMode: (mode: 'all' | 'individual') => void; // New: Set tab mode
+  setGradientParameter: (parameter: GradientParameter | null) => void;
+  toggleGradientVisualization: () => void;
   
   // Computed getters
   getVehicleIds: () => string[];
@@ -59,6 +64,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   mapCenter: null,
   mapZoom: 12,
+  gradientVisualization: {
+    isEnabled: false,
+    selectedParameter: null,
+    refreshKey: 0,
+  },
   
   // Actions
   setVehicleTracks: (tracks) => set({ vehicleTracks: tracks }),
@@ -94,6 +104,26 @@ export const useAppStore = create<AppState>((set, get) => ({
   })),
   
   setViewMode: (mode: 'all' | 'individual') => set({ viewMode: mode }),
+  
+  setGradientParameter: (parameter: GradientParameter | null) => set((state) => ({
+    gradientVisualization: {
+      ...state.gradientVisualization,
+      selectedParameter: parameter,
+      isEnabled: parameter !== null,
+      refreshKey: state.gradientVisualization.refreshKey + 1
+    }
+  })),
+  
+  toggleGradientVisualization: () => set((state) => ({
+    gradientVisualization: {
+      ...state.gradientVisualization,
+      isEnabled: !state.gradientVisualization.isEnabled,
+      selectedParameter: !state.gradientVisualization.isEnabled ? 
+        state.gradientVisualization.selectedParameter || 'altitude' : 
+        state.gradientVisualization.selectedParameter,
+      refreshKey: state.gradientVisualization.refreshKey + 1
+    }
+  })),
   
   // Computed getters
   getVehicleIds: () => Object.keys(get().vehicleTracks),
