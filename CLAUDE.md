@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 This is a vehicle tracking visualization webapp (リアルタイム機体追跡 Web アプリケーション) that consists of two main components:
+
 1. **Google Apps Script backend** (`SpreadSheets_GAS.gs`) - Handles data storage in Google Sheets and provides REST API endpoints
 2. **React frontend** (`vehicle-tracker/`) - Real-time web application that visualizes vehicle telemetry data on Google Maps
 
@@ -13,6 +14,7 @@ The system receives sensor telemetry data via POST requests, stores it in Google
 ## Common Commands
 
 ### Frontend Development (vehicle-tracker/)
+
 ```bash
 cd vehicle-tracker
 cp .env.example .env  # Create environment file (first time only)
@@ -24,12 +26,19 @@ npm run preview      # Preview production build (uses serve)
 ```
 
 ### Linting and Type Checking
+
 - **Lint**: `npm run lint` (in vehicle-tracker directory)
 - **Type check**: TypeScript compilation happens during build (webpack handles TypeScript)
+
+### Google Apps Script Backend
+
+- Deploy by copying `SpreadSheets_GAS.gs` content to Google Sheets' Apps Script editor
+- Use `testFunction()` and `testWebAppAPI()` in GAS editor for testing
 
 ## Architecture
 
 ### Data Flow
+
 1. **Data Ingestion**: External systems POST telemetry data to GAS endpoint
 2. **Storage**: GAS stores data in Google Sheets (one sheet per vehicle: `Vehicle_{vehicleId}`)
 3. **API Layer**: GAS provides GET endpoints for data retrieval
@@ -38,27 +47,34 @@ npm run preview      # Preview production build (uses serve)
 ### Key Components
 
 **Backend (GAS)**:
+
 - `doGet()`: Handles API requests (`getAllVehicles`, `getVehicle`, `getVehicleList`)
 - `doPost()`: Processes incoming telemetry data
 - Auto-creates vehicle sheets with standardized headers
 - Deploy by pasting `SpreadSheets_GAS.gs` into Google Sheets' Apps Script editor
 
 **Frontend Architecture**:
+
 - **State Management**: Zustand store (`src/store/index.ts`) for global app state
 - **Data Fetching**: SWR with custom hooks (`src/hooks/useVehicleData.ts`) for polling
 - **Map Integration**: Google Maps via `@react-google-maps/api`
 - **Component Structure**: Modular components for map, panels, and controls
 - **Animations**: Framer Motion for smooth UI transitions
+- **Gradient Visualization**: `DirectGradientPolyline` component for parameter-based track coloring
 
 ### Environment Configuration
+
 Frontend requires these environment variables:
+
 ```
 VITE_GMAPS_API_KEY=your_google_maps_api_key
 VITE_GAS_ENDPOINT=your_google_apps_script_web_app_url
 ```
 
 ### Data Schema
+
 Telemetry data structure:
+
 ```typescript
 interface TelemetryDataPoint {
   timestamp: string;
@@ -74,6 +90,7 @@ interface TelemetryDataPoint {
 ```
 
 ### Key Technical Decisions
+
 - **Monochrome Map Styling**: Custom dark theme defined in `src/constants/map.ts`
 - **Real-time Updates**: Configurable polling intervals (5s, 10s, 30s, 60s)
 - **Export Functionality**: CSV/JSON export via PapaParse
@@ -82,11 +99,13 @@ interface TelemetryDataPoint {
 - **Dark Theme**: GitHub-style colors (#0d1117 background, #161b22 surface, #58a6ff accent)
 
 ### Performance Optimizations
+
 - **Marker Limits**: Maximum 10 waypoint markers per vehicle to reduce rendering load
 - **Data Thinning**: Non-selected vehicles show every 10th data point only
 - **Memory Management**: Proper cleanup of event handlers in useEffect hooks
 
 ### Responsive Design
+
 - **Desktop**: 1280px and above
 - **Tablet**: 1024px to 1279px
 - **Mobile**: Below 1024px
@@ -94,20 +113,29 @@ interface TelemetryDataPoint {
 ## Development Notes
 
 ### Working with Maps
+
 The app uses a custom monochrome map style. Modify `MONOCHROME_MAP_STYLE` in `src/constants/map.ts` to change appearance.
 
 ### Adding New Vehicle Data Fields
+
 1. Update `TelemetryDataPoint` interface in `src/types/index.ts`
 2. Modify GAS sheet headers in `createNewSheet()` function
 3. Update data parsing in `getVehicleDataFromSheet()`
 4. Add UI elements in relevant components
 
 ### Testing GAS Functions
+
 Use `testFunction()` and `testWebAppAPI()` functions in the GAS editor for manual testing.
+
+### Recent Architecture Changes
+
+- Gradient visualization system refactored from `GradientClearOverlay` to `DirectGradientPolyline` for better performance
+- Improved polyline management to prevent overlap issues when switching parameters
 
 ## Build System
 
 The project uses **Webpack** (not Vite) for the build system:
+
 - **Development**: `webpack-dev-server` for hot reloading (port 4000)
 - **Production**: Standard webpack build with minification
 - **Configuration**: `webpack.config.js` handles TypeScript, PostCSS, and asset processing
@@ -121,10 +149,12 @@ The project uses **Webpack** (not Vite) for the build system:
 ## Data Format Differences
 
 **Important**: There's a schema mismatch between POST and GET data:
+
 - **POST to GAS**: Uses nested structure (`gps.latitude`, `sensors.water_temperature`)
 - **GET from GAS**: Returns flattened structure (`latitude`, `waterTemperature`)
 - The GAS backend handles the transformation between these formats
 
 When modifying data fields, update both:
+
 1. `TelemetryRow` interface (POST format) in `src/types/index.ts`
 2. `TelemetryDataPoint` interface (GET format) in `src/types/index.ts`
