@@ -1,0 +1,13 @@
+{
+  "DataType": "HK",
+  "MachineID": "00453",
+  "MachineTime": "2025/07/16 00:41:41",
+  "GPS": {
+    "LAT": 34.124125,
+    "LNG": 153.131241,
+    "ALT": 342.5,
+    "SAT": 43
+  },
+  "BAT": 3.45,
+  "CMT": "MODE:NORMAL,COMM:OK,GPS:LOCKED,SENSOR:TEMP_OK,PRESSURE:STABLE,ERROR:NONE"
+}
