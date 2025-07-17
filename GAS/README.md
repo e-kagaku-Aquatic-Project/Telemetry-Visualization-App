@@ -1,7 +1,7 @@
 # Google Apps Script (GAS) Telemetry System
 
-Google Apps Script を使用したテレメトリデータの送信・取得システム
-
+Google Apps Script を使用したテレメトリデータの送信・取得システム  
+スプレッドシート : https://docs.google.com/spreadsheets/d/1SocK5ILBHp-xWsAR6KiKkStret4O1lXqKA0zkAOyIwk/edit?usp=sharing
 ## 🚀 クイックスタート
 
 ### 提供される WebApp URL
