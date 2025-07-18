@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { TelemetryDataPoint, MachineTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
+import { PredictionConfig, PredictedPosition, predictPosition, DEFAULT_PREDICTION_CONFIG } from '../utils/prediction';
 
 interface AppState {
   // Machine data
@@ -25,6 +26,9 @@ interface AppState {
   // Gradient visualization state
   gradientVisualization: GradientVisualizationState;
   
+  // Position prediction state
+  predictionConfig: PredictionConfig;
+  
   // Actions
   setMachineTracks: (tracks: MachineTracks) => void;
   setSelectedMachine: (machineId: string | null) => void;
@@ -40,10 +44,20 @@ interface AppState {
   setGradientParameter: (parameter: GradientParameter | null) => void;
   toggleGradientVisualization: () => void;
   
+  // Prediction actions
+  setPredictionEnabled: (enabled: boolean) => void;
+  setPredictionMinutes: (minutes: number) => void;
+  setPredictionReferencePoints: (points: number) => void;
+  updatePredictionConfig: (config: Partial<PredictionConfig>) => void;
+  
   // Computed getters
   getMachineIds: () => string[];
   getSelectedMachineData: () => TelemetryDataPoint[];
   getLatestDataPoint: (machineId: string) => TelemetryDataPoint | null;
+  
+  // Prediction getters
+  getPredictedPosition: (machineId: string) => PredictedPosition | null;
+  getAllPredictedPositions: () => Record<string, PredictedPosition>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -69,6 +83,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     selectedParameter: null,
     refreshKey: 0,
   },
+  
+  predictionConfig: DEFAULT_PREDICTION_CONFIG,
   
   // Actions
   setMachineTracks: (tracks) => set({ machineTracks: tracks }),
@@ -125,6 +141,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   })),
   
+  // Prediction actions
+  setPredictionEnabled: (enabled) => set((state) => ({
+    predictionConfig: { ...state.predictionConfig, isEnabled: enabled }
+  })),
+  
+  setPredictionMinutes: (minutes) => set((state) => ({
+    predictionConfig: { ...state.predictionConfig, predictionMinutes: minutes }
+  })),
+  
+  setPredictionReferencePoints: (points) => set((state) => ({
+    predictionConfig: { ...state.predictionConfig, referencePoints: points }
+  })),
+  
+  updatePredictionConfig: (config) => set((state) => ({
+    predictionConfig: { ...state.predictionConfig, ...config }
+  })),
+  
   // Computed getters
   getMachineIds: () => Object.keys(get().machineTracks),
   
@@ -136,5 +169,34 @@ export const useAppStore = create<AppState>((set, get) => ({
   getLatestDataPoint: (machineId: string) => {
     const tracks = get().machineTracks[machineId];
     return tracks && tracks.length > 0 ? tracks[tracks.length - 1] : null;
+  },
+  
+  // Prediction getters
+  getPredictedPosition: (machineId: string) => {
+    const { machineTracks, predictionConfig } = get();
+    const tracks = machineTracks[machineId];
+    
+    if (!tracks || tracks.length === 0) {
+      return null;
+    }
+    
+    return predictPosition(tracks, predictionConfig);
+  },
+  
+  getAllPredictedPositions: () => {
+    const { machineTracks, predictionConfig } = get();
+    const predictions: Record<string, PredictedPosition> = {};
+    
+    Object.keys(machineTracks).forEach(machineId => {
+      const tracks = machineTracks[machineId];
+      if (tracks && tracks.length > 0) {
+        const prediction = predictPosition(tracks, predictionConfig);
+        if (prediction) {
+          predictions[machineId] = prediction;
+        }
+      }
+    });
+    
+    return predictions;
   },
 }));

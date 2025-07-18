@@ -7,6 +7,8 @@ import { WaypointMarker } from './WaypointMarker';
 import { DirectGradientPolyline } from './DirectGradientPolyline';
 import { GradientLegend } from './GradientLegend';
 import { GradientMapOverlay } from './GradientMapOverlay';
+import { PredictionControls } from './PredictionControls';
+import { PredictionVisualization } from './PredictionMarker';
 
 const GOOGLE_MAPS_LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = [];
 
@@ -152,6 +154,22 @@ export const MapContainer: React.FC = () => {
               />
             ))
         )}
+
+        {/* Render prediction visualizations - only when map is available */}
+        {map && Object.keys(machineTracks).map((machineId) => {
+          const shouldShowPrediction = viewMode === 'individual' ? 
+            machineId === selectedMachineId : 
+            true; // Show all predictions in 'all' mode
+            
+          return shouldShowPrediction ? (
+            <PredictionVisualization
+              key={`prediction-${machineId}`}
+              machineId={machineId}
+              isSelected={machineId === selectedMachineId}
+              map={map}
+            />
+          ) : null;
+        })}
       </GoogleMap>
       
       {/* Direct Google Maps polyline management */}
@@ -168,6 +186,9 @@ export const MapContainer: React.FC = () => {
       
       {/* Gradient controls overlay */}
       <GradientMapOverlay />
+      
+      {/* Prediction controls overlay */}
+      <PredictionControls />
       
       {/* Gradient legend overlay */}
       <GradientLegend />
