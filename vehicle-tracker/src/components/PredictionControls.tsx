@@ -178,15 +178,6 @@ export const PredictionControls: React.FC = () => {
                           Heading: {predictedPosition.heading.toFixed(0)}°
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          predictedPosition.confidence > 0.7 ? 'bg-green-400' :
-                          predictedPosition.confidence > 0.4 ? 'bg-yellow-400' : 'bg-red-400'
-                        }`} />
-                        <span className="text-xs text-dark-text">
-                          Confidence: {Math.round(predictedPosition.confidence * 100)}%
-                        </span>
-                      </div>
                     </div>
                   ) : (
                     <div className="flex items-center space-x-2">

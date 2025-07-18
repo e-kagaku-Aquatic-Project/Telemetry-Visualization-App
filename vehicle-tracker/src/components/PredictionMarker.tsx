@@ -60,11 +60,9 @@ export const PredictionMarker: React.FC<PredictionMarkerProps> = ({
       new google.maps.LatLng(predictedPosition.latitude, predictedPosition.longitude),
     ];
 
-    // Line style options based on confidence
-    const getLineOpacity = (confidence: number) => {
-      if (confidence > 0.7) return 0.8;
-      if (confidence > 0.4) return 0.6;
-      return 0.4;
+    // Line style options
+    const getLineOpacity = () => {
+      return 0.7; // Fixed opacity for prediction lines
     };
 
     // Use orange/yellow color for prediction lines to distinguish from track lines
@@ -74,7 +72,7 @@ export const PredictionMarker: React.FC<PredictionMarkerProps> = ({
       path: predictionPath,
       geodesic: true,
       strokeColor: predictionColor,
-      strokeOpacity: getLineOpacity(predictedPosition.confidence),
+      strokeOpacity: getLineOpacity(),
       strokeWeight: isSelected ? 3 : 2,
       strokeDashArray: '10,5',
       zIndex: isSelected ? 999 : 500,
@@ -111,8 +109,7 @@ export const PredictionMarker: React.FC<PredictionMarkerProps> = ({
       icon={arrowIcon}
       title={`${machineId} - Predicted position in ${predictionConfig.predictionMinutes}min
 Speed: ${predictedPosition.speed.toFixed(1)} km/h
-Heading: ${predictedPosition.heading.toFixed(0)}°
-Confidence: ${Math.round(predictedPosition.confidence * 100)}%`}
+Heading: ${predictedPosition.heading.toFixed(0)}°`}
       zIndex={isSelected ? 1001 : 501}
     />
   );
