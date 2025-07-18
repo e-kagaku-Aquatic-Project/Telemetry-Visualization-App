@@ -6,20 +6,18 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  Legend 
+  ResponsiveContainer 
 } from 'recharts';
 import { useAppStore } from '../store';
 import { TelemetryDataPoint } from '../types';
+import { formatTimestamp } from '../utils/export';
 
 interface ChartData {
   timestamp: string;
   time: string;
-  waterTemperature: number;
-  airTemperature: number;
-  airPressure: number;
   altitude: number;
   satellites: number;
+  battery?: number;
 }
 
 export const SensorGraphs: React.FC = () => {
@@ -44,12 +42,10 @@ export const SensorGraphs: React.FC = () => {
 
   const chartData: ChartData[] = machineData.map((point: TelemetryDataPoint) => ({
     timestamp: point.timestamp,
-    time: new Date(point.timestamp).toLocaleTimeString(),
-    waterTemperature: point.waterTemperature,
-    airTemperature: point.airTemperature,
-    airPressure: point.airPressure,
+    time: formatTimestamp(point.timestamp),
     altitude: point.altitude,
     satellites: point.satellites,
+    battery: point.battery,
   }));
 
   const chartConfig = {
@@ -91,58 +87,6 @@ export const SensorGraphs: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        {/* Temperature Chart */}
-        <ChartWrapper title="Temperature (°C)">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} {...chartConfig}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" {...axisStyle} />
-              <YAxis {...axisStyle} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#9CA3AF' }} />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="waterTemperature" 
-                stroke="#06B6D4" 
-                strokeWidth={2}
-                name="Water Temperature"
-                dot={false}
-                isAnimationActive={!hasViewedGraphs}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="airTemperature" 
-                stroke="#F59E0B" 
-                strokeWidth={2}
-                name="Air Temperature"
-                dot={false}
-                isAnimationActive={!hasViewedGraphs}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-
-        {/* Air Pressure Chart */}
-        <ChartWrapper title="Air Pressure (hPa)">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} {...chartConfig}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" {...axisStyle} />
-              <YAxis {...axisStyle} domain={['dataMin - 5', 'dataMax + 5']} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#9CA3AF' }} />
-              <Line 
-                type="monotone" 
-                dataKey="airPressure" 
-                stroke="#10B981" 
-                strokeWidth={2}
-                name="Air Pressure"
-                dot={false}
-                isAnimationActive={!hasViewedGraphs}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-
         {/* Altitude Chart */}
         <ChartWrapper title="Altitude (m)">
           <ResponsiveContainer width="100%" height="100%">
@@ -184,6 +128,29 @@ export const SensorGraphs: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
         </ChartWrapper>
+
+        {/* Battery Chart */}
+        {chartData.some(point => point.battery !== undefined) && (
+          <ChartWrapper title="Battery (V)">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} {...chartConfig}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="time" {...axisStyle} />
+                <YAxis {...axisStyle} domain={['dataMin - 0.1', 'dataMax + 0.1']} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#9CA3AF' }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="battery" 
+                  stroke="#10B981" 
+                  strokeWidth={2}
+                  name="Battery"
+                  dot={false}
+                  isAnimationActive={!hasViewedGraphs}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        )}
       </div>
     </div>
   );

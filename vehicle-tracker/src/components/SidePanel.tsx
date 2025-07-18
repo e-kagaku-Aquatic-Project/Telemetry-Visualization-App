@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../store';
 import { X } from 'lucide-react';
 import { TelemetryDataPoint } from '../types';
+import { formatTimestamp, parseComment, getStatusColor, getStatusLabel } from '../utils/export';
 
 interface SidePanelProps {
   isDesktop?: boolean;
@@ -78,9 +79,23 @@ const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({
         <div className="flex justify-between">
           <span className="text-dark-muted">Timestamp:</span>
           <span className="font-mono text-dark-text text-sm">
-            {new Date(selectedDataPoint.timestamp).toLocaleString()}
+            {formatTimestamp(selectedDataPoint.timestamp)}
           </span>
         </div>
+        {selectedDataPoint.machineTime && (
+          <div className="flex justify-between">
+            <span className="text-dark-muted">Machine Time:</span>
+            <span className="font-mono text-dark-text text-sm">
+              {formatTimestamp(selectedDataPoint.machineTime)}
+            </span>
+          </div>
+        )}
+        {selectedDataPoint.dataType && (
+          <div className="flex justify-between">
+            <span className="text-dark-muted">Data Type:</span>
+            <span className="font-mono text-dark-text">{selectedDataPoint.dataType}</span>
+          </div>
+        )}
       </div>
     </div>
 
@@ -115,37 +130,29 @@ const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({
       </div>
     </div>
 
-    {/* Sensor Data */}
+    {/* Additional Data */}
     <div className="card p-4">
-      <h3 className="font-medium text-dark-text mb-3">Sensor Readings</h3>
+      <h3 className="font-medium text-dark-text mb-3">Additional Information</h3>
       <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <span className="text-dark-muted">Water Temperature:</span>
-          <div className="text-right">
-            <span className="font-mono text-dark-text text-lg">
-              {selectedDataPoint.waterTemperature.toFixed(1)}°C
-            </span>
+        {selectedDataPoint.battery !== undefined && (
+          <div className="flex justify-between items-center">
+            <span className="text-dark-muted">Battery:</span>
+            <div className="text-right">
+              <span className="font-mono text-dark-text text-lg">
+                {selectedDataPoint.battery.toFixed(2)}V
+              </span>
+            </div>
           </div>
-        </div>
+        )}
         
-        <div className="flex justify-between items-center">
-          <span className="text-dark-muted">Air Pressure:</span>
-          <div className="text-right">
-            <span className="font-mono text-dark-text text-lg">
-              {selectedDataPoint.airPressure.toFixed(2)}
-            </span>
-            <span className="text-dark-muted text-sm ml-1">hPa</span>
+        {selectedDataPoint.comment && (
+          <div className="space-y-2">
+            <span className="text-dark-muted">Status Information:</span>
+            <div className="bg-dark-bg p-3 rounded-inner">
+              <StatusDisplay comment={selectedDataPoint.comment} />
+            </div>
           </div>
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <span className="text-dark-muted">Air Temperature:</span>
-          <div className="text-right">
-            <span className="font-mono text-dark-text text-lg">
-              {selectedDataPoint.airTemperature.toFixed(1)}°C
-            </span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
 
@@ -158,3 +165,48 @@ const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({
     </div>
   </div>
 );
+
+// Status Display Component for parsed comment data
+const StatusDisplay: React.FC<{ comment: string }> = ({ comment }) => {
+  const status = parseComment(comment);
+  const statusEntries = Object.entries(status);
+  
+  if (statusEntries.length === 0) {
+    // Fallback to raw comment if parsing fails
+    return (
+      <div className="text-sm font-mono text-dark-text break-all">
+        {comment}
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-2">
+      {statusEntries.map(([key, value]) => {
+        if (!value) return null;
+        
+        const label = getStatusLabel(key);
+        const colorClass = getStatusColor(key, value);
+        
+        return (
+          <div key={key} className="flex items-center justify-between">
+            <span className="text-dark-muted text-sm">{label}:</span>
+            <span className={`font-mono text-sm font-medium ${colorClass}`}>
+              {value}
+            </span>
+          </div>
+        );
+      })}
+      
+      {/* Raw comment as fallback */}
+      <details className="mt-3">
+        <summary className="text-xs text-dark-muted cursor-pointer hover:text-dark-text transition-colors">
+          Raw Data
+        </summary>
+        <div className="mt-1 text-xs font-mono text-dark-muted break-all bg-dark-surface p-2 rounded border">
+          {comment}
+        </div>
+      </details>
+    </div>
+  );
+};

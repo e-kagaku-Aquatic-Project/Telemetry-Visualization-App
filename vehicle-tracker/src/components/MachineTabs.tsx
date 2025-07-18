@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAppStore } from '../store';
 import { motion } from 'framer-motion';
+import { formatTimestamp } from '../utils/export';
 
 export const MachineTabs: React.FC = () => {
   const { 
@@ -103,7 +104,7 @@ export const MachineTabs: React.FC = () => {
                 </div>
                 {latestPoint && (
                   <div className="text-xs opacity-60 mt-1 hidden md:block">
-                    Last: {new Date(latestPoint.timestamp).toLocaleTimeString()}
+                    Last: {formatTimestamp(latestPoint.timestamp)}
                   </div>
                 )}
               </div>

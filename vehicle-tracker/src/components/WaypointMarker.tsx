@@ -2,6 +2,7 @@ import React from 'react';
 import { Marker } from '@react-google-maps/api';
 import { TelemetryDataPoint } from '../types';
 import { useAppStore } from '../store';
+import { formatTimestamp } from '../utils/export';
 
 interface WaypointMarkerProps {
   machineId: string;
@@ -67,7 +68,7 @@ export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
       }}
       onClick={handleMarkerClick}
       icon={markerIcon}
-      title={`${machineId} - ${new Date(dataPoint.timestamp).toLocaleString()}`}
+      title={`${machineId} - ${formatTimestamp(dataPoint.timestamp)}`}
       animation={isSelected && isLatest ? google.maps.Animation.BOUNCE : undefined}
       zIndex={isLatest ? 1000 : (isSelected ? 500 : 100)}
     />

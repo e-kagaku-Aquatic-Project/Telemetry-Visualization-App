@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a vehicle tracking visualization webapp (リアルタイム機体追跡 Web アプリケーション) that consists of two main components:
+This is a machine tracking visualization webapp (リアルタイム機体追跡 Web アプリケーション) that consists of two main components:
 
 1. **Google Apps Script backend** (`SpreadSheets_GAS.gs`) - Handles data storage in Google Sheets and provides REST API endpoints
-2. **React frontend** (`vehicle-tracker/`) - Real-time web application that visualizes vehicle telemetry data on Google Maps
+2. **React frontend** (`vehicle-tracker/`) - Real-time web application that visualizes machine telemetry data on Google Maps
 
-The system receives sensor telemetry data via POST requests, stores it in Google Sheets organized by vehicle ID, and provides real-time visualization with automatic data polling.
+The system receives sensor telemetry data via POST requests, stores it in Google Sheets organized by machine ID, and provides real-time visualization with automatic data polling.
 
 ## Common Commands
 
@@ -41,21 +41,21 @@ npm run preview      # Preview production build (uses serve)
 ### Data Flow
 
 1. **Data Ingestion**: External systems POST telemetry data to GAS endpoint
-2. **Storage**: GAS stores data in Google Sheets (one sheet per vehicle: `Vehicle_{vehicleId}`)
+2. **Storage**: GAS stores data in Google Sheets (one sheet per machine: `Machine_{machineId}`)
 3. **API Layer**: GAS provides GET endpoints for data retrieval
 4. **Frontend**: React app polls GAS API and displays real-time data on Google Maps
 
 ### Key Components
 
 **Backend (GAS)**:
-- `doGet()`: Handles API requests (`getAllVehicles`, `getVehicle`, `getVehicleList`)
+- `doGet()`: Handles API requests (`getAllMachines`, `getMachine`, `getMachineList`)
 - `doPost()`: Processes incoming telemetry data
-- Auto-creates vehicle sheets with standardized headers
+- Auto-creates machine sheets with standardized headers
 - Deploy by pasting `SpreadSheets_GAS.gs` into Google Sheets' Apps Script editor
 
 **Frontend Architecture**:
 - **State Management**: Zustand store (`src/store/index.ts`) for global app state
-- **Data Fetching**: SWR with custom hooks (`src/hooks/useVehicleData.ts`) for polling
+- **Data Fetching**: SWR with custom hooks (`src/hooks/useMachineData.ts`) for polling
 - **Map Integration**: Google Maps via `@react-google-maps/api`
 - **Component Structure**: Modular components for map, panels, and controls
 - **Animations**: Framer Motion for smooth UI transitions
@@ -75,7 +75,9 @@ Telemetry data structure:
 ```typescript
 interface TelemetryDataPoint {
   timestamp: string;
-  vehicleId: string;
+  machineTime?: string;
+  machineId: string;
+  dataType?: string;
   latitude: number;
   longitude: number;
   altitude: number;
@@ -83,6 +85,8 @@ interface TelemetryDataPoint {
   waterTemperature: number;
   airPressure: number;
   airTemperature: number;
+  battery?: number;
+  comment?: string;
 }
 ```
 
@@ -92,13 +96,13 @@ interface TelemetryDataPoint {
 - **Real-time Updates**: Configurable polling intervals (5s, 10s, 30s, 60s)
 - **Export Functionality**: CSV/JSON export via PapaParse
 - **Error Handling**: Custom `GASApiError` class with retry logic
-- **Keyboard Navigation**: Comprehensive shortcuts (1-9: select vehicle, [/]: switch, P: pause, E: export, ESC: close)
+- **Keyboard Navigation**: Comprehensive shortcuts (1-9: select machine, [/]: switch, P: pause, E: export, ESC: close)
 - **Dark Theme**: GitHub-style colors (#0d1117 background, #161b22 surface, #58a6ff accent)
 
 ### Performance Optimizations
 
-- **Marker Limits**: Maximum 10 waypoint markers per vehicle to reduce rendering load
-- **Data Thinning**: Non-selected vehicles show every 10th data point only
+- **Marker Limits**: Maximum 10 waypoint markers per machine to reduce rendering load
+- **Data Thinning**: Non-selected machines show every 10th data point only
 - **Memory Management**: Proper cleanup of event handlers in useEffect hooks
 
 ### Responsive Design
@@ -113,11 +117,11 @@ interface TelemetryDataPoint {
 
 The app uses a custom monochrome map style. Modify `MONOCHROME_MAP_STYLE` in `src/constants/map.ts` to change appearance.
 
-### Adding New Vehicle Data Fields
+### Adding New Machine Data Fields
 
 1. Update `TelemetryDataPoint` interface in `src/types/index.ts`
 2. Modify GAS sheet headers in `createNewSheet()` function
-3. Update data parsing in `getVehicleDataFromSheet()`
+3. Update data parsing in `getMachineDataFromSheet()`
 4. Add UI elements in relevant components
 
 ### Testing GAS Functions
@@ -128,6 +132,10 @@ Use `testFunction()` and `testWebAppAPI()` functions in the GAS editor for manua
 
 ### Recent Architecture Changes
 
+- **Vehicle-to-Machine Migration**: Complete refactoring from vehicle-centric to machine-centric naming convention
+- All API endpoints updated: `getAllMachines`, `getMachine`, `getMachineList`
+- Component names updated: `MachineMarker`, `MachineTabs`, `useMachineData`
+- State management updated with machine-centric properties
 - Gradient visualization system refactored from `GradientClearOverlay` to `DirectGradientPolyline` for better performance
 - Improved polyline management to prevent overlap issues when switching parameters
 - Detailed design documentation available in `docs/gradient-track-visualization-design.md`
@@ -149,7 +157,7 @@ The project uses **Webpack** (not Vite) for the build system:
 ## Data Format Differences
 
 **Important**: There's a schema mismatch between POST and GET data:
-- **POST to GAS**: Uses nested structure (`gps.latitude`, `sensors.water_temperature`)
+- **POST to GAS**: Uses nested structure (`GPS.LAT`, `sensors.water_temperature`)
 - **GET from GAS**: Returns flattened structure (`latitude`, `waterTemperature`)
 - The GAS backend handles the transformation between these formats
 
@@ -162,3 +170,10 @@ When modifying data fields, update both:
 - **Main README**: Japanese documentation with quick start and user guide
 - **GAS README**: Backend API documentation with Python examples
 - **Gradient Design Doc**: Technical specifications for track visualization feature
+
+## Important Notes
+
+- The project recently underwent a complete migration from "vehicle" to "machine" terminology
+- All component names, API endpoints, and data structures have been updated accordingly
+- The GAS backend is now at version 2.0.0 with new field additions (battery, comment, dataType, machineTime)
+- Frontend fully supports the new GAS API structure and additional telemetry fields

@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppStore } from '../store';
 import { motion } from 'framer-motion';
 import { Info } from 'lucide-react';
+import { formatTimestamp } from '../utils/export';
 
 export const TopBar: React.FC = () => {
   const { 
@@ -77,7 +78,7 @@ export const TopBar: React.FC = () => {
       
       {connectionStatus.lastUpdate && (
         <div className="mt-2 text-xs text-dark-muted">
-          Last update: {connectionStatus.lastUpdate.toLocaleTimeString()}
+          Last update: {formatTimestamp(connectionStatus.lastUpdate)}
           {connectionStatus.retryCount > 0 && (
             <span className="ml-2 text-red-400">
               (Retries: {connectionStatus.retryCount})

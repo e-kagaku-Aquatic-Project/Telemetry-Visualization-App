@@ -1,17 +1,14 @@
 export interface TelemetryRow {
   timestamp: string;
-  machine_id: string;
-  gps: {
-    latitude: number;
-    longitude: number;
-    altitude: number;
-    satellites: number;
-  };
-  sensors: {
-    water_temperature: number;
-    air_pressure: number;
-    air_temperature: number;
-  };
+  machineTime?: string;
+  machineId: string;
+  dataType?: string;
+  latitude: number;
+  longitude: number;
+  altitude: number;
+  satellites: number;
+  battery?: number;
+  comment?: string;
 }
 
 export interface MachineData {
@@ -28,9 +25,6 @@ export interface TelemetryDataPoint {
   longitude: number;
   altitude: number;
   satellites: number;
-  waterTemperature: number;
-  airPressure: number;
-  airTemperature: number;
   battery?: number;
   comment?: string;
 }
@@ -67,7 +61,7 @@ export interface ExportFormat {
   filename: string;
 }
 
-export type GradientParameter = 'altitude' | 'waterTemperature' | 'airPressure' | 'airTemperature' | 'satellites';
+export type GradientParameter = 'altitude' | 'satellites' | 'battery';
 
 export interface GradientSegment {
   path: google.maps.LatLngLiteral[];

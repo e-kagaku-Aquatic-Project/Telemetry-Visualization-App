@@ -6,7 +6,8 @@ import {
   exportToCSV, 
   exportToJSON, 
   exportAllMachinesToCSV, 
-  exportAllMachinesToJSON 
+  exportAllMachinesToJSON,
+  formatTimestamp 
 } from '../utils/export';
 
 export const StatusBar: React.FC = () => {
@@ -170,7 +171,7 @@ export const StatusBar: React.FC = () => {
       {/* Last Update Time */}
       {connectionStatus.lastUpdate && (
         <div className="mt-2 text-xs text-dark-muted">
-          Last update: {connectionStatus.lastUpdate.toLocaleString()}
+          Last update: {formatTimestamp(connectionStatus.lastUpdate)}
           {connectionStatus.retryCount > 0 && (
             <span className="ml-2 text-red-400">
               (Failed attempts: {connectionStatus.retryCount})

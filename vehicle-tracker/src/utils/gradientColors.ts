@@ -2,7 +2,7 @@
  * Gradient color mapping utilities for telemetry data visualization
  */
 
-export type GradientParameter = 'altitude' | 'waterTemperature' | 'airPressure' | 'airTemperature' | 'satellites';
+export type GradientParameter = 'altitude' | 'satellites' | 'battery';
 
 export interface ColorPalette {
   colors: string[];
@@ -17,35 +17,23 @@ export const COLOR_PALETTES: Record<GradientParameter, ColorPalette> = {
     name: 'Altitude',
     unit: 'm'
   },
-  waterTemperature: {
-    colors: ['#0066ff', '#00ccff', '#00ff99', '#ffff00', '#ff6600', '#ff0000'], // Cold blue -> Warm red
-    name: 'Water Temperature',
-    unit: '°C'
-  },
-  airPressure: {
-    colors: ['#6600cc', '#0066ff', '#00cc99', '#99cc00', '#ffcc00'], // Purple -> Blue -> Green -> Yellow
-    name: 'Air Pressure',
-    unit: 'hPa'
-  },
-  airTemperature: {
-    colors: ['#0066ff', '#00ccff', '#00ff99', '#ffff00', '#ff6600', '#ff0000'], // Cold blue -> Warm red
-    name: 'Air Temperature',
-    unit: '°C'
-  },
   satellites: {
     colors: ['#ff0000', '#ff6600', '#ffcc00', '#66cc00', '#00cc00'], // Red (few) -> Green (many)
     name: 'Satellites',
     unit: 'count'
+  },
+  battery: {
+    colors: ['#ff0000', '#ff6600', '#ffcc00', '#66cc00', '#00cc00'], // Red (low) -> Green (high)
+    name: 'Battery',
+    unit: 'V'
   }
 };
 
 // Expected value ranges for normalization (can be dynamic based on actual data)
 export const PARAMETER_RANGES: Record<GradientParameter, { min: number; max: number }> = {
   altitude: { min: 0, max: 1000 },
-  waterTemperature: { min: 0, max: 40 },
-  airPressure: { min: 980, max: 1040 },
-  airTemperature: { min: -10, max: 40 },
-  satellites: { min: 0, max: 12 }
+  satellites: { min: 0, max: 12 },
+  battery: { min: 0, max: 5 }
 };
 
 /**
