@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
 import { useAppStore } from '../store';
-import { exportAllVehiclesToCSV } from '../utils/export';
+import { exportAllMachinesToCSV } from '../utils/export';
 
 export function useKeyboardShortcuts() {
   const { 
-    vehicleTracks,
-    selectedVehicleId,
-    setSelectedVehicle,
+    machineTracks,
+    selectedMachineId,
+    setSelectedMachine,
     setPaused,
     isPaused,
-    getVehicleIds,
+    getMachineIds,
   } = useAppStore();
 
   useEffect(() => {
@@ -21,25 +21,25 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      const vehicleIds = getVehicleIds();
-      const currentIndex = selectedVehicleId ? vehicleIds.indexOf(selectedVehicleId) : -1;
+      const machineIds = getMachineIds();
+      const currentIndex = selectedMachineId ? machineIds.indexOf(selectedMachineId) : -1;
 
       switch (event.key) {
         case '[':
         case 'ArrowLeft':
           event.preventDefault();
-          if (vehicleIds.length > 0) {
-            const prevIndex = currentIndex <= 0 ? vehicleIds.length - 1 : currentIndex - 1;
-            setSelectedVehicle(vehicleIds[prevIndex]);
+          if (machineIds.length > 0) {
+            const prevIndex = currentIndex <= 0 ? machineIds.length - 1 : currentIndex - 1;
+            setSelectedMachine(machineIds[prevIndex]);
           }
           break;
 
         case ']':
         case 'ArrowRight':
           event.preventDefault();
-          if (vehicleIds.length > 0) {
-            const nextIndex = currentIndex >= vehicleIds.length - 1 ? 0 : currentIndex + 1;
-            setSelectedVehicle(vehicleIds[nextIndex]);
+          if (machineIds.length > 0) {
+            const nextIndex = currentIndex >= machineIds.length - 1 ? 0 : currentIndex + 1;
+            setSelectedMachine(machineIds[nextIndex]);
           }
           break;
 
@@ -54,9 +54,9 @@ export function useKeyboardShortcuts() {
         case 'E':
           if (event.ctrlKey || event.metaKey) return; // Don't interfere with Ctrl+E
           event.preventDefault();
-          if (Object.keys(vehicleTracks).length > 0) {
+          if (Object.keys(machineTracks).length > 0) {
             try {
-              exportAllVehiclesToCSV(vehicleTracks);
+              exportAllMachinesToCSV(machineTracks);
             } catch (error) {
               console.error('Export failed:', error);
             }
@@ -79,8 +79,8 @@ export function useKeyboardShortcuts() {
         case '9': {
           event.preventDefault();
           const index = parseInt(event.key) - 1;
-          if (vehicleIds[index]) {
-            setSelectedVehicle(vehicleIds[index]);
+          if (machineIds[index]) {
+            setSelectedMachine(machineIds[index]);
           }
           break;
         }
@@ -89,5 +89,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedVehicleId, vehicleTracks, isPaused, setSelectedVehicle, setPaused, getVehicleIds]);
+  }, [selectedMachineId, machineTracks, isPaused, setSelectedMachine, setPaused, getMachineIds]);
 }

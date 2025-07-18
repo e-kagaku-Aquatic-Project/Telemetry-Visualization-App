@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { useAppStore } from '../store';
 import { DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from '../constants/map';
-import { VehicleMarker } from './VehicleMarker';
+import { MachineMarker } from './MachineMarker';
 import { WaypointMarker } from './WaypointMarker';
 import { DirectGradientPolyline } from './DirectGradientPolyline';
 import { GradientLegend } from './GradientLegend';
@@ -12,8 +12,8 @@ const GOOGLE_MAPS_LIBRARIES: ("places" | "geometry" | "drawing" | "visualization
 
 export const MapContainer: React.FC = () => {
   const { 
-    selectedVehicleId, 
-    vehicleTracks, 
+    selectedMachineId, 
+    machineTracks, 
     mapCenter, 
     mapZoom, 
     getLatestDataPoint,
@@ -35,11 +35,11 @@ export const MapContainer: React.FC = () => {
     if (!map) return;
 
     if (viewMode === 'all') {
-      // Fit bounds to show all vehicles
+      // Fit bounds to show all machines
       const bounds = new google.maps.LatLngBounds();
       let hasPoints = false;
 
-      Object.values(vehicleTracks).forEach(track => {
+      Object.values(machineTracks).forEach(track => {
         if (track.length > 0) {
           const latestPoint = track[track.length - 1];
           bounds.extend({
@@ -56,9 +56,9 @@ export const MapContainer: React.FC = () => {
         const padding = { top: 50, right: 50, bottom: 50, left: 50 };
         map.fitBounds(bounds, padding);
       }
-    } else if (viewMode === 'individual' && selectedVehicleId) {
-      // Center on selected vehicle's latest position
-      const latestPoint = getLatestDataPoint(selectedVehicleId);
+    } else if (viewMode === 'individual' && selectedMachineId) {
+      // Center on selected machine's latest position
+      const latestPoint = getLatestDataPoint(selectedMachineId);
       if (latestPoint) {
         const center = {
           lat: latestPoint.latitude,
@@ -67,7 +67,7 @@ export const MapContainer: React.FC = () => {
         map.panTo(center);
       }
     }
-  }, [viewMode, selectedVehicleId, vehicleTracks, map, getLatestDataPoint]);
+  }, [viewMode, selectedMachineId, machineTracks, map, getLatestDataPoint]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -124,28 +124,28 @@ export const MapContainer: React.FC = () => {
         {/* This is handled by DirectGradientPolyline component outside GoogleMap */}
 
         {/* Render markers for latest positions only */}
-        {Object.entries(vehicleTracks).map(([vehicleId, data]) => {
+        {Object.entries(machineTracks).map(([machineId, data]) => {
           const latestPoint = data[data.length - 1];
           if (!latestPoint) return null;
           
           return (
-            <VehicleMarker
-              key={vehicleId}
-              vehicleId={vehicleId}
+            <MachineMarker
+              key={machineId}
+              machineId={machineId}
               dataPoint={latestPoint}
-              isSelected={vehicleId === selectedVehicleId}
+              isSelected={machineId === selectedMachineId}
             />
           );
         })}
 
-        {/* Render additional waypoint markers for selected vehicle only (in individual mode) */}
-        {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && (
-          vehicleTracks[selectedVehicleId]
-            .slice(0, -1) // Exclude latest point (already shown by VehicleMarker)
+        {/* Render additional waypoint markers for selected machine only (in individual mode) */}
+        {viewMode === 'individual' && selectedMachineId && machineTracks[selectedMachineId] && (
+          machineTracks[selectedMachineId]
+            .slice(0, -1) // Exclude latest point (already shown by MachineMarker)
             .map((dataPoint, index) => (
               <WaypointMarker
-                key={`${selectedVehicleId}-waypoint-${index}`}
-                vehicleId={selectedVehicleId}
+                key={`${selectedMachineId}-waypoint-${index}`}
+                machineId={selectedMachineId}
                 dataPoint={dataPoint}
                 isSelected={true}
                 isLatest={false}
@@ -155,12 +155,12 @@ export const MapContainer: React.FC = () => {
       </GoogleMap>
       
       {/* Direct Google Maps polyline management */}
-      {viewMode === 'individual' && selectedVehicleId && vehicleTracks[selectedVehicleId] && map && (
+      {viewMode === 'individual' && selectedMachineId && machineTracks[selectedMachineId] && map && (
         <DirectGradientPolyline
-          key={`direct-${selectedVehicleId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.refreshKey}`}
+          key={`direct-${selectedMachineId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.refreshKey}`}
           map={map}
-          vehicleId={selectedVehicleId}
-          data={vehicleTracks[selectedVehicleId]}
+          machineId={selectedMachineId}
+          data={machineTracks[selectedMachineId]}
           isSelected={true}
           gradientParameter={gradientVisualization.isEnabled ? gradientVisualization.selectedParameter : null}
         />

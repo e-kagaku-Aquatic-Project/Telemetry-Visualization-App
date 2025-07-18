@@ -4,13 +4,13 @@ import { TelemetryDataPoint } from '../types';
 import { useAppStore } from '../store';
 
 interface TrackPolylineProps {
-  vehicleId: string;
+  machineId: string;
   data: TelemetryDataPoint[];
   isSelected: boolean;
 }
 
-// Color palette for different vehicles (matching WaypointMarker)
-const VEHICLE_COLORS = [
+// Color palette for different machines (matching WaypointMarker)
+const MACHINE_COLORS = [
   '#58a6ff', // Blue
   '#7c3aed', // Purple  
   '#f59e0b', // Amber
@@ -22,11 +22,11 @@ const VEHICLE_COLORS = [
 ];
 
 export const TrackPolyline: React.FC<TrackPolylineProps> = ({
-  vehicleId,
+  machineId,
   data,
   isSelected,
 }) => {
-  const { getVehicleIds } = useAppStore();
+  const { getMachineIds } = useAppStore();
   
   if (data.length < 2) return null;
 
@@ -35,15 +35,15 @@ export const TrackPolyline: React.FC<TrackPolylineProps> = ({
     lng: point.longitude,
   }));
 
-  // Get consistent color for this vehicle
-  const vehicleIds = getVehicleIds();
-  const vehicleIndex = vehicleIds.indexOf(vehicleId);
-  const vehicleColor = VEHICLE_COLORS[vehicleIndex % VEHICLE_COLORS.length];
+  // Get consistent color for this machine
+  const machineIds = getMachineIds();
+  const machineIndex = machineIds.indexOf(machineId);
+  const machineColor = MACHINE_COLORS[machineIndex % MACHINE_COLORS.length];
 
   const polylineOptions: google.maps.PolylineOptions = {
     path,
     geodesic: true,
-    strokeColor: vehicleColor,
+    strokeColor: machineColor,
     strokeOpacity: isSelected ? 0.9 : 0.6,
     strokeWeight: isSelected ? 4 : 2,
     zIndex: isSelected ? 100 : 50,

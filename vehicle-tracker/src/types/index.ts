@@ -1,6 +1,6 @@
 export interface TelemetryRow {
   timestamp: string;
-  vehicle_id: string;
+  machine_id: string;
   gps: {
     latitude: number;
     longitude: number;
@@ -14,14 +14,16 @@ export interface TelemetryRow {
   };
 }
 
-export interface VehicleData {
-  vehicleId: string;
+export interface MachineData {
+  machineId: string;
   data: TelemetryDataPoint[];
 }
 
 export interface TelemetryDataPoint {
   timestamp: string;
-  vehicleId: string;
+  machineTime?: string;
+  machineId: string;
+  dataType?: string;
   latitude: number;
   longitude: number;
   altitude: number;
@@ -29,17 +31,19 @@ export interface TelemetryDataPoint {
   waterTemperature: number;
   airPressure: number;
   airTemperature: number;
+  battery?: number;
+  comment?: string;
 }
 
-export type VehicleTracks = Record<string, TelemetryDataPoint[]>;
+export type MachineTracks = Record<string, TelemetryDataPoint[]>;
 
 export interface GASResponse {
   status: 'success' | 'error';
   message?: string;
-  timestamp: string;
-  vehicles?: VehicleData[];
-  totalVehicles?: number;
-  vehicleId?: string;
+  timestamp?: string;
+  machines?: MachineData[];
+  totalMachines?: number;
+  machineId?: string;
   data?: TelemetryDataPoint[];
   dataCount?: number;
 }

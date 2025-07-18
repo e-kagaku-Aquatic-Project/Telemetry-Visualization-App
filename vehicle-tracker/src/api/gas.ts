@@ -1,4 +1,4 @@
-import { GASResponse, VehicleData, TelemetryDataPoint, VehicleTracks } from '../types';
+import { GASResponse, MachineData, TelemetryDataPoint, MachineTracks } from '../types';
 
 const GAS_ENDPOINT = import.meta.env.VITE_GAS_ENDPOINT;
 
@@ -55,31 +55,68 @@ async function fetchGAS<T>(action: string, params: Record<string, string> = {}):
   }
 }
 
-export async function getAllVehicles(): Promise<VehicleTracks> {
-  const response = await fetchGAS<{ vehicles: VehicleData[] }>('getAllVehicles');
+export async function getAllMachines(): Promise<MachineTracks> {
+  const response = await fetchGAS<{ machines: MachineData[] }>('getAllMachines');
   
-  const tracks: VehicleTracks = {};
+  const tracks: MachineTracks = {};
   
-  if (response.vehicles) {
-    response.vehicles.forEach(vehicle => {
-      tracks[vehicle.vehicleId] = vehicle.data;
+  if (response.machines) {
+    response.machines.forEach(machine => {
+      tracks[machine.machineId] = machine.data;
     });
   }
   
   return tracks;
 }
 
-export async function getVehicle(vehicleId: string): Promise<TelemetryDataPoint[]> {
-  const response = await fetchGAS<{ data: TelemetryDataPoint[] }>('getVehicle', { vehicleId });
+export async function getMachine(machineId: string): Promise<TelemetryDataPoint[]> {
+  const response = await fetchGAS<{ data: TelemetryDataPoint[] }>('getMachine', { machineId });
   return response.data || [];
 }
 
-export async function getVehicleList(): Promise<string[]> {
+export async function getMachineList(): Promise<string[]> {
   const response = await fetchGAS<{ 
-    vehicles: Array<{ vehicleId: string; dataCount: number }> 
-  }>('getVehicleList');
+    machines: Array<{ machineId: string; dataCount: number }> 
+  }>('getMachineList');
   
-  return response.vehicles?.map(v => v.vehicleId) || [];
+  return response.machines?.map(m => m.machineId) || [];
+}
+
+export async function registerMachine(machineId: string): Promise<void> {
+  if (!GAS_ENDPOINT) {
+    throw new GASApiError('GAS endpoint not configured');
+  }
+
+  try {
+    const response = await fetch(GAS_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'registerMachine',
+        MachineID: machineId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new GASApiError(`HTTP ${response.status}: ${response.statusText}`, response.status);
+    }
+
+    const result = await response.json();
+    
+    if (result.status === 'error') {
+      throw new GASApiError(result.message || 'Unknown error from GAS API');
+    }
+  } catch (error) {
+    if (error instanceof GASApiError) {
+      throw error;
+    }
+    
+    throw new GASApiError(
+      error instanceof Error ? error.message : 'Network error'
+    );
+  }
 }
 
 export async function postTelemetryData(data: Record<string, unknown>): Promise<void> {

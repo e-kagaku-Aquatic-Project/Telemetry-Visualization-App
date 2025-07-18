@@ -34,6 +34,7 @@ npm run preview      # Preview production build (uses serve)
 
 - Deploy by copying `SpreadSheets_GAS.gs` content to Google Sheets' Apps Script editor
 - Use `testFunction()` and `testWebAppAPI()` in GAS editor for testing
+- Python test scripts available in `GAS/` directory for API testing
 
 ## Architecture
 
@@ -47,14 +48,12 @@ npm run preview      # Preview production build (uses serve)
 ### Key Components
 
 **Backend (GAS)**:
-
 - `doGet()`: Handles API requests (`getAllVehicles`, `getVehicle`, `getVehicleList`)
 - `doPost()`: Processes incoming telemetry data
 - Auto-creates vehicle sheets with standardized headers
 - Deploy by pasting `SpreadSheets_GAS.gs` into Google Sheets' Apps Script editor
 
 **Frontend Architecture**:
-
 - **State Management**: Zustand store (`src/store/index.ts`) for global app state
 - **Data Fetching**: SWR with custom hooks (`src/hooks/useVehicleData.ts`) for polling
 - **Map Integration**: Google Maps via `@react-google-maps/api`
@@ -65,7 +64,6 @@ npm run preview      # Preview production build (uses serve)
 ### Environment Configuration
 
 Frontend requires these environment variables:
-
 ```
 VITE_GMAPS_API_KEY=your_google_maps_api_key
 VITE_GAS_ENDPOINT=your_google_apps_script_web_app_url
@@ -74,7 +72,6 @@ VITE_GAS_ENDPOINT=your_google_apps_script_web_app_url
 ### Data Schema
 
 Telemetry data structure:
-
 ```typescript
 interface TelemetryDataPoint {
   timestamp: string;
@@ -125,20 +122,23 @@ The app uses a custom monochrome map style. Modify `MONOCHROME_MAP_STYLE` in `sr
 
 ### Testing GAS Functions
 
-Use `testFunction()` and `testWebAppAPI()` functions in the GAS editor for manual testing.
+Use `testFunction()` and `testWebAppAPI()` functions in the GAS editor for manual testing. Python test scripts available in `GAS/` directory:
+- `test_post.py` - Test POST endpoint
+- `test_api.py` - Test GET endpoints
 
 ### Recent Architecture Changes
 
 - Gradient visualization system refactored from `GradientClearOverlay` to `DirectGradientPolyline` for better performance
 - Improved polyline management to prevent overlap issues when switching parameters
+- Detailed design documentation available in `docs/gradient-track-visualization-design.md`
 
 ## Build System
 
 The project uses **Webpack** (not Vite) for the build system:
-
 - **Development**: `webpack-dev-server` for hot reloading (port 4000)
 - **Production**: Standard webpack build with minification
 - **Configuration**: `webpack.config.js` handles TypeScript, PostCSS, and asset processing
+- **TypeScript**: Transpiled via Babel with strict mode enabled
 
 ## Deployment
 
@@ -149,12 +149,16 @@ The project uses **Webpack** (not Vite) for the build system:
 ## Data Format Differences
 
 **Important**: There's a schema mismatch between POST and GET data:
-
 - **POST to GAS**: Uses nested structure (`gps.latitude`, `sensors.water_temperature`)
 - **GET from GAS**: Returns flattened structure (`latitude`, `waterTemperature`)
 - The GAS backend handles the transformation between these formats
 
 When modifying data fields, update both:
-
 1. `TelemetryRow` interface (POST format) in `src/types/index.ts`
 2. `TelemetryDataPoint` interface (GET format) in `src/types/index.ts`
+
+## Project Documentation
+
+- **Main README**: Japanese documentation with quick start and user guide
+- **GAS README**: Backend API documentation with Python examples
+- **Gradient Design Doc**: Technical specifications for track visualization feature

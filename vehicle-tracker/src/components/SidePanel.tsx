@@ -67,13 +67,13 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
 // Extracted content component to avoid duplication
 const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({ selectedDataPoint }) => (
   <div className="space-y-6">
-    {/* Vehicle Info */}
+    {/* Machine Info */}
     <div className="card p-4">
-      <h3 className="font-medium text-dark-text mb-3">Vehicle Information</h3>
+      <h3 className="font-medium text-dark-text mb-3">Machine Information</h3>
       <div className="space-y-2">
         <div className="flex justify-between">
-          <span className="text-dark-muted">Vehicle ID:</span>
-          <span className="font-mono text-dark-text">{selectedDataPoint.vehicleId}</span>
+          <span className="text-dark-muted">Machine ID:</span>
+          <span className="font-mono text-dark-text">{selectedDataPoint.machineId}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-dark-muted">Timestamp:</span>

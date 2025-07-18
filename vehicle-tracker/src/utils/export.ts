@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
-import { TelemetryDataPoint, VehicleTracks } from '../types';
+import { TelemetryDataPoint, MachineTracks } from '../types';
 
-export function exportToCSV(data: TelemetryDataPoint[], filename: string = 'vehicle-data') {
+export function exportToCSV(data: TelemetryDataPoint[], filename: string = 'machine-data') {
   if (data.length === 0) {
     throw new Error('No data to export');
   }
@@ -10,7 +10,9 @@ export function exportToCSV(data: TelemetryDataPoint[], filename: string = 'vehi
     header: true,
     columns: [
       'timestamp',
-      'vehicleId',
+      'machineTime',
+      'machineId',
+      'dataType',
       'latitude',
       'longitude',
       'altitude',
@@ -18,13 +20,15 @@ export function exportToCSV(data: TelemetryDataPoint[], filename: string = 'vehi
       'waterTemperature',
       'airPressure',
       'airTemperature',
+      'battery',
+      'comment',
     ],
   });
 
   downloadFile(csv, `${filename}.csv`, 'text/csv');
 }
 
-export function exportToJSON(data: TelemetryDataPoint[], filename: string = 'vehicle-data') {
+export function exportToJSON(data: TelemetryDataPoint[], filename: string = 'machine-data') {
   if (data.length === 0) {
     throw new Error('No data to export');
   }
@@ -33,11 +37,11 @@ export function exportToJSON(data: TelemetryDataPoint[], filename: string = 'veh
   downloadFile(json, `${filename}.json`, 'application/json');
 }
 
-export function exportAllVehiclesToCSV(vehicleTracks: VehicleTracks, filename: string = 'all-vehicles-data') {
+export function exportAllMachinesToCSV(machineTracks: MachineTracks, filename: string = 'all-machines-data') {
   const allData: TelemetryDataPoint[] = [];
   
-  Object.values(vehicleTracks).forEach(vehicleData => {
-    allData.push(...vehicleData);
+  Object.values(machineTracks).forEach(machineData => {
+    allData.push(...machineData);
   });
 
   // Sort by timestamp
@@ -46,16 +50,16 @@ export function exportAllVehiclesToCSV(vehicleTracks: VehicleTracks, filename: s
   exportToCSV(allData, filename);
 }
 
-export function exportAllVehiclesToJSON(vehicleTracks: VehicleTracks, filename: string = 'all-vehicles-data') {
-  if (Object.keys(vehicleTracks).length === 0) {
+export function exportAllMachinesToJSON(machineTracks: MachineTracks, filename: string = 'all-machines-data') {
+  if (Object.keys(machineTracks).length === 0) {
     throw new Error('No data to export');
   }
 
   const exportData = {
     exportedAt: new Date().toISOString(),
-    totalVehicles: Object.keys(vehicleTracks).length,
-    totalDataPoints: Object.values(vehicleTracks).reduce((sum, data) => sum + data.length, 0),
-    vehicles: vehicleTracks,
+    totalMachines: Object.keys(machineTracks).length,
+    totalDataPoints: Object.values(machineTracks).reduce((sum, data) => sum + data.length, 0),
+    machines: machineTracks,
   };
 
   const json = JSON.stringify(exportData, null, 2);

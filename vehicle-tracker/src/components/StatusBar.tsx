@@ -5,39 +5,39 @@ import { Download, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { 
   exportToCSV, 
   exportToJSON, 
-  exportAllVehiclesToCSV, 
-  exportAllVehiclesToJSON 
+  exportAllMachinesToCSV, 
+  exportAllMachinesToJSON 
 } from '../utils/export';
 
 export const StatusBar: React.FC = () => {
   const { 
     connectionStatus, 
-    vehicleTracks, 
-    selectedVehicleId,
-    getSelectedVehicleData,
+    machineTracks, 
+    selectedMachineId,
+    getSelectedMachineData,
     refreshInterval,
     isPaused,
   } = useAppStore();
 
   const [isExporting, setIsExporting] = useState(false);
 
-  const selectedVehicleData = getSelectedVehicleData();
-  const totalVehicles = Object.keys(vehicleTracks).length;
-  const totalDataPoints = Object.values(vehicleTracks).reduce((sum, data) => sum + data.length, 0);
+  const selectedMachineData = getSelectedMachineData();
+  const totalMachines = Object.keys(machineTracks).length;
+  const totalDataPoints = Object.values(machineTracks).reduce((sum, data) => sum + data.length, 0);
 
   const handleExportSelected = async (format: 'csv' | 'json') => {
-    if (!selectedVehicleId || selectedVehicleData.length === 0) {
-      alert('No vehicle selected or no data to export');
+    if (!selectedMachineId || selectedMachineData.length === 0) {
+      alert('No machine selected or no data to export');
       return;
     }
 
     setIsExporting(true);
     try {
-      const filename = `${selectedVehicleId}-data`;
+      const filename = `${selectedMachineId}-data`;
       if (format === 'csv') {
-        exportToCSV(selectedVehicleData, filename);
+        exportToCSV(selectedMachineData, filename);
       } else {
-        exportToJSON(selectedVehicleData, filename);
+        exportToJSON(selectedMachineData, filename);
       }
     } catch (error) {
       console.error('Export failed:', error);
@@ -55,11 +55,11 @@ export const StatusBar: React.FC = () => {
 
     setIsExporting(true);
     try {
-      const filename = 'all-vehicles-data';
+      const filename = 'all-machines-data';
       if (format === 'csv') {
-        exportAllVehiclesToCSV(vehicleTracks, filename);
+        exportAllMachinesToCSV(machineTracks, filename);
       } else {
-        exportAllVehiclesToJSON(vehicleTracks, filename);
+        exportAllMachinesToJSON(machineTracks, filename);
       }
     } catch (error) {
       console.error('Export failed:', error);
@@ -106,14 +106,14 @@ export const StatusBar: React.FC = () => {
           {/* Data Stats */}
           <div className="flex items-center space-x-4">
             <div className="text-sm text-dark-muted">
-              <span className="font-medium text-dark-text">{totalVehicles}</span> vehicles
+              <span className="font-medium text-dark-text">{totalMachines}</span> machines
             </div>
             <div className="text-sm text-dark-muted">
               <span className="font-medium text-dark-text">{totalDataPoints}</span> data points
             </div>
-            {selectedVehicleId && (
+            {selectedMachineId && (
               <div className="text-sm text-dark-muted">
-                <span className="font-medium text-dark-accent">{selectedVehicleData.length}</span> selected
+                <span className="font-medium text-dark-accent">{selectedMachineData.length}</span> selected
               </div>
             )}
           </div>
@@ -121,7 +121,7 @@ export const StatusBar: React.FC = () => {
 
         {/* Export Controls */}
         <div className="flex items-center space-x-2">
-          {selectedVehicleId && selectedVehicleData.length > 0 && (
+          {selectedMachineId && selectedMachineData.length > 0 && (
             <div className="flex items-center space-x-1">
               <span className="text-xs text-dark-muted mr-2">Export Selected:</span>
               <button

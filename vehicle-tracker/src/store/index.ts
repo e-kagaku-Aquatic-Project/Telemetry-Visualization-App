@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import { TelemetryDataPoint, VehicleTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
+import { TelemetryDataPoint, MachineTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
 
 interface AppState {
-  // Vehicle data
-  vehicleTracks: VehicleTracks;
-  selectedVehicleId: string | null;
+  // Machine data
+  machineTracks: MachineTracks;
+  selectedMachineId: string | null;
   selectedDataPoint: TelemetryDataPoint | null;
   
   // UI state
@@ -13,7 +13,7 @@ interface AppState {
   isPaused: boolean;
   currentView: 'map' | 'graphs';
   hasViewedGraphs: boolean;
-  viewMode: 'all' | 'individual'; // New: Tab mode for all vehicles or individual
+  viewMode: 'all' | 'individual'; // New: Tab mode for all machines or individual
   
   // Connection status
   connectionStatus: ConnectionStatus;
@@ -26,8 +26,8 @@ interface AppState {
   gradientVisualization: GradientVisualizationState;
   
   // Actions
-  setVehicleTracks: (tracks: VehicleTracks) => void;
-  setSelectedVehicle: (vehicleId: string | null) => void;
+  setMachineTracks: (tracks: MachineTracks) => void;
+  setSelectedMachine: (machineId: string | null) => void;
   setSelectedDataPoint: (dataPoint: TelemetryDataPoint | null) => void;
   setSidePanelOpen: (open: boolean) => void;
   setRefreshInterval: (interval: number) => void;
@@ -41,22 +41,22 @@ interface AppState {
   toggleGradientVisualization: () => void;
   
   // Computed getters
-  getVehicleIds: () => string[];
-  getSelectedVehicleData: () => TelemetryDataPoint[];
-  getLatestDataPoint: (vehicleId: string) => TelemetryDataPoint | null;
+  getMachineIds: () => string[];
+  getSelectedMachineData: () => TelemetryDataPoint[];
+  getLatestDataPoint: (machineId: string) => TelemetryDataPoint | null;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial state
-  vehicleTracks: {},
-  selectedVehicleId: null,
+  machineTracks: {},
+  selectedMachineId: null,
   selectedDataPoint: null,
   isSidePanelOpen: false,
   refreshInterval: 5,
   isPaused: false,
   currentView: 'map',
   hasViewedGraphs: false,
-  viewMode: 'all', // Default to showing all vehicles
+  viewMode: 'all', // Default to showing all machines
   connectionStatus: {
     isConnected: false,
     lastUpdate: null,
@@ -71,10 +71,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   
   // Actions
-  setVehicleTracks: (tracks) => set({ vehicleTracks: tracks }),
+  setMachineTracks: (tracks) => set({ machineTracks: tracks }),
   
-  setSelectedVehicle: (vehicleId) => set({ 
-    selectedVehicleId: vehicleId,
+  setSelectedMachine: (machineId) => set({ 
+    selectedMachineId: machineId,
     selectedDataPoint: null,
     isSidePanelOpen: false,
   }),
@@ -126,15 +126,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   })),
   
   // Computed getters
-  getVehicleIds: () => Object.keys(get().vehicleTracks),
+  getMachineIds: () => Object.keys(get().machineTracks),
   
-  getSelectedVehicleData: () => {
-    const { selectedVehicleId, vehicleTracks } = get();
-    return selectedVehicleId ? vehicleTracks[selectedVehicleId] || [] : [];
+  getSelectedMachineData: () => {
+    const { selectedMachineId, machineTracks } = get();
+    return selectedMachineId ? machineTracks[selectedMachineId] || [] : [];
   },
   
-  getLatestDataPoint: (vehicleId: string) => {
-    const tracks = get().vehicleTracks[vehicleId];
+  getLatestDataPoint: (machineId: string) => {
+    const tracks = get().machineTracks[machineId];
     return tracks && tracks.length > 0 ? tracks[tracks.length - 1] : null;
   },
 }));

@@ -26,7 +26,7 @@ export const TopBar: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-bold text-dark-text">
-            Vehicle Tracker
+            Machine Tracker
           </h1>
           
           <div className="flex items-center space-x-2">

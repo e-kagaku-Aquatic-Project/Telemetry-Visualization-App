@@ -1,27 +1,27 @@
 import useSWR from 'swr';
-import { getAllVehicles, GASApiError } from '../api/gas';
+import { getAllMachines, GASApiError } from '../api/gas';
 import { useAppStore } from '../store';
-import { VehicleTracks } from '../types';
+import { MachineTracks } from '../types';
 import { useEffect } from 'react';
 
-export function useVehicleData() {
+export function useMachineData() {
   const { 
     refreshInterval, 
     isPaused, 
-    setVehicleTracks, 
+    setMachineTracks, 
     setConnectionStatus,
-    vehicleTracks 
+    machineTracks 
   } = useAppStore();
 
-  const { data, error, isLoading, mutate } = useSWR<VehicleTracks>(
-    isPaused ? null : 'vehicle-data',
-    getAllVehicles,
+  const { data, error, isLoading, mutate } = useSWR<MachineTracks>(
+    isPaused ? null : 'machine-data',
+    getAllMachines,
     {
       refreshInterval: refreshInterval * 1000,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
       onSuccess: (data) => {
-        setVehicleTracks(data);
+        setMachineTracks(data);
         setConnectionStatus({
           isConnected: true,
           lastUpdate: new Date(),
@@ -29,7 +29,7 @@ export function useVehicleData() {
         });
       },
       onError: (error: GASApiError) => {
-        console.error('Failed to fetch vehicle data:', error);
+        console.error('Failed to fetch machine data:', error);
         setConnectionStatus({
           isConnected: false,
           retryCount: (useAppStore.getState().connectionStatus.retryCount || 0) + 1,
@@ -57,7 +57,7 @@ export function useVehicleData() {
   }, [refreshInterval, setConnectionStatus]);
 
   return {
-    vehicleTracks: data || vehicleTracks,
+    machineTracks: data || machineTracks,
     error,
     isLoading,
     refetch: mutate,

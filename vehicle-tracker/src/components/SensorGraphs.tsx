@@ -23,18 +23,18 @@ interface ChartData {
 }
 
 export const SensorGraphs: React.FC = () => {
-  const { selectedVehicleId, getSelectedVehicleData, hasViewedGraphs } = useAppStore();
-  const vehicleData = getSelectedVehicleData();
+  const { selectedMachineId, getSelectedMachineData, hasViewedGraphs } = useAppStore();
+  const machineData = getSelectedMachineData();
 
-  if (!selectedVehicleId || vehicleData.length === 0) {
+  if (!selectedMachineId || machineData.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center text-dark-muted">
           <div className="text-lg mb-2">No Data Available</div>
           <div className="text-sm">
-            {!selectedVehicleId 
-              ? 'Select a vehicle to view sensor graphs' 
-              : 'No sensor data found for this vehicle'
+            {!selectedMachineId 
+              ? 'Select a machine to view sensor graphs' 
+              : 'No sensor data found for this machine'
             }
           </div>
         </div>
@@ -42,7 +42,7 @@ export const SensorGraphs: React.FC = () => {
     );
   }
 
-  const chartData: ChartData[] = vehicleData.map((point: TelemetryDataPoint) => ({
+  const chartData: ChartData[] = machineData.map((point: TelemetryDataPoint) => ({
     timestamp: point.timestamp,
     time: new Date(point.timestamp).toLocaleTimeString(),
     waterTemperature: point.waterTemperature,
@@ -83,10 +83,10 @@ export const SensorGraphs: React.FC = () => {
     <div className="h-full p-2 sm:p-4 overflow-y-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
         <h2 className="text-lg sm:text-xl font-semibold text-dark-text mb-1 sm:mb-0">
-          Sensor Data - {selectedVehicleId}
+          Sensor Data - {selectedMachineId}
         </h2>
         <div className="text-xs sm:text-sm text-dark-muted">
-          {vehicleData.length} data points
+          {machineData.length} data points
         </div>
       </div>
 
