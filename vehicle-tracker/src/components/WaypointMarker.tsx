@@ -2,16 +2,17 @@ import React from 'react';
 import { Marker } from '@react-google-maps/api';
 import { TelemetryDataPoint } from '../types';
 import { useAppStore } from '../store';
+import { formatTimestamp } from '../utils/export';
 
 interface WaypointMarkerProps {
-  vehicleId: string;
+  machineId: string;
   dataPoint: TelemetryDataPoint;
   isSelected: boolean;
   isLatest: boolean;
 }
 
-// Color palette for different vehicles (improved colors)
-const VEHICLE_COLORS = [
+// Color palette for different machines (improved colors)
+const MACHINE_COLORS = [
   '#58a6ff', // Blue
   '#7c3aed', // Purple  
   '#f59e0b', // Amber
@@ -23,28 +24,28 @@ const VEHICLE_COLORS = [
 ];
 
 export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
-  vehicleId,
+  machineId,
   dataPoint,
   isSelected,
   isLatest,
 }) => {
-  const { setSelectedDataPoint, setSelectedVehicle, getVehicleIds } = useAppStore();
+  const { setSelectedDataPoint, setSelectedMachine, getMachineIds } = useAppStore();
 
   const handleMarkerClick = () => {
-    setSelectedVehicle(vehicleId);
+    setSelectedMachine(machineId);
     setSelectedDataPoint(dataPoint);
   };
 
-  // Get consistent color for this vehicle
-  const vehicleIds = getVehicleIds();
-  const vehicleIndex = vehicleIds.indexOf(vehicleId);
-  const vehicleColor = VEHICLE_COLORS[vehicleIndex % VEHICLE_COLORS.length];
+  // Get consistent color for this machine
+  const machineIds = getMachineIds();
+  const machineIndex = machineIds.indexOf(machineId);
+  const machineColor = MACHINE_COLORS[machineIndex % MACHINE_COLORS.length];
 
   // Create different marker styles for waypoints vs current position
   const markerIcon = isLatest ? {
     // Current position marker (larger, animated)
     path: google.maps.SymbolPath.CIRCLE,
-    fillColor: vehicleColor,
+    fillColor: machineColor,
     fillOpacity: 1,
     strokeColor: '#0d1117',
     strokeWeight: 3,
@@ -52,7 +53,7 @@ export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
   } : {
     // Waypoint marker (smaller, subtle)
     path: google.maps.SymbolPath.CIRCLE,
-    fillColor: vehicleColor,
+    fillColor: machineColor,
     fillOpacity: 0.7,
     strokeColor: '#0d1117',
     strokeWeight: 1,
@@ -67,7 +68,7 @@ export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
       }}
       onClick={handleMarkerClick}
       icon={markerIcon}
-      title={`${vehicleId} - ${new Date(dataPoint.timestamp).toLocaleString()}`}
+      title={`${machineId} - ${formatTimestamp(dataPoint.timestamp)}`}
       animation={isSelected && isLatest ? google.maps.Animation.BOUNCE : undefined}
       zIndex={isLatest ? 1000 : (isSelected ? 500 : 100)}
     />

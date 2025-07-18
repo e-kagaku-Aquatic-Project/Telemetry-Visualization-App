@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppStore } from '../store';
 import { motion } from 'framer-motion';
 import { Info } from 'lucide-react';
+import { formatTimestamp } from '../utils/export';
 
 export const TopBar: React.FC = () => {
   const { 
@@ -26,7 +27,7 @@ export const TopBar: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-bold text-dark-text">
-            Vehicle Tracker
+            Machine Tracker
           </h1>
           
           <div className="flex items-center space-x-2">
@@ -77,7 +78,7 @@ export const TopBar: React.FC = () => {
       
       {connectionStatus.lastUpdate && (
         <div className="mt-2 text-xs text-dark-muted">
-          Last update: {connectionStatus.lastUpdate.toLocaleTimeString()}
+          Last update: {formatTimestamp(connectionStatus.lastUpdate)}
           {connectionStatus.retryCount > 0 && (
             <span className="ml-2 text-red-400">
               (Retries: {connectionStatus.retryCount})

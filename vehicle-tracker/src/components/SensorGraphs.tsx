@@ -6,35 +6,33 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  Legend 
+  ResponsiveContainer 
 } from 'recharts';
 import { useAppStore } from '../store';
 import { TelemetryDataPoint } from '../types';
+import { formatTimestamp } from '../utils/export';
 
 interface ChartData {
   timestamp: string;
   time: string;
-  waterTemperature: number;
-  airTemperature: number;
-  airPressure: number;
   altitude: number;
   satellites: number;
+  battery?: number;
 }
 
 export const SensorGraphs: React.FC = () => {
-  const { selectedVehicleId, getSelectedVehicleData, hasViewedGraphs } = useAppStore();
-  const vehicleData = getSelectedVehicleData();
+  const { selectedMachineId, getSelectedMachineData, hasViewedGraphs } = useAppStore();
+  const machineData = getSelectedMachineData();
 
-  if (!selectedVehicleId || vehicleData.length === 0) {
+  if (!selectedMachineId || machineData.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center text-dark-muted">
           <div className="text-lg mb-2">No Data Available</div>
           <div className="text-sm">
-            {!selectedVehicleId 
-              ? 'Select a vehicle to view sensor graphs' 
-              : 'No sensor data found for this vehicle'
+            {!selectedMachineId 
+              ? 'Select a machine to view sensor graphs' 
+              : 'No sensor data found for this machine'
             }
           </div>
         </div>
@@ -42,14 +40,12 @@ export const SensorGraphs: React.FC = () => {
     );
   }
 
-  const chartData: ChartData[] = vehicleData.map((point: TelemetryDataPoint) => ({
+  const chartData: ChartData[] = machineData.map((point: TelemetryDataPoint) => ({
     timestamp: point.timestamp,
-    time: new Date(point.timestamp).toLocaleTimeString(),
-    waterTemperature: point.waterTemperature,
-    airTemperature: point.airTemperature,
-    airPressure: point.airPressure,
+    time: formatTimestamp(point.timestamp),
     altitude: point.altitude,
     satellites: point.satellites,
+    battery: point.battery,
   }));
 
   const chartConfig = {
@@ -83,66 +79,14 @@ export const SensorGraphs: React.FC = () => {
     <div className="h-full p-2 sm:p-4 overflow-y-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
         <h2 className="text-lg sm:text-xl font-semibold text-dark-text mb-1 sm:mb-0">
-          Sensor Data - {selectedVehicleId}
+          Sensor Data - {selectedMachineId}
         </h2>
         <div className="text-xs sm:text-sm text-dark-muted">
-          {vehicleData.length} data points
+          {machineData.length} data points
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        {/* Temperature Chart */}
-        <ChartWrapper title="Temperature (°C)">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} {...chartConfig}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" {...axisStyle} />
-              <YAxis {...axisStyle} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#9CA3AF' }} />
-              <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="waterTemperature" 
-                stroke="#06B6D4" 
-                strokeWidth={2}
-                name="Water Temperature"
-                dot={false}
-                isAnimationActive={!hasViewedGraphs}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="airTemperature" 
-                stroke="#F59E0B" 
-                strokeWidth={2}
-                name="Air Temperature"
-                dot={false}
-                isAnimationActive={!hasViewedGraphs}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-
-        {/* Air Pressure Chart */}
-        <ChartWrapper title="Air Pressure (hPa)">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} {...chartConfig}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" {...axisStyle} />
-              <YAxis {...axisStyle} domain={['dataMin - 5', 'dataMax + 5']} />
-              <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#9CA3AF' }} />
-              <Line 
-                type="monotone" 
-                dataKey="airPressure" 
-                stroke="#10B981" 
-                strokeWidth={2}
-                name="Air Pressure"
-                dot={false}
-                isAnimationActive={!hasViewedGraphs}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-
         {/* Altitude Chart */}
         <ChartWrapper title="Altitude (m)">
           <ResponsiveContainer width="100%" height="100%">
@@ -184,6 +128,29 @@ export const SensorGraphs: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
         </ChartWrapper>
+
+        {/* Battery Chart */}
+        {chartData.some(point => point.battery !== undefined) && (
+          <ChartWrapper title="Battery (V)">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} {...chartConfig}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="time" {...axisStyle} />
+                <YAxis {...axisStyle} domain={['dataMin - 0.1', 'dataMax + 0.1']} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: '#9CA3AF' }} />
+                <Line 
+                  type="monotone" 
+                  dataKey="battery" 
+                  stroke="#10B981" 
+                  strokeWidth={2}
+                  name="Battery"
+                  dot={false}
+                  isAnimationActive={!hasViewedGraphs}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+        )}
       </div>
     </div>
   );

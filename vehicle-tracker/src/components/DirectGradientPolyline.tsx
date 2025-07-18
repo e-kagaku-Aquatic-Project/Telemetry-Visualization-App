@@ -5,26 +5,26 @@ import { useAppStore } from '../store';
 
 interface DirectGradientPolylineProps {
   map: google.maps.Map | null;
-  vehicleId: string;
+  machineId: string;
   data: TelemetryDataPoint[];
   isSelected: boolean;
   gradientParameter: GradientParameter | null;
 }
 
-// Fallback color palette for different vehicles
-const VEHICLE_COLORS = [
+// Fallback color palette for different machines
+const MACHINE_COLORS = [
   '#58a6ff', '#7c3aed', '#f59e0b', '#10b981', 
   '#ef4444', '#ec4899', '#06b6d4', '#84cc16',
 ];
 
 export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
   map,
-  vehicleId,
+  machineId,
   data,
   isSelected,
   gradientParameter,
 }) => {
-  const { getVehicleIds } = useAppStore();
+  const { getMachineIds } = useAppStore();
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
 
   // Clear all existing polylines
@@ -51,14 +51,14 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
         lng: point.longitude,
       }));
 
-      const vehicleIds = getVehicleIds();
-      const vehicleIndex = vehicleIds.indexOf(vehicleId);
-      const vehicleColor = VEHICLE_COLORS[vehicleIndex % VEHICLE_COLORS.length];
+      const machineIds = getMachineIds();
+      const machineIndex = machineIds.indexOf(machineId);
+      const machineColor = MACHINE_COLORS[machineIndex % MACHINE_COLORS.length];
 
       const polyline = new google.maps.Polyline({
         path,
         geodesic: true,
-        strokeColor: vehicleColor,
+        strokeColor: machineColor,
         strokeOpacity: isSelected ? 0.9 : 0.6,
         strokeWeight: isSelected ? 4 : 2,
         zIndex: isSelected ? 100 : 50,
@@ -111,7 +111,7 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
     return () => {
       clearPolylines();
     };
-  }, [map, data, gradientParameter, vehicleId, isSelected, getVehicleIds]);
+  }, [map, data, gradientParameter, machineId, isSelected, getMachineIds]);
 
   // Cleanup on unmount
   useEffect(() => {
