@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const webpack = require('webpack');
 require('dotenv').config();
 
@@ -53,6 +54,11 @@ module.exports = (env, argv) => {
       ...(isProduction ? [new MiniCssExtractPlugin({
         filename: '[name].[contenthash].css',
       })] : []),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: 'public', to: '.' }
+        ],
+      }),
     ],
     devServer: {
       static: {
