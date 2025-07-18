@@ -213,6 +213,10 @@ function MainApplication() {
                     <span className="font-medium text-dark-accent">{getSelectedMachineData().length}</span> selected
                   </div>
                 )}
+                
+                <div className="text-dark-muted">
+                  Created by Shintaro Matsumoto
+                </div>
               </div>
               
               <div className="flex items-center space-x-4">

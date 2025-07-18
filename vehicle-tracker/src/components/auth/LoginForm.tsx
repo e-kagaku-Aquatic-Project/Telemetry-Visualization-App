@@ -100,6 +100,9 @@ export const LoginForm: React.FC = () => {
           <p className="text-xs text-gray-500">
             © 2025 Machine Tracking System
           </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Created by Shintaro Matsumoto
+          </p>
         </div>
       </motion.div>
     </div>
