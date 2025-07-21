@@ -413,6 +413,39 @@ function getLastUpdateTime(sheet) {
 }
 
 /**
+ * 最終更新地点を取得
+ * @param {Sheet} sheet - シートオブジェクト
+ * @returns {Object|null} 緯度経度情報
+ */
+function getLastLocation(sheet) {
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      return null;
+    }
+
+    // 最終行から緯度経度を取得（E列=緯度、F列=経度）
+    const locationRange = sheet.getRange(lastRow, 5, 1, 2);  // E:F列
+    const locationValues = locationRange.getValues()[0];
+    
+    const latitude = parseFloat(locationValues[0]) || 0;
+    const longitude = parseFloat(locationValues[1]) || 0;
+    
+    if (latitude === 0 && longitude === 0) {
+      return null;
+    }
+    
+    return {
+      latitude: latitude,
+      longitude: longitude
+    };
+  } catch (error) {
+    Logger.log("getLastLocation Error: " + error.toString());
+    return null;
+  }
+}
+
+/**
  * タイムスタンプのフォーマット
  */
 function formatTimestamp(timestamp) {
@@ -796,27 +829,39 @@ function sendDiscordNotification(embed) {
  * @returns {Object} Discord embed object
  */
 function createStaleAlertEmbed(details) {
+  const fields = [
+    {
+      name: "Machine ID",
+      value: details.machineId,
+      inline: true
+    },
+    {
+      name: "Last Update",
+      value: details.lastUpdate,
+      inline: true
+    },
+    {
+      name: "Offline Duration", 
+      value: details.offlineDuration,
+      inline: true
+    }
+  ];
+  
+  // 地点情報があれば追加
+  if (details.lastLocation) {
+    const googleMapsUrl = `https://www.google.com/maps?q=${details.lastLocation.latitude},${details.lastLocation.longitude}`;
+    fields.push({
+      name: "Last Known Location",
+      value: `${details.lastLocation.latitude.toFixed(6)}, ${details.lastLocation.longitude.toFixed(6)}\n[View on Google Maps](${googleMapsUrl})`,
+      inline: false
+    });
+  }
+  
   return {
     title: "🚨 Machine Alert",
     description: "Machine has stopped transmitting data",
     color: 16711680, // Red
-    fields: [
-      {
-        name: "Machine ID",
-        value: details.machineId,
-        inline: true
-      },
-      {
-        name: "Last Update",
-        value: details.lastUpdate,
-        inline: true
-      },
-      {
-        name: "Offline Duration", 
-        value: details.offlineDuration,
-        inline: true
-      }
-    ],
+    fields: fields,
     timestamp: details.alertTime,
     footer: {
       text: "Machine Telemetry Monitor"
@@ -830,27 +875,39 @@ function createStaleAlertEmbed(details) {
  * @returns {Object} Discord embed object
  */
 function createRecoveryEmbed(details) {
+  const fields = [
+    {
+      name: "Machine ID",
+      value: details.machineId,
+      inline: true
+    },
+    {
+      name: "Resumed At",
+      value: details.resumedAt,
+      inline: true
+    },
+    {
+      name: "Offline Duration",
+      value: details.offlineDuration,
+      inline: true
+    }
+  ];
+  
+  // 現在地点情報があれば追加
+  if (details.currentLocation) {
+    const googleMapsUrl = `https://www.google.com/maps?q=${details.currentLocation.latitude},${details.currentLocation.longitude}`;
+    fields.push({
+      name: "Current Location",
+      value: `${details.currentLocation.latitude.toFixed(6)}, ${details.currentLocation.longitude.toFixed(6)}\n[View on Google Maps](${googleMapsUrl})`,
+      inline: false
+    });
+  }
+  
   return {
     title: "✅ Machine Recovery",
     description: "Machine has resumed data transmission", 
     color: 65280, // Green
-    fields: [
-      {
-        name: "Machine ID",
-        value: details.machineId,
-        inline: true
-      },
-      {
-        name: "Resumed At",
-        value: details.resumedAt,
-        inline: true
-      },
-      {
-        name: "Offline Duration",
-        value: details.offlineDuration,
-        inline: true
-      }
-    ],
+    fields: fields,
     timestamp: details.recoveryTime,
     footer: {
       text: "Machine Telemetry Monitor"
@@ -878,6 +935,11 @@ function testDiscordNotification() {
           name: "Test Time",
           value: formatTimestampForDisplay(new Date().toISOString()),
           inline: true
+        },
+        {
+          name: "Test Location",
+          value: "35.681236, 139.767125\n[View on Google Maps](https://www.google.com/maps?q=35.681236,139.767125)",
+          inline: false
         }
       ],
       timestamp: new Date().toISOString(),
@@ -966,12 +1028,14 @@ function getAllActiveMachines() {
       
       const machineId = sheetName.replace("Machine_", "");
       const lastUpdate = getLastUpdateTime(sheet);
+      const lastLocation = getLastLocation(sheet);
       
       if (lastUpdate) {
         activeMachines.push({
           machineId: machineId,
           sheetName: sheetName,
           lastUpdate: lastUpdate,
+          lastLocation: lastLocation,
           status: statusValue
         });
       }
@@ -1066,7 +1130,8 @@ function processStaleMachineAlert(machine) {
       machineId: machine.machineId,
       lastUpdate: formatTimestampForDisplay(machine.lastUpdate),
       offlineDuration: offlineDurationText,
-      alertTime: currentTime.toISOString()
+      alertTime: currentTime.toISOString(),
+      lastLocation: machine.lastLocation
     };
     
     const notificationSent = sendStaleAlert(alertDetails);
@@ -1100,7 +1165,8 @@ function processRecoveryAlert(machine) {
       machineId: machine.machineId,
       resumedAt: formatTimestampForDisplay(machine.lastUpdate),
       offlineDuration: machine.offlineDuration,
-      recoveryTime: new Date().toISOString()
+      recoveryTime: new Date().toISOString(),
+      currentLocation: machine.lastLocation
     };
     
     const notificationSent = sendRecoveryAlert(recoveryDetails);
@@ -1168,7 +1234,7 @@ function calculateOfflineDuration(alertTime, recoveryTime) {
 function formatTimestampForDisplay(timestamp) {
   try {
     const date = new Date(timestamp);
-    return Utilities.formatDate(date, "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss JST");
+    return Utilities.formatDate(date, "Asia/Tokyo", "yyyy-MM-dd HH:mm:ss");
   } catch (error) {
     Logger.log(`Error formatting timestamp: ${error.toString()}`);
     return timestamp;
