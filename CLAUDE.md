@@ -29,6 +29,7 @@ npm run preview      # Preview production build (uses serve)
 
 - **Lint**: `npm run lint` (in vehicle-tracker directory)
 - **Type check**: TypeScript compilation happens during build (webpack handles TypeScript)
+- **No test suite**: This project does not have automated tests configured
 
 ### Google Apps Script Backend
 
@@ -63,11 +64,13 @@ npm run preview      # Preview production build (uses serve)
 
 ### Environment Configuration
 
-Frontend requires these environment variables:
+Frontend requires these environment variables (.env file in vehicle-tracker/ directory):
 ```
 VITE_GMAPS_API_KEY=your_google_maps_api_key
 VITE_GAS_ENDPOINT=your_google_apps_script_web_app_url
 ```
+
+**Setup**: Copy `.env.example` to `.env` and fill in the values. The app will not function without these environment variables.
 
 ### Data Schema
 
@@ -129,6 +132,15 @@ The app uses a custom monochrome map style. Modify `MONOCHROME_MAP_STYLE` in `sr
 Use `testFunction()` and `testWebAppAPI()` functions in the GAS editor for manual testing. Python test scripts available in `GAS/` directory:
 - `test_post.py` - Test POST endpoint
 - `test_api.py` - Test GET endpoints
+
+### Prediction System
+
+The app includes a sophisticated position prediction feature:
+- **Algorithm**: Linear extrapolation based on historical movement patterns
+- **Configuration**: Adjustable prediction time (1-60 minutes) and reference points (2-10)
+- **Accuracy Metrics**: Confidence calculations based on speed/direction consistency
+- **Visualization**: Prediction markers and trajectory lines on map
+- **Components**: `PredictionControls.tsx` for settings, prediction logic in utils
 
 ### Recent Architecture Changes
 

@@ -124,7 +124,7 @@ function createNewSheet(spreadsheet, sheetName) {
   // 新しいシートを作成
   const sheet = spreadsheet.insertSheet(sheetName);
 
-  // ヘッダー行を設定
+  // ヘッダー行を設定（K列に運用状況を追加）
   const headers = [
     "GAS Time",
     "MachineTime",
@@ -136,6 +136,7 @@ function createNewSheet(spreadsheet, sheetName) {
     "GPS Satellites",
     "Battery",
     "Comment",
+    "Operational Status"  // New column K
   ];
 
   // ヘッダーを設定
@@ -147,13 +148,32 @@ function createNewSheet(spreadsheet, sheetName) {
   headerRange.setFontColor("white");
   headerRange.setFontWeight("bold");
 
+  // K列（運用状況）の特別な設定
+  const statusCell = sheet.getRange(1, 11); // K1
+  
+  // データ検証を設定（ドロップダウンリスト）
+  const validationRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['Active', 'Inactive', 'Maintenance'], true)
+    .setAllowInvalid(false)
+    .setHelpText('Select operational status for monitoring')
+    .build();
+  
+  statusCell.setDataValidation(validationRule);
+  statusCell.setValue('Inactive'); // デフォルト値
+  
+  // 運用状況セルの特別なフォーマット
+  statusCell.setBackground("#f8f9fa");
+  statusCell.setFontColor("#333333");
+  statusCell.setHorizontalAlignment("center");
+  statusCell.setFontWeight("bold");
+
   // 列幅を自動調整
   sheet.autoResizeColumns(1, headers.length);
 
   // フリーズヘッダー
   sheet.setFrozenRows(1);
 
-  Logger.log(`New sheet created: ${sheetName}`);
+  Logger.log(`New sheet created with monitoring support: ${sheetName}`);
 
   return sheet;
 }
@@ -504,5 +524,914 @@ function testWebAppAPI() {
     console.log("=== Test Completed ===");
   } catch (error) {
     console.error("Test Error:", error.toString());
+  }
+}
+
+// === Discord Monitoring System ===
+
+/**
+ * Configuration Management Functions
+ */
+
+/**
+ * Set Discord webhook URL (deprecated - now hardcoded)
+ * @deprecated URL is now hardcoded in getDiscordWebhookUrl() function
+ * @param {string} url - Discord webhook URL
+ */
+function setDiscordWebhookUrl(url) {
+  Logger.log('Note: Discord webhook URL is now hardcoded in the getDiscordWebhookUrl() function.');
+  Logger.log('Please edit the DISCORD_WEBHOOK_URL constant in getDiscordWebhookUrl() function instead.');
+}
+
+/**
+ * Get Discord webhook URL
+ * @returns {string|null} Webhook URL or null if not configured
+ */
+function getDiscordWebhookUrl() {
+  // Discord Webhook URLを直接指定してください
+  const DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE";
+  
+  // URLが設定されていない場合は警告
+  if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+    Logger.log("Warning: Discord webhook URL not configured");
+    return null;
+  }
+  
+  return DISCORD_WEBHOOK_URL;
+}
+
+/**
+ * Enable or disable monitoring
+ * @param {boolean} enabled - Monitoring state
+ */
+function setMonitoringEnabled(enabled) {
+  PropertiesService.getScriptProperties().setProperty('MONITORING_ENABLED', enabled.toString());
+  Logger.log(`Monitoring ${enabled ? 'enabled' : 'disabled'}`);
+}
+
+/**
+ * Check if monitoring is enabled
+ * @returns {boolean} Monitoring state
+ */
+function isMonitoringEnabled() {
+  const enabled = PropertiesService.getScriptProperties().getProperty('MONITORING_ENABLED');
+  return enabled === 'true';
+}
+
+/**
+ * Set alert threshold in minutes
+ * @param {number} minutes - Threshold in minutes
+ */
+function setAlertThresholdMinutes(minutes) {
+  if (minutes < 1 || minutes > 1440) { // 1 minute to 24 hours
+    throw new Error('Alert threshold must be between 1 and 1440 minutes');
+  }
+  
+  PropertiesService.getScriptProperties().setProperty('ALERT_THRESHOLD_MINUTES', minutes.toString());
+  Logger.log(`Alert threshold set to ${minutes} minutes`);
+}
+
+/**
+ * Get alert threshold in minutes
+ * @returns {number} Threshold in minutes (default: 10)
+ */
+function getAlertThresholdMinutes() {
+  const threshold = PropertiesService.getScriptProperties().getProperty('ALERT_THRESHOLD_MINUTES');
+  return threshold ? parseInt(threshold) : 10;
+}
+
+/**
+ * Get cooldown period in hours
+ * @returns {number} Cooldown hours (default: 24)
+ */
+function getCooldownHours() {
+  const hours = PropertiesService.getScriptProperties().getProperty('ALERT_COOLDOWN_HOURS');
+  return hours ? parseInt(hours) : 24;
+}
+
+/**
+ * Set cooldown period in hours
+ * @param {number} hours - Cooldown period in hours
+ */
+function setCooldownHours(hours) {
+  if (hours < 1 || hours > 168) { // 1 hour to 7 days
+    throw new Error('Cooldown period must be between 1 and 168 hours');
+  }
+  
+  PropertiesService.getScriptProperties().setProperty('ALERT_COOLDOWN_HOURS', hours.toString());
+  Logger.log(`Cooldown period set to ${hours} hours`);
+}
+
+/**
+ * Alert History Management Functions
+ */
+
+/**
+ * Get alert history from PropertiesService
+ * @returns {Array<Object>} Alert history records
+ */
+function getAlertHistory() {
+  try {
+    const historyJson = PropertiesService.getScriptProperties().getProperty('ALERT_HISTORY');
+    return historyJson ? JSON.parse(historyJson) : [];
+  } catch (error) {
+    Logger.log(`Error reading alert history: ${error.toString()}`);
+    return [];
+  }
+}
+
+/**
+ * Save alert history to PropertiesService
+ * @param {Array<Object>} history - Alert history records
+ */
+function saveAlertHistory(history) {
+  try {
+    // Limit history size to prevent storage overflow
+    const maxRecords = 1000;
+    if (history.length > maxRecords) {
+      history = history.slice(-maxRecords); // Keep only the most recent records
+    }
+    
+    const historyJson = JSON.stringify(history);
+    PropertiesService.getScriptProperties().setProperty('ALERT_HISTORY', historyJson);
+  } catch (error) {
+    Logger.log(`Error saving alert history: ${error.toString()}`);
+  }
+}
+
+/**
+ * Update alert record for a specific machine
+ * @param {string} machineId - Machine ID
+ * @param {Object} updates - Update object
+ */
+function updateMachineAlertRecord(machineId, updates) {
+  const history = getAlertHistory();
+  const existingIndex = history.findIndex(record => record.machineId === machineId);
+  
+  if (existingIndex >= 0) {
+    // Update existing record
+    history[existingIndex] = { ...history[existingIndex], ...updates };
+  } else {
+    // Create new record
+    history.push({
+      machineId: machineId,
+      isCurrentlyAlerting: false,
+      alertCount: 0,
+      ...updates
+    });
+  }
+  
+  saveAlertHistory(history);
+}
+
+/**
+ * Clear all alert history (maintenance function)
+ */
+function clearAlertHistory() {
+  PropertiesService.getScriptProperties().deleteProperty('ALERT_HISTORY');
+  Logger.log('Alert history cleared');
+}
+
+/**
+ * Check if machine is in cooldown period
+ * @param {string} lastAlertTime - ISO timestamp of last alert
+ * @returns {boolean} True if in cooldown period
+ */
+function isInCooldownPeriod(lastAlertTime) {
+  if (!lastAlertTime) return false;
+  
+  const cooldownHours = getCooldownHours();
+  const cooldownMs = cooldownHours * 60 * 60 * 1000;
+  const lastAlert = new Date(lastAlertTime);
+  const currentTime = new Date();
+  
+  return (currentTime - lastAlert) < cooldownMs;
+}
+
+/**
+ * Update alert history after monitoring cycle
+ * @param {Array<Object>} staleMachines - Array of stale machines
+ * @param {Array<Object>} recoveredMachines - Array of recovered machines
+ */
+function updateAlertHistory(staleMachines, recoveredMachines) {
+  try {
+    // Store last monitoring execution time
+    PropertiesService.getScriptProperties().setProperty('LAST_MONITORING_EXECUTION', new Date().toISOString());
+    
+    Logger.log(`Alert history updated: ${staleMachines.length} stale, ${recoveredMachines.length} recovered`);
+  } catch (error) {
+    Logger.log(`Error updating alert history: ${error.toString()}`);
+  }
+}
+
+/**
+ * Discord Integration Functions
+ */
+
+/**
+ * Send stale machine alert to Discord
+ * @param {Object} details - Alert details
+ * @returns {boolean} Success status
+ */
+function sendStaleAlert(details) {
+  const embed = createStaleAlertEmbed(details);
+  return sendDiscordNotification(embed);
+}
+
+/**
+ * Send recovery notification to Discord
+ * @param {Object} details - Recovery details  
+ * @returns {boolean} Success status
+ */
+function sendRecoveryAlert(details) {
+  const embed = createRecoveryEmbed(details);
+  return sendDiscordNotification(embed);
+}
+
+/**
+ * Send notification to Discord via webhook
+ * @param {Object} embed - Discord embed object
+ * @returns {boolean} Success status
+ */
+function sendDiscordNotification(embed) {
+  try {
+    const webhookUrl = getDiscordWebhookUrl();
+    if (!webhookUrl) {
+      Logger.log("Discord webhook URL not configured");
+      return false;
+    }
+    
+    const payload = {
+      embeds: [embed]
+    };
+    
+    const response = UrlFetchApp.fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    });
+    
+    const responseCode = response.getResponseCode();
+    
+    if (responseCode === 204) {
+      Logger.log("Discord notification sent successfully");
+      return true;
+    } else {
+      Logger.log(`Discord notification failed: HTTP ${responseCode} - ${response.getContentText()}`);
+      return false;
+    }
+    
+  } catch (error) {
+    Logger.log(`Discord notification error: ${error.toString()}`);
+    return false;
+  }
+}
+
+/**
+ * Create Discord embed for stale machine alert
+ * @param {Object} details - Alert details
+ * @returns {Object} Discord embed object
+ */
+function createStaleAlertEmbed(details) {
+  return {
+    title: "🚨 Machine Alert",
+    description: "Machine has stopped transmitting data",
+    color: 16711680, // Red
+    fields: [
+      {
+        name: "Machine ID",
+        value: details.machineId,
+        inline: true
+      },
+      {
+        name: "Last Update",
+        value: details.lastUpdate,
+        inline: true
+      },
+      {
+        name: "Offline Duration", 
+        value: details.offlineDuration,
+        inline: true
+      }
+    ],
+    timestamp: details.alertTime,
+    footer: {
+      text: "Machine Telemetry Monitor"
+    }
+  };
+}
+
+/**
+ * Create Discord embed for machine recovery
+ * @param {Object} details - Recovery details
+ * @returns {Object} Discord embed object
+ */
+function createRecoveryEmbed(details) {
+  return {
+    title: "✅ Machine Recovery",
+    description: "Machine has resumed data transmission", 
+    color: 65280, // Green
+    fields: [
+      {
+        name: "Machine ID",
+        value: details.machineId,
+        inline: true
+      },
+      {
+        name: "Resumed At",
+        value: details.resumedAt,
+        inline: true
+      },
+      {
+        name: "Offline Duration",
+        value: details.offlineDuration,
+        inline: true
+      }
+    ],
+    timestamp: details.recoveryTime,
+    footer: {
+      text: "Machine Telemetry Monitor"
+    }
+  };
+}
+
+/**
+ * Test Discord notification functionality
+ * @returns {boolean} Test success status
+ */
+function testDiscordNotification() {
+  try {
+    const testEmbed = {
+      title: "🧪 Test Notification",
+      description: "This is a test notification from the monitoring system",
+      color: 3447003, // Blue
+      fields: [
+        {
+          name: "System Status",
+          value: "Operational", 
+          inline: true
+        },
+        {
+          name: "Test Time",
+          value: formatTimestampForDisplay(new Date().toISOString()),
+          inline: true
+        }
+      ],
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: "Machine Telemetry Monitor - Test"
+      }
+    };
+    
+    const success = sendDiscordNotification(testEmbed);
+    
+    if (success) {
+      Logger.log("Discord test notification sent successfully");
+    } else {
+      Logger.log("Discord test notification failed");
+    }
+    
+    return success;
+  } catch (error) {
+    Logger.log(`Discord test error: ${error.toString()}`);
+    return false;
+  }
+}
+
+/**
+ * Monitoring System Core Functions
+ */
+
+/**
+ * Main monitoring execution function (called by trigger)
+ * Orchestrates the complete monitoring cycle
+ */
+function executeMonitoring() {
+  try {
+    Logger.log("Starting monitoring cycle");
+    
+    // Check if monitoring is enabled
+    if (!isMonitoringEnabled()) {
+      Logger.log("Monitoring disabled, skipping cycle");
+      return;
+    }
+    
+    // Get current monitoring state
+    const staleMachines = identifyStaleMachines();
+    const recoveredMachines = identifyRecoveredMachines();
+    
+    Logger.log(`Found ${staleMachines.length} stale machines, ${recoveredMachines.length} recovered machines`);
+    
+    // Process alerts for stale machines
+    staleMachines.forEach(machine => {
+      processStaleMachineAlert(machine);
+    });
+    
+    // Process recovery notifications
+    recoveredMachines.forEach(machine => {
+      processRecoveryAlert(machine);
+    });
+    
+    // Update alert history
+    updateAlertHistory(staleMachines, recoveredMachines);
+    
+    Logger.log("Monitoring cycle completed successfully");
+    
+  } catch (error) {
+    Logger.log(`Monitoring error: ${error.toString()}`);
+    // Don't re-throw to prevent trigger deletion
+  }
+}
+
+/**
+ * Get all machines with operational status "Active"
+ * @returns {Array<Object>} Array of active machine objects
+ */
+function getAllActiveMachines() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = spreadsheet.getSheets();
+  const activeMachines = [];
+  
+  sheets.forEach(sheet => {
+    const sheetName = sheet.getName();
+    if (!sheetName.startsWith("Machine_")) return;
+    
+    try {
+      // Check operational status in K1
+      const statusValue = sheet.getRange(1, 11).getValue();
+      if (statusValue !== "Active") return;
+      
+      const machineId = sheetName.replace("Machine_", "");
+      const lastUpdate = getLastUpdateTime(sheet);
+      
+      if (lastUpdate) {
+        activeMachines.push({
+          machineId: machineId,
+          sheetName: sheetName,
+          lastUpdate: lastUpdate,
+          status: statusValue
+        });
+      }
+    } catch (error) {
+      Logger.log(`Error processing sheet ${sheetName}: ${error.toString()}`);
+    }
+  });
+  
+  return activeMachines;
+}
+
+/**
+ * Identify machines that are active but have stale data
+ * @returns {Array<Object>} Array of stale machine objects
+ */
+function identifyStaleMachines() {
+  const activeMachines = getAllActiveMachines();
+  const currentTime = new Date();
+  const thresholdMinutes = getAlertThresholdMinutes();
+  const thresholdMs = thresholdMinutes * 60 * 1000;
+  
+  return activeMachines.filter(machine => {
+    if (!machine.lastUpdate) return false;
+    
+    const lastUpdateTime = new Date(machine.lastUpdate);
+    const elapsedMs = currentTime - lastUpdateTime;
+    
+    return elapsedMs > thresholdMs;
+  });
+}
+
+/**
+ * Identify machines that have recovered from stale state
+ * @returns {Array<Object>} Array of recovered machine objects
+ */
+function identifyRecoveredMachines() {
+  const alertHistory = getAlertHistory();
+  const currentlyAlertingMachines = alertHistory.filter(record => record.isCurrentlyAlerting);
+  
+  if (currentlyAlertingMachines.length === 0) {
+    return [];
+  }
+  
+  const activeMachines = getAllActiveMachines();
+  const thresholdMinutes = getAlertThresholdMinutes();
+  const thresholdMs = thresholdMinutes * 60 * 1000;
+  const currentTime = new Date();
+  
+  return currentlyAlertingMachines.filter(alertRecord => {
+    const activeMachine = activeMachines.find(m => m.machineId === alertRecord.machineId);
+    
+    if (!activeMachine) return false; // Machine no longer active
+    
+    const lastUpdateTime = new Date(activeMachine.lastUpdate);
+    const elapsedMs = currentTime - lastUpdateTime;
+    
+    // Machine is considered recovered if it's within threshold
+    return elapsedMs <= thresholdMs;
+  }).map(alertRecord => {
+    const activeMachine = activeMachines.find(m => m.machineId === alertRecord.machineId);
+    return {
+      ...activeMachine,
+      previousAlertTime: alertRecord.lastAlertTime,
+      offlineDuration: calculateOfflineDuration(alertRecord.lastAlertTime, activeMachine.lastUpdate)
+    };
+  });
+}
+
+/**
+ * Process alert for a stale machine
+ * @param {Object} machine - Stale machine object
+ */
+function processStaleMachineAlert(machine) {
+  try {
+    const alertHistory = getAlertHistory();
+    const existingRecord = alertHistory.find(record => record.machineId === machine.machineId);
+    
+    // Check cooldown period
+    if (existingRecord && isInCooldownPeriod(existingRecord.lastAlertTime)) {
+      Logger.log(`Machine ${machine.machineId} still in cooldown period`);
+      return;
+    }
+    
+    // Calculate offline duration
+    const currentTime = new Date();
+    const lastUpdateTime = new Date(machine.lastUpdate);
+    const offlineDurationMs = currentTime - lastUpdateTime;
+    const offlineDurationText = formatDuration(offlineDurationMs);
+    
+    // Send Discord notification
+    const alertDetails = {
+      machineId: machine.machineId,
+      lastUpdate: formatTimestampForDisplay(machine.lastUpdate),
+      offlineDuration: offlineDurationText,
+      alertTime: currentTime.toISOString()
+    };
+    
+    const notificationSent = sendStaleAlert(alertDetails);
+    
+    if (notificationSent) {
+      Logger.log(`Stale alert sent for machine ${machine.machineId}`);
+      
+      // Update alert history
+      updateMachineAlertRecord(machine.machineId, {
+        lastAlertTime: currentTime.toISOString(),
+        isCurrentlyAlerting: true,
+        alertCount: (existingRecord?.alertCount || 0) + 1,
+        lastUpdateTime: machine.lastUpdate
+      });
+    } else {
+      Logger.log(`Failed to send stale alert for machine ${machine.machineId}`);
+    }
+    
+  } catch (error) {
+    Logger.log(`Error processing stale alert for ${machine.machineId}: ${error.toString()}`);
+  }
+}
+
+/**
+ * Process recovery alert for a recovered machine
+ * @param {Object} machine - Recovered machine object
+ */
+function processRecoveryAlert(machine) {
+  try {
+    const recoveryDetails = {
+      machineId: machine.machineId,
+      resumedAt: formatTimestampForDisplay(machine.lastUpdate),
+      offlineDuration: machine.offlineDuration,
+      recoveryTime: new Date().toISOString()
+    };
+    
+    const notificationSent = sendRecoveryAlert(recoveryDetails);
+    
+    if (notificationSent) {
+      Logger.log(`Recovery alert sent for machine ${machine.machineId}`);
+      
+      // Update alert history
+      updateMachineAlertRecord(machine.machineId, {
+        isCurrentlyAlerting: false,
+        lastRecoveryTime: new Date().toISOString(),
+        lastUpdateTime: machine.lastUpdate
+      });
+    } else {
+      Logger.log(`Failed to send recovery alert for machine ${machine.machineId}`);
+    }
+    
+  } catch (error) {
+    Logger.log(`Error processing recovery alert for ${machine.machineId}: ${error.toString()}`);
+  }
+}
+
+/**
+ * Utility Functions
+ */
+
+/**
+ * Format duration in milliseconds to human-readable string
+ * @param {number} durationMs - Duration in milliseconds
+ * @returns {string} Formatted duration
+ */
+function formatDuration(durationMs) {
+  const minutes = Math.floor(durationMs / (1000 * 60));
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (days > 0) {
+    return `${days} day${days > 1 ? 's' : ''}, ${hours % 24} hour${(hours % 24) > 1 ? 's' : ''}`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''}, ${minutes % 60} minute${(minutes % 60) > 1 ? 's' : ''}`;
+  } else {
+    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+  }
+}
+
+/**
+ * Calculate offline duration between two timestamps
+ * @param {string} alertTime - Alert timestamp
+ * @param {string} recoveryTime - Recovery timestamp  
+ * @returns {string} Formatted offline duration
+ */
+function calculateOfflineDuration(alertTime, recoveryTime) {
+  const alertDate = new Date(alertTime);
+  const recoveryDate = new Date(recoveryTime);
+  const durationMs = Math.abs(recoveryDate - alertDate);
+  
+  return formatDuration(durationMs);
+}
+
+/**
+ * Format timestamp for display in notifications
+ * @param {string} timestamp - ISO timestamp
+ * @returns {string} Formatted timestamp
+ */
+function formatTimestampForDisplay(timestamp) {
+  try {
+    const date = new Date(timestamp);
+    return Utilities.formatDate(date, "Asia/Tokyo", "yyyy/MM/dd HH:mm:ss JST");
+  } catch (error) {
+    Logger.log(`Error formatting timestamp: ${error.toString()}`);
+    return timestamp;
+  }
+}
+
+/**
+ * Trigger Management Functions
+ */
+
+/**
+ * Install monitoring trigger (5-minute intervals)
+ */
+function installMonitoringTrigger() {
+  try {
+    // Delete existing monitoring triggers first
+    deleteMonitoringTrigger();
+    
+    // Create new trigger
+    ScriptApp.newTrigger('executeMonitoring')
+      .timeBased()
+      .everyMinutes(5)
+      .create();
+      
+    Logger.log('Monitoring trigger installed successfully (5-minute intervals)');
+  } catch (error) {
+    Logger.log(`Error installing monitoring trigger: ${error.toString()}`);
+    throw error;
+  }
+}
+
+/**
+ * Delete all monitoring triggers
+ */
+function deleteMonitoringTrigger() {
+  try {
+    const triggers = ScriptApp.getProjectTriggers();
+    let deletedCount = 0;
+    
+    triggers.forEach(trigger => {
+      if (trigger.getHandlerFunction() === 'executeMonitoring') {
+        ScriptApp.deleteTrigger(trigger);
+        deletedCount++;
+      }
+    });
+    
+    Logger.log(`Deleted ${deletedCount} monitoring trigger(s)`);
+  } catch (error) {
+    Logger.log(`Error deleting monitoring triggers: ${error.toString()}`);
+  }
+}
+
+/**
+ * Check if monitoring trigger is installed
+ * @returns {boolean} True if trigger exists
+ */
+function isMonitoringTriggerInstalled() {
+  const triggers = ScriptApp.getProjectTriggers();
+  return triggers.some(trigger => trigger.getHandlerFunction() === 'executeMonitoring');
+}
+
+/**
+ * System Management and Testing Functions
+ */
+
+/**
+ * Get comprehensive monitoring system status
+ * @returns {Object} System status object
+ */
+function getMonitoringSystemStatus() {
+  const webhookUrl = getDiscordWebhookUrl();
+  return {
+    webhookConfigured: !!webhookUrl,
+    webhookStatus: webhookUrl ? "Configured" : "Not configured (edit getDiscordWebhookUrl function)",
+    monitoringEnabled: isMonitoringEnabled(), 
+    triggerInstalled: isMonitoringTriggerInstalled(),
+    alertThresholdMinutes: getAlertThresholdMinutes(),
+    cooldownHours: getCooldownHours(),
+    alertHistoryCount: getAlertHistory().length,
+    activeMachineCount: getAllActiveMachines().length,
+    lastExecutionTime: PropertiesService.getScriptProperties().getProperty('LAST_MONITORING_EXECUTION'),
+    systemVersion: "1.0.1"
+  };
+}
+
+/**
+ * Manually execute monitoring cycle (for testing)
+ */
+function manualMonitoringExecution() {
+  Logger.log("=== Manual Monitoring Execution ===");
+  
+  const startTime = new Date();
+  executeMonitoring();
+  const endTime = new Date();
+  
+  Logger.log(`Monitoring execution completed in ${endTime - startTime}ms`);
+  Logger.log("=== Manual Monitoring Completed ===");
+}
+
+/**
+ * Get detailed status of all machines for debugging
+ * @returns {Array<Object>} Machine status array
+ */
+function getAllMachineStatuses() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = spreadsheet.getSheets();
+  const machineStatuses = [];
+  
+  sheets.forEach(sheet => {
+    const sheetName = sheet.getName();
+    if (!sheetName.startsWith("Machine_")) return;
+    
+    try {
+      const machineId = sheetName.replace("Machine_", "");
+      const statusCell = sheet.getRange(1, 11);
+      const operationalStatus = statusCell.getValue() || "Unknown";
+      const lastUpdate = getLastUpdateTime(sheet);
+      
+      const currentTime = new Date();
+      const elapsedMinutes = lastUpdate ? 
+        Math.floor((currentTime - new Date(lastUpdate)) / (1000 * 60)) : null;
+      
+      machineStatuses.push({
+        machineId: machineId,
+        operationalStatus: operationalStatus,
+        lastUpdate: lastUpdate,
+        elapsedMinutes: elapsedMinutes,
+        isStale: operationalStatus === "Active" && elapsedMinutes > getAlertThresholdMinutes(),
+        sheetName: sheetName
+      });
+    } catch (error) {
+      Logger.log(`Error getting status for ${sheetName}: ${error.toString()}`);
+    }
+  });
+  
+  return machineStatuses;
+}
+
+/**
+ * Setup monitoring system with default configuration
+ */
+function setupMonitoringSystem() {
+  Logger.log("=== Setting up Discord Monitoring System ===");
+  
+  try {
+    // Set default configurations
+    setAlertThresholdMinutes(10);  // 10 minutes threshold
+    setCooldownHours(24);          // 24 hours cooldown
+    
+    Logger.log("Default configurations set:");
+    Logger.log("- Alert threshold: 10 minutes");
+    Logger.log("- Cooldown period: 24 hours");
+    
+    const status = getMonitoringSystemStatus();
+    Logger.log("System status:", status);
+    
+    Logger.log("\nNext steps:");
+    Logger.log("1. Edit Discord webhook URL in getDiscordWebhookUrl() function");
+    Logger.log("2. Enable monitoring: setMonitoringEnabled(true)");
+    Logger.log("3. Install trigger: installMonitoringTrigger()");
+    Logger.log("4. Set machine status to 'Active' in column K for machines to monitor");
+    Logger.log("5. Test notification: testDiscordNotification()");
+    
+  } catch (error) {
+    Logger.log(`Setup error: ${error.toString()}`);
+  }
+}
+
+/**
+ * Complete system initialization (for first-time setup)
+ * Note: Make sure to edit the Discord webhook URL in getDiscordWebhookUrl() function first
+ */
+function initializeMonitoringSystem() {
+  try {
+    Logger.log("=== Initializing Discord Monitoring System ===");
+    
+    // Check Discord webhook configuration
+    const webhookUrl = getDiscordWebhookUrl();
+    if (!webhookUrl) {
+      Logger.log("⚠ Please edit the Discord webhook URL in getDiscordWebhookUrl() function first");
+      return;
+    }
+    Logger.log("✓ Discord webhook URL found in code");
+    
+    // Set default configurations
+    setAlertThresholdMinutes(10);
+    setCooldownHours(24);
+    Logger.log("✓ Default configurations set");
+    
+    // Enable monitoring
+    setMonitoringEnabled(true);
+    Logger.log("✓ Monitoring enabled");
+    
+    // Install trigger
+    installMonitoringTrigger();
+    Logger.log("✓ Monitoring trigger installed");
+    
+    // Test Discord notification
+    const testResult = testDiscordNotification();
+    if (testResult) {
+      Logger.log("✓ Discord notification test successful");
+    } else {
+      Logger.log("⚠ Discord notification test failed - check webhook URL in getDiscordWebhookUrl() function");
+    }
+    
+    // Show final status
+    const status = getMonitoringSystemStatus();
+    Logger.log("=== Initialization Complete ===");
+    Logger.log("System Status:", status);
+    
+    Logger.log("\nTo monitor machines:");
+    Logger.log("1. Open each machine sheet");
+    Logger.log("2. Set cell K1 to 'Active' for machines to monitor");
+    Logger.log("3. Monitoring will begin automatically every 5 minutes");
+    
+    return status;
+    
+  } catch (error) {
+    Logger.log(`Initialization error: ${error.toString()}`);
+    throw error;
+  }
+}
+
+/**
+ * Test function to simulate monitoring scenarios
+ */
+function testMonitoringScenarios() {
+  Logger.log("=== Testing Monitoring Scenarios ===");
+  
+  try {
+    // Test 1: Get all active machines
+    const activeMachines = getAllActiveMachines();
+    Logger.log(`Test 1 - Active machines found: ${activeMachines.length}`);
+    activeMachines.forEach(machine => {
+      Logger.log(`  - Machine ${machine.machineId}: Last update ${machine.lastUpdate}`);
+    });
+    
+    // Test 2: Check for stale machines
+    const staleMachines = identifyStaleMachines();
+    Logger.log(`Test 2 - Stale machines found: ${staleMachines.length}`);
+    staleMachines.forEach(machine => {
+      const lastUpdate = new Date(machine.lastUpdate);
+      const elapsedMinutes = Math.floor((new Date() - lastUpdate) / (1000 * 60));
+      Logger.log(`  - Machine ${machine.machineId}: ${elapsedMinutes} minutes offline`);
+    });
+    
+    // Test 3: Check recovery candidates
+    const recoveredMachines = identifyRecoveredMachines();
+    Logger.log(`Test 3 - Recovered machines found: ${recoveredMachines.length}`);
+    recoveredMachines.forEach(machine => {
+      Logger.log(`  - Machine ${machine.machineId}: Recovered`);
+    });
+    
+    // Test 4: Alert history
+    const alertHistory = getAlertHistory();
+    Logger.log(`Test 4 - Alert history records: ${alertHistory.length}`);
+    alertHistory.forEach(record => {
+      Logger.log(`  - Machine ${record.machineId}: ${record.isCurrentlyAlerting ? 'Currently alerting' : 'Not alerting'}`);
+    });
+    
+    Logger.log("=== Testing Complete ===");
+    
+  } catch (error) {
+    Logger.log(`Testing error: ${error.toString()}`);
   }
 }
