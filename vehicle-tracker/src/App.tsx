@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MachineTabs } from './components/MachineTabs';
 import { ViewToggle } from './components/ViewToggle';
 import { MapContainer } from './components/MapContainer';
@@ -7,10 +8,12 @@ import { SidePanel } from './components/SidePanel';
 import { useMachineData } from './hooks/useMachineData';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useAppStore } from './store';
-import { Info, Wifi, WifiOff } from 'lucide-react';
+import { Info, Wifi, WifiOff, LogOut } from 'lucide-react';
 import { exportToCSV, exportToJSON, exportAllMachinesToCSV } from './utils/export';
+import { LoginForm } from './components/auth/LoginForm';
+import { PrivateRoute } from './components/auth/PrivateRoute';
 
-function App() {
+function MainApplication() {
   const { machineTracks, error, isLoading } = useMachineData();
   const { 
     setSelectedMachine, 
@@ -24,7 +27,8 @@ function App() {
     setPaused,
     refreshInterval,
     setRefreshInterval,
-    getSelectedMachineData
+    getSelectedMachineData,
+    logout
   } = useAppStore();
 
   // Enable keyboard shortcuts
@@ -146,6 +150,15 @@ function App() {
                 >
                   {isPaused ? 'Resume' : 'Pause'}
                 </button>
+                
+                <button
+                  onClick={logout}
+                  className="btn btn-secondary text-xs px-2 py-1.5 flex items-center space-x-1"
+                  title="Logout"
+                >
+                  <LogOut size={14} />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
               </div>
             </div>
             
@@ -200,6 +213,10 @@ function App() {
                     <span className="font-medium text-dark-accent">{getSelectedMachineData().length}</span> selected
                   </div>
                 )}
+                
+                <div className="text-dark-muted">
+                  Created by Shintaro Matsumoto
+                </div>
               </div>
               
               <div className="flex items-center space-x-4">
@@ -285,6 +302,30 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+function App() {
+  const { initializeAuth } = useAppStore();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginForm />} />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <MainApplication />
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+    </Router>
   );
 }
 

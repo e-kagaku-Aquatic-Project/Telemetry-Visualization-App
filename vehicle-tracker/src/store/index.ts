@@ -1,8 +1,19 @@
 import { create } from 'zustand';
 import { TelemetryDataPoint, MachineTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
 import { PredictionConfig, PredictedPosition, predictPosition, DEFAULT_PREDICTION_CONFIG } from '../utils/prediction';
+import { verifyPassword, generateSessionToken, saveSession, getSession, clearSession, checkAuthStatus as checkAuthStatusUtil } from '../utils/auth';
 
-interface AppState {
+interface AuthState {
+  isAuthenticated: boolean;
+  sessionToken: string | null;
+  sessionTimestamp: number | null;
+  login: (password: string) => boolean;
+  logout: () => void;
+  checkAuthStatus: () => boolean;
+  initializeAuth: () => void;
+}
+
+interface AppState extends AuthState {
   // Machine data
   machineTracks: MachineTracks;
   selectedMachineId: string | null;
@@ -85,6 +96,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   
   predictionConfig: DEFAULT_PREDICTION_CONFIG,
+  
+  // Auth state
+  isAuthenticated: false,
+  sessionToken: null,
+  sessionTimestamp: null,
   
   // Actions
   setMachineTracks: (tracks) => set({ machineTracks: tracks }),
@@ -198,5 +214,48 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
     
     return predictions;
+  },
+  
+  // Auth actions
+  login: (password: string) => {
+    const isValid = verifyPassword(password);
+    if (isValid) {
+      const token = generateSessionToken();
+      saveSession(token);
+      set({
+        isAuthenticated: true,
+        sessionToken: token,
+        sessionTimestamp: Date.now(),
+      });
+      return true;
+    }
+    return false;
+  },
+  
+  logout: () => {
+    clearSession();
+    set({
+      isAuthenticated: false,
+      sessionToken: null,
+      sessionTimestamp: null,
+    });
+  },
+  
+  checkAuthStatus: () => {
+    const isValid = checkAuthStatusUtil();
+    if (!isValid) {
+      get().logout();
+    }
+    return isValid;
+  },
+  
+  initializeAuth: () => {
+    const { token, timestamp } = getSession();
+    const isValid = checkAuthStatusUtil();
+    set({
+      isAuthenticated: isValid,
+      sessionToken: isValid ? token : null,
+      sessionTimestamp: isValid ? timestamp : null,
+    });
   },
 }));
