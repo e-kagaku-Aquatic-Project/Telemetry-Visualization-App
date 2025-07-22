@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '../store';
-import { GradientParameter } from '../types';
-import { COLOR_PALETTES } from '../utils/gradientColors';
+import { useAppStore } from '../../store';
+import { GradientParameter } from '../../types';
+import { COLOR_PALETTES } from '../../utils/gradientColors';
 import { Palette, ChevronDown, X } from 'lucide-react';
 
 export const GradientMapOverlay: React.FC = () => {

@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import { useAppStore } from '../store';
-import { DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from '../constants/map';
+import { useAppStore } from '../../store';
+import { DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from '../../constants/map';
 import { MachineMarker } from './MachineMarker';
 import { WaypointMarker } from './WaypointMarker';
 import { DirectGradientPolyline } from './DirectGradientPolyline';
-import { GradientLegend } from './GradientLegend';
+import { GradientLegend } from '../features/GradientLegend';
 import { GradientMapOverlay } from './GradientMapOverlay';
-import { PredictionControls } from './PredictionControls';
+import { PredictionControls } from '../features/PredictionControls';
 import { PredictionVisualization } from './PredictionMarker';
 
 const GOOGLE_MAPS_LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = [];

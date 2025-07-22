@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '../store';
+import { useAppStore } from '../../store';
 import { X } from 'lucide-react';
-import { TelemetryDataPoint } from '../types';
-import { formatTimestamp, parseComment, getStatusColor, getStatusLabel } from '../utils/export';
+import { TelemetryDataPoint } from '../../types';
+import { formatTimestamp, parseComment, getStatusColor, getStatusLabel } from '../../utils/export';
 
 interface SidePanelProps {
   isDesktop?: boolean;

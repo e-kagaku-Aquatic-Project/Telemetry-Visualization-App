@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '../store';
+import { useAppStore } from '../../store';
 import { Navigation, ChevronDown, X, Clock, MapPin } from 'lucide-react';
 
 export const PredictionControls: React.FC = () => {

@@ -1,34 +1,34 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '../store';
-import { COLOR_PALETTES, getDataRange, getColorForValue, normalizeValue } from '../utils/gradientColors';
+import { useAppStore } from '../../store';
+import { COLOR_PALETTES, getDataRange, getColorForValue, normalizeValue } from '../../utils/gradientColors';
 
 export const GradientLegend: React.FC = () => {
   const { 
     gradientVisualization,
-    selectedVehicleId,
-    vehicleTracks,
+    selectedMachineId,
+    machineTracks,
     viewMode,
   } = useAppStore();
 
-  // Get current vehicle data
-  const vehicleData = useMemo(() => {
-    if (viewMode !== 'individual' || !selectedVehicleId || !vehicleTracks[selectedVehicleId]) {
+  // Get current machine data
+  const machineData = useMemo(() => {
+    if (viewMode !== 'individual' || !selectedMachineId || !machineTracks[selectedMachineId]) {
       return [];
     }
-    return vehicleTracks[selectedVehicleId];
-  }, [viewMode, selectedVehicleId, vehicleTracks]);
+    return machineTracks[selectedMachineId];
+  }, [viewMode, selectedMachineId, machineTracks]);
 
   // Calculate data range and create legend scale
   const legendData = useMemo(() => {
     if (!gradientVisualization.isEnabled || 
         !gradientVisualization.selectedParameter || 
-        vehicleData.length === 0) {
+        machineData.length === 0) {
       return null;
     }
 
     const parameter = gradientVisualization.selectedParameter;
-    const range = getDataRange(vehicleData, parameter);
+    const range = getDataRange(machineData, parameter);
     const palette = COLOR_PALETTES[parameter];
     
     // Create 50 steps for smooth gradient display
@@ -49,7 +49,7 @@ export const GradientLegend: React.FC = () => {
       palette,
       parameter
     };
-  }, [gradientVisualization, vehicleData]);
+  }, [gradientVisualization, machineData]);
 
   if (!legendData) return null;
 
@@ -69,7 +69,7 @@ export const GradientLegend: React.FC = () => {
                 {legendData.palette.name} ({legendData.palette.unit})
               </h4>
               <div className="text-xs text-dark-muted">
-                {vehicleData.length} data points
+                {machineData.length} data points
               </div>
             </div>
             
@@ -101,7 +101,7 @@ export const GradientLegend: React.FC = () => {
             
             {/* Additional info */}
             <div className="mt-2 text-xs text-dark-muted/70 text-center">
-              Darker colors indicate higher values • Track segments: {Math.max(0, (vehicleData.length - 1) * 5)}
+              Darker colors indicate higher values • Track segments: {Math.max(0, (machineData.length - 1) * 5)}
             </div>
           </div>
         </div>

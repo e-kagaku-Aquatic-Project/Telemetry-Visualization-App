@@ -1,16 +1,17 @@
 import React from 'react';
 import { Marker } from '@react-google-maps/api';
-import { TelemetryDataPoint } from '../types';
-import { useAppStore } from '../store';
-import { formatTimestamp } from '../utils/export';
+import { TelemetryDataPoint } from '../../types';
+import { useAppStore } from '../../store';
+import { formatTimestamp } from '../../utils/export';
 
-interface MachineMarkerProps {
+interface WaypointMarkerProps {
   machineId: string;
   dataPoint: TelemetryDataPoint;
   isSelected: boolean;
+  isLatest: boolean;
 }
 
-// Color palette for different machines (matching TrackPolyline and WaypointMarker)
+// Color palette for different machines (improved colors)
 const MACHINE_COLORS = [
   '#58a6ff', // Blue
   '#7c3aed', // Purple  
@@ -22,10 +23,11 @@ const MACHINE_COLORS = [
   '#84cc16', // Lime
 ];
 
-export const MachineMarker: React.FC<MachineMarkerProps> = ({
+export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
   machineId,
   dataPoint,
   isSelected,
+  isLatest,
 }) => {
   const { setSelectedDataPoint, setSelectedMachine, getMachineIds } = useAppStore();
 
@@ -39,14 +41,23 @@ export const MachineMarker: React.FC<MachineMarkerProps> = ({
   const machineIndex = machineIds.indexOf(machineId);
   const machineColor = MACHINE_COLORS[machineIndex % MACHINE_COLORS.length];
 
-  // Create custom marker icon
-  const markerIcon = {
+  // Create different marker styles for waypoints vs current position
+  const markerIcon = isLatest ? {
+    // Current position marker (larger, animated)
     path: google.maps.SymbolPath.CIRCLE,
     fillColor: machineColor,
     fillOpacity: 1,
     strokeColor: '#0d1117',
     strokeWeight: 3,
     scale: isSelected ? 14 : 10,
+  } : {
+    // Waypoint marker (smaller, subtle)
+    path: google.maps.SymbolPath.CIRCLE,
+    fillColor: machineColor,
+    fillOpacity: 0.7,
+    strokeColor: '#0d1117',
+    strokeWeight: 1,
+    scale: isSelected ? 6 : 4,
   };
 
   return (
@@ -58,8 +69,8 @@ export const MachineMarker: React.FC<MachineMarkerProps> = ({
       onClick={handleMarkerClick}
       icon={markerIcon}
       title={`${machineId} - ${formatTimestamp(dataPoint.timestamp)}`}
-      animation={isSelected ? google.maps.Animation.BOUNCE : undefined}
-      zIndex={isSelected ? 1000 : 100}
+      animation={isSelected && isLatest ? google.maps.Animation.BOUNCE : undefined}
+      zIndex={isLatest ? 1000 : (isSelected ? 500 : 100)}
     />
   );
 };

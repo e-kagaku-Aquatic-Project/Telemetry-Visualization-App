@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { Marker } from '@react-google-maps/api';
-import { PredictedPosition } from '../utils/prediction';
-import { TelemetryDataPoint } from '../types';
-import { useAppStore } from '../store';
+import { PredictedPosition } from '../../utils/prediction';
+import { TelemetryDataPoint } from '../../types';
+import { useAppStore } from '../../store';
 
 interface PredictionMarkerProps {
   machineId: string;

@@ -1,8 +1,8 @@
 import React from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '../../store';
 import { motion } from 'framer-motion';
 import { Info } from 'lucide-react';
-import { formatTimestamp } from '../utils/export';
+import { formatTimestamp } from '../../utils/export';
 
 export const TopBar: React.FC = () => {
   const { 

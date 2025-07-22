@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, BarChart3 } from 'lucide-react';
-import { useAppStore } from '../store';
+import { useAppStore } from '../../store';
 import { motion } from 'framer-motion';
 
 export const ViewToggle: React.FC = () => {

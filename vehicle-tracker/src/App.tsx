@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { MachineTabs } from './components/MachineTabs';
-import { ViewToggle } from './components/ViewToggle';
-import { MapContainer } from './components/MapContainer';
-import { SensorGraphs } from './components/SensorGraphs';
-import { SidePanel } from './components/SidePanel';
+import { MachineTabs } from './components/features/MachineTabs';
+import { ViewToggle } from './components/ui/ViewToggle';
+import { MapContainer } from './components/map/MapContainer';
+import { SensorGraphs } from './components/features/SensorGraphs';
+import { SidePanel } from './components/ui/SidePanel';
 import { useMachineData } from './hooks/useMachineData';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useAppStore } from './store';

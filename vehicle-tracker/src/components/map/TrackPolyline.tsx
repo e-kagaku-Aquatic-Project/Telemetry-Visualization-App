@@ -1,7 +1,7 @@
 import React from 'react';
 import { Polyline } from '@react-google-maps/api';
-import { TelemetryDataPoint } from '../types';
-import { useAppStore } from '../store';
+import { TelemetryDataPoint } from '../../types';
+import { useAppStore } from '../../store';
 
 interface TrackPolylineProps {
   machineId: string;

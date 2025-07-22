@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { TelemetryDataPoint, GradientParameter } from '../types';
-import { generateGradientColors, getDataRange } from '../utils/gradientColors';
-import { useAppStore } from '../store';
+import { TelemetryDataPoint, GradientParameter } from '../../types';
+import { generateGradientColors, getDataRange } from '../../utils/gradientColors';
+import { useAppStore } from '../../store';
 
 interface DirectGradientPolylineProps {
   map: google.maps.Map | null;

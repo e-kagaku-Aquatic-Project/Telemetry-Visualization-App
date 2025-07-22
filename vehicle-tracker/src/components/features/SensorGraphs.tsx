@@ -8,9 +8,9 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-import { useAppStore } from '../store';
-import { TelemetryDataPoint } from '../types';
-import { formatTimestamp } from '../utils/export';
+import { useAppStore } from '../../store';
+import { TelemetryDataPoint } from '../../types';
+import { formatTimestamp } from '../../utils/export';
 
 interface ChartData {
   timestamp: string;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAppStore } from '../store';
+import { useAppStore } from '../../store';
 import { Download, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { 
   exportToCSV, 
@@ -8,7 +8,7 @@ import {
   exportAllMachinesToCSV, 
   exportAllMachinesToJSON,
   formatTimestamp 
-} from '../utils/export';
+} from '../../utils/export';
 
 export const StatusBar: React.FC = () => {
   const { 
