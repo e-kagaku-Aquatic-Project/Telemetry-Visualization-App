@@ -1246,24 +1246,43 @@ function formatTimestampForDisplay(timestamp) {
  */
 
 /**
- * Install monitoring trigger (5-minute intervals)
+ * Install monitoring trigger with custom interval
+ * @param {number} intervalMinutes - Interval in minutes (default: 3)
  */
-function installMonitoringTrigger() {
+function installMonitoringTrigger(intervalMinutes = 3) {
   try {
+    // Validate interval (1-60 minutes)
+    if (intervalMinutes < 1 || intervalMinutes > 60) {
+      throw new Error('Monitoring interval must be between 1 and 60 minutes');
+    }
+    
     // Delete existing monitoring triggers first
     deleteMonitoringTrigger();
     
     // Create new trigger
     ScriptApp.newTrigger('executeMonitoring')
       .timeBased()
-      .everyMinutes(5)
+      .everyMinutes(intervalMinutes)
       .create();
       
-    Logger.log('Monitoring trigger installed successfully (5-minute intervals)');
+    Logger.log(`Monitoring trigger installed successfully (${intervalMinutes}-minute intervals)`);
+    
+    // Store interval setting
+    PropertiesService.getScriptProperties().setProperty('MONITORING_INTERVAL_MINUTES', intervalMinutes.toString());
+    
   } catch (error) {
     Logger.log(`Error installing monitoring trigger: ${error.toString()}`);
     throw error;
   }
+}
+
+/**
+ * Get current monitoring interval
+ * @returns {number} Interval in minutes
+ */
+function getMonitoringIntervalMinutes() {
+  const interval = PropertiesService.getScriptProperties().getProperty('MONITORING_INTERVAL_MINUTES');
+  return interval ? parseInt(interval) : 3;  // デフォルト3分
 }
 
 /**
@@ -1311,12 +1330,13 @@ function getMonitoringSystemStatus() {
     webhookStatus: webhookUrl ? "Configured" : "Not configured (edit getDiscordWebhookUrl function)",
     monitoringEnabled: isMonitoringEnabled(), 
     triggerInstalled: isMonitoringTriggerInstalled(),
+    monitoringIntervalMinutes: getMonitoringIntervalMinutes(),
     alertThresholdMinutes: getAlertThresholdMinutes(),
     cooldownHours: getCooldownHours(),
     alertHistoryCount: getAlertHistory().length,
     activeMachineCount: getAllActiveMachines().length,
     lastExecutionTime: PropertiesService.getScriptProperties().getProperty('LAST_MONITORING_EXECUTION'),
-    systemVersion: "1.0.1"
+    systemVersion: "1.1.0"
   };
 }
 
@@ -1445,10 +1465,11 @@ function initializeMonitoringSystem() {
     Logger.log("=== Initialization Complete ===");
     Logger.log("System Status:", status);
     
+    const monitoringInterval = getMonitoringIntervalMinutes();
     Logger.log("\nTo monitor machines:");
     Logger.log("1. Open each machine sheet");
     Logger.log("2. Set cell K1 to 'Active' for machines to monitor");
-    Logger.log("3. Monitoring will begin automatically every 5 minutes");
+    Logger.log(`3. Monitoring will begin automatically every ${monitoringInterval} minutes`);
     
     return status;
     
