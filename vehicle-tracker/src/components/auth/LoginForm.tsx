@@ -21,7 +21,7 @@ export const LoginForm: React.FC = () => {
       if (success) {
         navigate('/');
       } else {
-        setError('パスワードが正しくありません');
+        setError('Incorrect password');
         setPassword('');
       }
       setIsLoading(false);
@@ -29,34 +29,34 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-dark-bg flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-[#161b22] rounded-lg shadow-xl p-8 w-full max-w-md"
+        className="bg-dark-surface rounded-lg shadow-xl p-8 w-full max-w-md"
       >
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">
-            リアルタイム機体追跡システム
+            Real-time Machine Tracking System
           </h1>
           <p className="text-gray-400 text-sm">
-            アクセスにはパスワードが必要です
+            Password required for access
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              パスワード
+              Password
             </label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#58a6ff] focus:border-transparent transition-colors"
-              placeholder="パスワードを入力"
+              className="w-full px-4 py-2 bg-dark-bg border border-[#30363d] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-dark-accent focus:border-transparent transition-colors"
+              placeholder="Enter password"
               required
               autoFocus
               disabled={isLoading}
@@ -79,7 +79,7 @@ export const LoginForm: React.FC = () => {
             className={`w-full py-2 px-4 rounded-md font-medium transition-all ${
               isLoading
                 ? 'bg-gray-600 cursor-not-allowed'
-                : 'bg-[#58a6ff] hover:bg-[#4d8fd9] text-white'
+                : 'bg-dark-accent hover:bg-[#4d8fd9] text-white'
             }`}
           >
             {isLoading ? (
@@ -88,10 +88,10 @@ export const LoginForm: React.FC = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                ログイン中...
+                Logging in...
               </span>
             ) : (
-              'ログイン'
+              'Login'
             )}
           </button>
         </form>
