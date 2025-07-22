@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { useAppStore } from '../../store';
-import { DEFAULT_MAP_OPTIONS, DEFAULT_CENTER } from '../../constants/map';
+import { getMapOptions, DEFAULT_CENTER } from '../../constants/map';
 import { MachineMarker } from './MachineMarker';
 import { WaypointMarker } from './WaypointMarker';
 import { DirectGradientPolyline } from './DirectGradientPolyline';
@@ -21,6 +21,7 @@ export const MapContainer: React.FC = () => {
     getLatestDataPoint,
     viewMode,
     gradientVisualization,
+    theme,
   } = useAppStore();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -86,7 +87,7 @@ export const MapContainer: React.FC = () => {
       <div className="card p-8 flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-400 mb-2">Failed to load Google Maps</div>
-          <div className="text-dark-muted text-sm">
+          <div className="text-light-muted dark:text-dark-muted text-sm">
             Please check your API key configuration
           </div>
         </div>
@@ -98,8 +99,8 @@ export const MapContainer: React.FC = () => {
     return (
       <div className="card p-8 flex-1 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-dark-accent border-t-transparent rounded-full mx-auto mb-2"></div>
-          <div className="text-dark-muted">Loading map...</div>
+          <div className="animate-spin w-8 h-8 border-2 border-light-accent dark:border-dark-accent border-t-transparent rounded-full mx-auto mb-2"></div>
+          <div className="text-light-muted dark:text-dark-muted">Loading map...</div>
         </div>
       </div>
     );
@@ -110,7 +111,7 @@ export const MapContainer: React.FC = () => {
   return (
     <div className="card overflow-hidden w-full h-full relative">
       <GoogleMap
-        key={viewMode} // Force remount when viewMode changes
+        key={`${viewMode}-${theme}`} // Force remount when viewMode or theme changes
         mapContainerStyle={{ 
           width: '100%', 
           height: '100%',
@@ -120,7 +121,7 @@ export const MapContainer: React.FC = () => {
         zoom={mapZoom}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        options={DEFAULT_MAP_OPTIONS}
+        options={getMapOptions(theme)}
       >
         {/* Render polylines managed outside React-Google-Maps */}
         {/* This is handled by DirectGradientPolyline component outside GoogleMap */}

@@ -63,18 +63,18 @@ export const GradientLegend: React.FC = () => {
         className="absolute bottom-4 left-4 right-80 z-10 pointer-events-none"
       >
         <div className="max-w-sm">
-          <div className="card p-3 bg-dark-surface/95 backdrop-blur-sm border border-dark-muted/20">
+          <div className="card p-3 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-sm border border-light-muted/20 dark:border-dark-muted/20">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-xs font-medium text-dark-text">
+              <h4 className="text-xs font-medium text-light-text dark:text-dark-text">
                 {legendData.palette.name} ({legendData.palette.unit})
               </h4>
-              <div className="text-xs text-dark-muted">
+              <div className="text-xs text-light-muted dark:text-dark-muted">
                 {machineData.length} data points
               </div>
             </div>
             
             {/* Color gradient bar */}
-            <div className="relative h-4 rounded-inner overflow-hidden border border-dark-muted/30">
+            <div className="relative h-4 rounded-inner overflow-hidden border border-light-muted/30 dark:border-dark-muted/30">
               <div className="absolute inset-0 flex">
                 {legendData.steps.map((step, index) => (
                   <div
@@ -87,7 +87,7 @@ export const GradientLegend: React.FC = () => {
             </div>
             
             {/* Value labels */}
-            <div className="flex justify-between mt-2 text-xs text-dark-muted">
+            <div className="flex justify-between mt-2 text-xs text-light-muted dark:text-dark-muted">
               <span className="font-mono">
                 {legendData.range.min.toFixed(1)}
               </span>
@@ -100,7 +100,7 @@ export const GradientLegend: React.FC = () => {
             </div>
             
             {/* Additional info */}
-            <div className="mt-2 text-xs text-dark-muted/70 text-center">
+            <div className="mt-2 text-xs text-light-muted/70 dark:text-dark-muted/70 text-center">
               Darker colors indicate higher values • Track segments: {Math.max(0, (machineData.length - 1) * 5)}
             </div>
           </div>

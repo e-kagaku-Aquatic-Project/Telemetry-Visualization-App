@@ -11,14 +11,14 @@ export const ViewToggle: React.FC = () => {
   };
 
   return (
-    <div className="flex bg-dark-surface border border-dark-muted/30 rounded-card p-1">
+    <div className="flex bg-light-surface dark:bg-dark-surface border border-light-muted/30 dark:border-dark-muted/30 rounded-card p-1">
       <motion.button
         onClick={() => toggleView('map')}
         className={`
           flex items-center gap-2 px-3 py-2 rounded-card transition-all duration-150 text-sm font-medium
           ${currentView === 'map' 
-            ? 'bg-dark-accent text-white shadow-sm' 
-            : 'text-dark-muted hover:text-dark-text hover:bg-dark-muted/10'
+            ? 'bg-light-accent dark:bg-dark-accent text-white shadow-sm' 
+            : 'text-light-muted dark:text-dark-muted hover:text-light-text dark:hover:text-dark-text hover:bg-light-muted/10 dark:hover:bg-dark-muted/10'
           }
         `}
         whileHover={{ scale: 1.02 }}
@@ -33,8 +33,8 @@ export const ViewToggle: React.FC = () => {
         className={`
           flex items-center gap-2 px-3 py-2 rounded-card transition-all duration-150 text-sm font-medium
           ${currentView === 'graphs' 
-            ? 'bg-dark-accent text-white shadow-sm' 
-            : 'text-dark-muted hover:text-dark-text hover:bg-dark-muted/10'
+            ? 'bg-light-accent dark:bg-dark-accent text-white shadow-sm' 
+            : 'text-light-muted dark:text-dark-muted hover:text-light-text dark:hover:text-dark-text hover:bg-light-muted/10 dark:hover:bg-dark-muted/10'
           }
         `}
         whileHover={{ scale: 1.02 }}
