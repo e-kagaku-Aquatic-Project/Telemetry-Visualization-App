@@ -132,10 +132,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 ### Tailwind CSS
 
 ```tsx
-// ✅ Good - Tailwind クラスを使用
-<div className="min-h-screen bg-dark-bg">
+// ✅ Good - テーマ対応 Tailwind クラスを使用
+<div className="min-h-screen bg-light-bg dark:bg-dark-bg">
   <div className="card p-3 mb-2">
-    <h1 className="text-lg font-bold text-dark-text">Machine Tracker</h1>
+    <h1 className="text-lg font-bold text-light-text dark:text-dark-text">Machine Tracker</h1>
   </div>
 </div>
 
@@ -147,11 +147,21 @@ colors: {
     accent: '#58a6ff',
     text: '#c9d1d9',
     muted: '#8b949e',
+  },
+  light: {
+    bg: '#ffffff',
+    surface: '#f6f8fa',
+    accent: '#0969da',
+    text: '#1f2328',
+    muted: '#656d76',
   }
 }
 
 // ❌ Bad - インラインスタイル
 <div style={{ backgroundColor: '#0d1117' }}>...</div>
+
+// ❌ Bad - テーマ対応なしの単一色指定
+<div className="bg-dark-bg text-dark-text">...</div>
 ```
 
 ### レスポンシブデザイン
@@ -161,6 +171,98 @@ colors: {
 <div className="hidden md:block">      {/* タブレット以上で表示 */}
 <div className="text-xs lg:text-sm">   {/* デスクトップで文字サイズ変更 */}
 <div className="p-2 sm:p-3">           {/* モバイルで余白調整 */}
+```
+
+### テーマシステム
+
+アプリケーション全体でダーク/ライトテーマをサポートします。
+
+#### テーマ状態管理
+
+```typescript
+// ✅ Good - Zustand ストアでテーマ管理
+interface ThemeState {
+  theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
+  toggleTheme: () => void;
+}
+
+// ストアでのテーマ初期化
+initializeAuth: () => {
+  // ... 認証処理
+  
+  // Initialize theme from localStorage
+  if (typeof window !== 'undefined') {
+    const savedTheme = localStorage.getItem('theme') as Theme | null;
+    const theme: Theme = savedTheme || 'dark';
+    get().setTheme(theme);
+  }
+}
+```
+
+#### コンポーネントでのテーマ対応
+
+```tsx
+// ✅ Good - 全ての色プロパティをテーマ対応
+<div className="bg-light-surface dark:bg-dark-surface 
+                border border-light-muted/20 dark:border-dark-muted/20
+                text-light-text dark:text-dark-text">
+  {/* コンテンツ */}
+</div>
+
+// ✅ Good - ホバー効果もテーマ対応
+<button className="hover:bg-light-muted/10 dark:hover:bg-dark-muted/10">
+  Button
+</button>
+
+// ✅ Good - 動的テーマ切り替え（JavaScript側での処理）
+const tooltipStyle = {
+  backgroundColor: theme === 'dark' ? '#1F2937' : '#f6f8fa',
+  border: theme === 'dark' ? '1px solid #374151' : '1px solid #d1d9e0',
+  color: theme === 'dark' ? '#F3F4F6' : '#1f2328'
+};
+```
+
+#### マップのテーマ対応
+
+```typescript
+// ✅ Good - テーマに応じたマップスタイル
+export const getMapOptions = (theme: 'light' | 'dark'): google.maps.MapOptions => ({
+  disableDefaultUI: true,
+  gestureHandling: 'greedy',
+  styles: theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
+  zoom: 12,
+  mapTypeId: 'roadmap',
+  backgroundColor: theme === 'dark' ? '#0d1117' : '#ffffff',
+});
+
+// GoogleMapコンポーネントでの使用
+<GoogleMap
+  key={`${viewMode}-${theme}`} // テーマ変更時に再描画
+  options={getMapOptions(theme)}
+>
+```
+
+#### テーマ切り替えコンポーネント
+
+```tsx
+// ✅ Good - ThemeToggle コンポーネントの実装
+export const ThemeToggle: React.FC = () => {
+  const { theme, toggleTheme } = useAppStore();
+
+  return (
+    <motion.button
+      onClick={toggleTheme}
+      className="relative p-2 rounded-lg transition-all duration-300
+                 bg-light-surface dark:bg-dark-surface 
+                 border border-light-muted/30 dark:border-dark-muted/30
+                 hover:border-light-accent/50 dark:hover:border-dark-accent/50"
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+    >
+      {/* アニメーション付きアイコン切り替え */}
+    </motion.button>
+  );
+};
 ```
 
 ## 📦 インポート順序
