@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MachineTabs } from './components/features/MachineTabs';
 import { ViewToggle } from './components/ui/ViewToggle';
+import { ThemeToggle } from './components/ui/ThemeToggle';
 import { MapContainer } from './components/map/MapContainer';
 import { SensorGraphs } from './components/features/SensorGraphs';
 import { SidePanel } from './components/ui/SidePanel';
@@ -81,7 +82,7 @@ function MainApplication() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg">
+    <div className="min-h-screen bg-light-bg dark:bg-dark-bg">
       <div className="h-screen flex flex-col max-w-full">
         {/* Compact header section */}
         <div className="flex-shrink-0 p-2 pb-0">
@@ -89,7 +90,7 @@ function MainApplication() {
             <div className="flex items-center justify-between">
               {/* Left side: Title, Connection Status, Machine Tabs */}
               <div className="flex items-center space-x-4 flex-1 min-w-0">
-                <h1 className="text-lg font-bold text-dark-text flex-shrink-0">
+                <h1 className="text-lg font-bold text-light-text dark:text-dark-text flex-shrink-0">
                   Machine Tracker
                 </h1>
                 
@@ -97,11 +98,11 @@ function MainApplication() {
                   <div className={`w-2 h-2 rounded-full ${
                     connectionStatus.isConnected ? 'bg-green-500' : 'bg-red-500'
                   }`} />
-                  <span className="text-sm text-dark-muted">
+                  <span className="text-sm text-light-muted dark:text-dark-muted">
                     {connectionStatus.isConnected ? 'Connected' : 'Disconnected'}
                   </span>
                   {connectionStatus.lastUpdate && (
-                    <span className="text-xs text-dark-muted hidden lg:inline">
+                    <span className="text-xs text-light-muted dark:text-dark-muted hidden lg:inline">
                       Last update: {new Date(connectionStatus.lastUpdate).toLocaleTimeString()}
                     </span>
                   )}
@@ -128,7 +129,7 @@ function MainApplication() {
                 
                 {/* Refresh interval selector */}
                 <div className="hidden sm:flex items-center space-x-2">
-                  <label className="text-xs text-dark-muted">Refresh:</label>
+                  <label className="text-xs text-light-muted dark:text-dark-muted">Refresh:</label>
                   <select
                     value={refreshInterval}
                     onChange={(e) => setRefreshInterval(Number(e.target.value))}
@@ -143,6 +144,8 @@ function MainApplication() {
                 </div>
                 
                 <ViewToggle />
+                
+                <ThemeToggle />
                 
                 <button
                   onClick={() => setPaused(!isPaused)}
@@ -190,31 +193,31 @@ function MainApplication() {
               <div className="flex items-center space-x-4 sm:space-x-6">
                 <div className="flex items-center space-x-2">
                   {connectionStatus.isConnected ? <Wifi size={16} className="text-green-400" /> : <WifiOff size={16} className="text-red-400" />}
-                  <span className="text-dark-muted">
+                  <span className="text-light-muted dark:text-dark-muted">
                     {isPaused ? 'Paused' : (connectionStatus.isConnected ? 'Connected' : 'Disconnected')}
                   </span>
                   {!isPaused && (
-                    <span className="text-xs text-dark-muted">
+                    <span className="text-xs text-light-muted dark:text-dark-muted">
                       ({refreshInterval}s interval)
                     </span>
                   )}
                 </div>
                 
-                <div className="text-dark-muted">
-                  <span className="font-medium text-dark-text">{Object.keys(machineTracks).length}</span> machines
+                <div className="text-light-muted dark:text-dark-muted">
+                  <span className="font-medium text-light-text dark:text-dark-text">{Object.keys(machineTracks).length}</span> machines
                 </div>
                 
-                <div className="text-dark-muted">
-                  <span className="font-medium text-dark-text">{Object.values(machineTracks).reduce((sum, data) => sum + data.length, 0)}</span> points
+                <div className="text-light-muted dark:text-dark-muted">
+                  <span className="font-medium text-light-text dark:text-dark-text">{Object.values(machineTracks).reduce((sum, data) => sum + data.length, 0)}</span> points
                 </div>
                 
                 {selectedMachineId && (
-                  <div className="text-dark-muted">
-                    <span className="font-medium text-dark-accent">{getSelectedMachineData().length}</span> selected
+                  <div className="text-light-muted dark:text-dark-muted">
+                    <span className="font-medium text-light-accent dark:text-dark-accent">{getSelectedMachineData().length}</span> selected
                   </div>
                 )}
                 
-                <div className="text-dark-muted">
+                <div className="text-light-muted dark:text-dark-muted">
                   Created by Shintaro Matsumoto
                 </div>
               </div>
@@ -224,7 +227,7 @@ function MainApplication() {
                 <div className="flex items-center space-x-2">
                   {selectedMachineId && getSelectedMachineData().length > 0 && (
                     <>
-                      <span className="text-xs text-dark-muted">Export:</span>
+                      <span className="text-xs text-light-muted dark:text-dark-muted">Export:</span>
                       <button
                         onClick={() => exportSelectedAsCSV()}
                         className="btn-secondary text-xs px-2 py-1"
@@ -244,7 +247,7 @@ function MainApplication() {
                   
                   {Object.keys(machineTracks).length > 0 && (
                     <>
-                      <span className="text-xs text-dark-muted">All:</span>
+                      <span className="text-xs text-light-muted dark:text-dark-muted">All:</span>
                       <button
                         onClick={() => exportAllAsCSV()}
                         className="btn-secondary text-xs px-2 py-1"
@@ -256,7 +259,7 @@ function MainApplication() {
                   )}
                 </div>
                 
-                <div className="text-xs text-dark-muted hidden lg:block">
+                <div className="text-xs text-light-muted dark:text-dark-muted hidden lg:block">
                   Shortcuts: [/] tabs • P pause • E export • ESC close
                 </div>
               </div>
@@ -273,23 +276,23 @@ function MainApplication() {
         
         {/* Loading overlay */}
         {isLoading && Object.keys(machineTracks).length === 0 && (
-          <div className="fixed inset-0 bg-dark-bg/80 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-light-bg/80 dark:bg-dark-bg/80 flex items-center justify-center z-50">
             <div className="card p-8 text-center">
-              <div className="animate-spin w-12 h-12 border-2 border-dark-accent border-t-transparent rounded-full mx-auto mb-4"></div>
-              <div className="text-dark-text">Loading machine data...</div>
+              <div className="animate-spin w-12 h-12 border-2 border-light-accent dark:border-dark-accent border-t-transparent rounded-full mx-auto mb-4"></div>
+              <div className="text-light-text dark:text-dark-text">Loading machine data...</div>
             </div>
           </div>
         )}
         
         {/* Error state */}
         {error && Object.keys(machineTracks).length === 0 && (
-          <div className="fixed inset-0 bg-dark-bg/80 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-light-bg/80 dark:bg-dark-bg/80 flex items-center justify-center z-50">
             <div className="card p-8 text-center max-w-md">
               <div className="text-red-400 mb-4">Failed to load data</div>
-              <div className="text-dark-muted text-sm mb-4">
+              <div className="text-light-muted dark:text-dark-muted text-sm mb-4">
                 {error.message || 'Unknown error occurred'}
               </div>
-              <div className="text-dark-muted text-xs">
+              <div className="text-light-muted dark:text-dark-muted text-xs">
                 Please check your .env configuration and GAS endpoint.
               </div>
             </div>
@@ -297,7 +300,7 @@ function MainApplication() {
         )}
         
         {/* Help overlay */}
-        <div className="fixed bottom-2 left-2 text-xs text-dark-muted">
+        <div className="fixed bottom-2 left-2 text-xs text-light-muted dark:text-dark-muted">
           <div>Shortcuts: [/] switch tabs • P pause • E export • ESC close panel</div>
         </div>
       </div>
