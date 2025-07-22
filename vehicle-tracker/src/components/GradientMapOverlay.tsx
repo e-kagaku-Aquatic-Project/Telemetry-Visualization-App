@@ -9,24 +9,22 @@ export const GradientMapOverlay: React.FC = () => {
   const { 
     gradientVisualization,
     setGradientParameter,
-    selectedVehicleId,
-    vehicleTracks,
+    selectedMachineId,
+    machineTracks,
     viewMode,
   } = useAppStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Only show gradient controls when viewing individual vehicle
-  if (viewMode !== 'individual' || !selectedVehicleId || !vehicleTracks[selectedVehicleId]) {
+  // Only show gradient controls when viewing individual machine
+  if (viewMode !== 'individual' || !selectedMachineId || !machineTracks[selectedMachineId]) {
     return null;
   }
 
   const parameters: Array<{ key: GradientParameter; label: string; unit: string }> = [
     { key: 'altitude', label: 'Altitude', unit: 'm' },
-    { key: 'waterTemperature', label: 'Water Temperature', unit: '°C' },
-    { key: 'airPressure', label: 'Air Pressure', unit: 'hPa' },
-    { key: 'airTemperature', label: 'Air Temperature', unit: '°C' },
     { key: 'satellites', label: 'Satellites', unit: 'count' },
+    { key: 'battery', label: 'Battery', unit: 'V' },
   ];
 
   const handleParameterSelect = (parameter: GradientParameter) => {

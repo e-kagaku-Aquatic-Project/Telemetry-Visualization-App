@@ -5,14 +5,14 @@ import { generateGradientColors, getDataRange } from '../utils/gradientColors';
 import { useAppStore } from '../store';
 
 interface GradientTrackPolylineProps {
-  vehicleId: string;
+  machineId: string;
   data: TelemetryDataPoint[];
   isSelected: boolean;
   gradientParameter: GradientParameter | null;
 }
 
-// Fallback color palette for different vehicles (matching original TrackPolyline)
-const VEHICLE_COLORS = [
+// Fallback color palette for different machines (matching original TrackPolyline)
+const MACHINE_COLORS = [
   '#58a6ff', // Blue
   '#7c3aed', // Purple  
   '#f59e0b', // Amber
@@ -24,12 +24,12 @@ const VEHICLE_COLORS = [
 ];
 
 export const GradientTrackPolyline: React.FC<GradientTrackPolylineProps> = ({
-  vehicleId,
+  machineId,
   data,
   isSelected,
   gradientParameter,
 }) => {
-  const { getVehicleIds } = useAppStore();
+  const { getMachineIds } = useAppStore();
   
   // Create gradient segments with smooth interpolation
   const gradientSegments = useMemo((): GradientSegment[] => {
@@ -90,22 +90,22 @@ export const GradientTrackPolyline: React.FC<GradientTrackPolylineProps> = ({
       lng: point.longitude,
     }));
 
-    // Get consistent color for this vehicle
-    const vehicleIds = getVehicleIds();
-    const vehicleIndex = vehicleIds.indexOf(vehicleId);
-    const vehicleColor = VEHICLE_COLORS[vehicleIndex % VEHICLE_COLORS.length];
+    // Get consistent color for this machine
+    const machineIds = getMachineIds();
+    const machineIndex = machineIds.indexOf(machineId);
+    const machineColor = MACHINE_COLORS[machineIndex % MACHINE_COLORS.length];
 
     const polylineOptions: google.maps.PolylineOptions = {
       path,
       geodesic: true,
-      strokeColor: vehicleColor,
+      strokeColor: machineColor,
       strokeOpacity: isSelected ? 0.9 : 0.6,
       strokeWeight: isSelected ? 4 : 2,
       zIndex: isSelected ? 100 : 50,
     };
 
-    return <Polyline key={`regular-${vehicleId}`} options={polylineOptions} />;
-  }, [data, gradientParameter, vehicleId, isSelected, getVehicleIds]);
+    return <Polyline key={`regular-${machineId}`} options={polylineOptions} />;
+  }, [data, gradientParameter, machineId, isSelected, getMachineIds]);
 
   // Render gradient segments
   if (gradientParameter && gradientSegments.length > 0) {
@@ -123,7 +123,7 @@ export const GradientTrackPolyline: React.FC<GradientTrackPolylineProps> = ({
 
           return (
             <Polyline
-              key={`gradient-${vehicleId}-${gradientParameter}-${index}-${Date.now()}`}
+              key={`gradient-${machineId}-${gradientParameter}-${index}-${Date.now()}`}
               options={polylineOptions}
             />
           );

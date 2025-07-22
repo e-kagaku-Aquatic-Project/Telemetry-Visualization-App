@@ -1,10 +1,22 @@
 import { create } from 'zustand';
-import { TelemetryDataPoint, VehicleTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
+import { TelemetryDataPoint, MachineTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
+import { PredictionConfig, PredictedPosition, predictPosition, DEFAULT_PREDICTION_CONFIG } from '../utils/prediction';
+import { verifyPassword, generateSessionToken, saveSession, getSession, clearSession, checkAuthStatus as checkAuthStatusUtil } from '../utils/auth';
 
-interface AppState {
-  // Vehicle data
-  vehicleTracks: VehicleTracks;
-  selectedVehicleId: string | null;
+interface AuthState {
+  isAuthenticated: boolean;
+  sessionToken: string | null;
+  sessionTimestamp: number | null;
+  login: (password: string) => boolean;
+  logout: () => void;
+  checkAuthStatus: () => boolean;
+  initializeAuth: () => void;
+}
+
+interface AppState extends AuthState {
+  // Machine data
+  machineTracks: MachineTracks;
+  selectedMachineId: string | null;
   selectedDataPoint: TelemetryDataPoint | null;
   
   // UI state
@@ -13,7 +25,7 @@ interface AppState {
   isPaused: boolean;
   currentView: 'map' | 'graphs';
   hasViewedGraphs: boolean;
-  viewMode: 'all' | 'individual'; // New: Tab mode for all vehicles or individual
+  viewMode: 'all' | 'individual'; // New: Tab mode for all machines or individual
   
   // Connection status
   connectionStatus: ConnectionStatus;
@@ -25,9 +37,12 @@ interface AppState {
   // Gradient visualization state
   gradientVisualization: GradientVisualizationState;
   
+  // Position prediction state
+  predictionConfig: PredictionConfig;
+  
   // Actions
-  setVehicleTracks: (tracks: VehicleTracks) => void;
-  setSelectedVehicle: (vehicleId: string | null) => void;
+  setMachineTracks: (tracks: MachineTracks) => void;
+  setSelectedMachine: (machineId: string | null) => void;
   setSelectedDataPoint: (dataPoint: TelemetryDataPoint | null) => void;
   setSidePanelOpen: (open: boolean) => void;
   setRefreshInterval: (interval: number) => void;
@@ -40,23 +55,33 @@ interface AppState {
   setGradientParameter: (parameter: GradientParameter | null) => void;
   toggleGradientVisualization: () => void;
   
+  // Prediction actions
+  setPredictionEnabled: (enabled: boolean) => void;
+  setPredictionMinutes: (minutes: number) => void;
+  setPredictionReferencePoints: (points: number) => void;
+  updatePredictionConfig: (config: Partial<PredictionConfig>) => void;
+  
   // Computed getters
-  getVehicleIds: () => string[];
-  getSelectedVehicleData: () => TelemetryDataPoint[];
-  getLatestDataPoint: (vehicleId: string) => TelemetryDataPoint | null;
+  getMachineIds: () => string[];
+  getSelectedMachineData: () => TelemetryDataPoint[];
+  getLatestDataPoint: (machineId: string) => TelemetryDataPoint | null;
+  
+  // Prediction getters
+  getPredictedPosition: (machineId: string) => PredictedPosition | null;
+  getAllPredictedPositions: () => Record<string, PredictedPosition>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial state
-  vehicleTracks: {},
-  selectedVehicleId: null,
+  machineTracks: {},
+  selectedMachineId: null,
   selectedDataPoint: null,
   isSidePanelOpen: false,
   refreshInterval: 5,
   isPaused: false,
   currentView: 'map',
   hasViewedGraphs: false,
-  viewMode: 'all', // Default to showing all vehicles
+  viewMode: 'all', // Default to showing all machines
   connectionStatus: {
     isConnected: false,
     lastUpdate: null,
@@ -70,11 +95,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     refreshKey: 0,
   },
   
-  // Actions
-  setVehicleTracks: (tracks) => set({ vehicleTracks: tracks }),
+  predictionConfig: DEFAULT_PREDICTION_CONFIG,
   
-  setSelectedVehicle: (vehicleId) => set({ 
-    selectedVehicleId: vehicleId,
+  // Auth state
+  isAuthenticated: false,
+  sessionToken: null,
+  sessionTimestamp: null,
+  
+  // Actions
+  setMachineTracks: (tracks) => set({ machineTracks: tracks }),
+  
+  setSelectedMachine: (machineId) => set({ 
+    selectedMachineId: machineId,
     selectedDataPoint: null,
     isSidePanelOpen: false,
   }),
@@ -125,16 +157,105 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   })),
   
-  // Computed getters
-  getVehicleIds: () => Object.keys(get().vehicleTracks),
+  // Prediction actions
+  setPredictionEnabled: (enabled) => set((state) => ({
+    predictionConfig: { ...state.predictionConfig, isEnabled: enabled }
+  })),
   
-  getSelectedVehicleData: () => {
-    const { selectedVehicleId, vehicleTracks } = get();
-    return selectedVehicleId ? vehicleTracks[selectedVehicleId] || [] : [];
+  setPredictionMinutes: (minutes) => set((state) => ({
+    predictionConfig: { ...state.predictionConfig, predictionMinutes: minutes }
+  })),
+  
+  setPredictionReferencePoints: (points) => set((state) => ({
+    predictionConfig: { ...state.predictionConfig, referencePoints: points }
+  })),
+  
+  updatePredictionConfig: (config) => set((state) => ({
+    predictionConfig: { ...state.predictionConfig, ...config }
+  })),
+  
+  // Computed getters
+  getMachineIds: () => Object.keys(get().machineTracks),
+  
+  getSelectedMachineData: () => {
+    const { selectedMachineId, machineTracks } = get();
+    return selectedMachineId ? machineTracks[selectedMachineId] || [] : [];
   },
   
-  getLatestDataPoint: (vehicleId: string) => {
-    const tracks = get().vehicleTracks[vehicleId];
+  getLatestDataPoint: (machineId: string) => {
+    const tracks = get().machineTracks[machineId];
     return tracks && tracks.length > 0 ? tracks[tracks.length - 1] : null;
+  },
+  
+  // Prediction getters
+  getPredictedPosition: (machineId: string) => {
+    const { machineTracks, predictionConfig } = get();
+    const tracks = machineTracks[machineId];
+    
+    if (!tracks || tracks.length === 0) {
+      return null;
+    }
+    
+    return predictPosition(tracks, predictionConfig);
+  },
+  
+  getAllPredictedPositions: () => {
+    const { machineTracks, predictionConfig } = get();
+    const predictions: Record<string, PredictedPosition> = {};
+    
+    Object.keys(machineTracks).forEach(machineId => {
+      const tracks = machineTracks[machineId];
+      if (tracks && tracks.length > 0) {
+        const prediction = predictPosition(tracks, predictionConfig);
+        if (prediction) {
+          predictions[machineId] = prediction;
+        }
+      }
+    });
+    
+    return predictions;
+  },
+  
+  // Auth actions
+  login: (password: string) => {
+    const isValid = verifyPassword(password);
+    if (isValid) {
+      const token = generateSessionToken();
+      saveSession(token);
+      set({
+        isAuthenticated: true,
+        sessionToken: token,
+        sessionTimestamp: Date.now(),
+      });
+      return true;
+    }
+    return false;
+  },
+  
+  logout: () => {
+    clearSession();
+    set({
+      isAuthenticated: false,
+      sessionToken: null,
+      sessionTimestamp: null,
+    });
+  },
+  
+  checkAuthStatus: () => {
+    const isValid = checkAuthStatusUtil();
+    if (!isValid) {
+      get().logout();
+    }
+    return isValid;
+  },
+  
+  initializeAuth: () => {
+    const { token, timestamp } = getSession();
+    const isValid = checkAuthStatusUtil();
+    set({
+      isAuthenticated: isValid,
+      sessionToken: isValid ? token : null,
+      sessionTimestamp: isValid ? timestamp : null,
+    });
   },
 }));
