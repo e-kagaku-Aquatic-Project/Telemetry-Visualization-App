@@ -4,6 +4,7 @@ import { useAppStore } from '../../store';
 import { GradientParameter } from '../../types';
 import { COLOR_PALETTES } from '../../utils/gradientColors';
 import { Palette, ChevronDown, X } from 'lucide-react';
+import { CurrentLocationButton } from '../controls/CurrentLocationButton';
 
 export const GradientMapOverlay: React.FC = () => {
   const { 
@@ -43,8 +44,15 @@ export const GradientMapOverlay: React.FC = () => {
   };
 
   return (
-    <div className="absolute top-4 right-4 z-10">
-      <div className="flex flex-col items-end space-y-2">
+    <>
+      {/* Current location button - always visible */}
+      <div className="absolute top-4 left-4 z-10">
+        <CurrentLocationButton />
+      </div>
+
+      {/* Gradient controls - only for individual view */}
+      <div className="absolute top-4 right-4 z-10">
+        <div className="flex flex-col items-end space-y-2">
         {/* Main gradient button */}
         <motion.button
           onClick={handleToggle}
@@ -142,7 +150,8 @@ export const GradientMapOverlay: React.FC = () => {
           )}
         </AnimatePresence>
 
+        </div>
       </div>
-    </div>
+    </>
   );
 };
