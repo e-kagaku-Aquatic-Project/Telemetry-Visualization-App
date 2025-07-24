@@ -41,6 +41,7 @@ interface AppState extends AuthState, ThemeState {
   // Map state
   mapCenter: google.maps.LatLngLiteral | null;
   mapZoom: number;
+  mapInstance: google.maps.Map | null;
   
   // Gradient visualization state
   gradientVisualization: GradientVisualizationState;
@@ -58,6 +59,7 @@ interface AppState extends AuthState, ThemeState {
   setConnectionStatus: (status: Partial<ConnectionStatus>) => void;
   setMapCenter: (center: google.maps.LatLngLiteral) => void;
   setMapZoom: (zoom: number) => void;
+  setMapInstance: (map: google.maps.Map | null) => void;
   setCurrentView: (view: 'map' | 'graphs') => void;
   setViewMode: (mode: 'all' | 'individual') => void; // New: Set tab mode
   setGradientParameter: (parameter: GradientParameter | null) => void;
@@ -97,6 +99,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   mapCenter: null,
   mapZoom: 12,
+  mapInstance: null,
   gradientVisualization: {
     isEnabled: false,
     selectedParameter: null,
@@ -140,6 +143,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   setMapCenter: (center) => set({ mapCenter: center }),
   
   setMapZoom: (zoom) => set({ mapZoom: zoom }),
+  
+  setMapInstance: (map) => set({ mapInstance: map }),
   
   setCurrentView: (view) => set((state) => ({ 
     currentView: view, 

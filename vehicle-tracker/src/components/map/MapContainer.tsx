@@ -9,7 +9,7 @@ import { GradientLegend } from '../features/GradientLegend';
 import { GradientMapOverlay } from './GradientMapOverlay';
 import { PredictionControls } from '../features/PredictionControls';
 import { PredictionVisualization } from './PredictionMarker';
-import { CurrentLocationMarker } from '../CurrentLocationMarker';
+import { CurrentLocationMarker } from './CurrentLocationMarker';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 
 const GOOGLE_MAPS_LIBRARIES: ("places" | "geometry" | "drawing" | "visualization")[] = [];
@@ -27,7 +27,7 @@ export const MapContainer: React.FC = () => {
   } = useAppStore();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const { position: currentLocation, startWatching } = useCurrentLocation();
+  const { position: currentLocation } = useCurrentLocation();
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -75,15 +75,17 @@ export const MapContainer: React.FC = () => {
     }
   }, [viewMode, selectedMachineId, machineTracks, map, getLatestDataPoint]);
 
+  const { setMapInstance } = useAppStore();
+
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
-    // Start watching location when map loads
-    startWatching();
-  }, [startWatching]);
+    setMapInstance(map);
+  }, [setMapInstance]);
 
   const onUnmount = useCallback(() => {
     setMap(null);
-  }, []);
+    setMapInstance(null);
+  }, [setMapInstance]);
 
 
 
@@ -179,13 +181,16 @@ export const MapContainer: React.FC = () => {
 
         {/* Render current location marker */}
         {currentLocation && (
-          <CurrentLocationMarker
-            position={{
-              lat: currentLocation.latitude,
-              lng: currentLocation.longitude
-            }}
-            accuracy={currentLocation.accuracy}
-          />
+          <>
+            {console.log('Rendering current location marker:', currentLocation)}
+            <CurrentLocationMarker
+              position={{
+                lat: currentLocation.latitude,
+                lng: currentLocation.longitude
+              }}
+              accuracy={currentLocation.accuracy}
+            />
+          </>
         )}
       </GoogleMap>
       

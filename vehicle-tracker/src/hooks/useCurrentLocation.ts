@@ -25,12 +25,14 @@ export const useCurrentLocation = (): UseCurrentLocationResult => {
   const [watchId, setWatchId] = useState<number | null>(null);
 
   const handleSuccess = useCallback((position: GeolocationPosition) => {
-    setPosition({
+    const newPosition = {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
       accuracy: position.coords.accuracy,
       timestamp: position.timestamp,
-    });
+    };
+    console.log('Current location updated:', newPosition);
+    setPosition(newPosition);
     setError(null);
     setIsLoading(false);
   }, []);

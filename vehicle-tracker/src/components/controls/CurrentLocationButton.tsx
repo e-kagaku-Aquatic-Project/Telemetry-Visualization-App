@@ -1,36 +1,55 @@
 import React from 'react';
-import { MapPin, Loader } from 'lucide-react';
+import { MapPin, Loader, MapPinOff } from 'lucide-react';
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { useAppStore } from '../../store';
 
 export const CurrentLocationButton: React.FC = () => {
-  const { position, error, isLoading, getCurrentPosition } = useCurrentLocation();
-  const { setMapCenter, setMapZoom } = useAppStore();
+  const { position, error, isLoading, isWatching, startWatching, stopWatching } = useCurrentLocation();
+  const { selectedMachineId, getLatestDataPoint, mapInstance } = useAppStore();
 
   const handleClick = () => {
-    if (position) {
-      // If we already have position, center on it
-      setMapCenter({
-        lat: position.latitude,
-        lng: position.longitude,
-      });
-      setMapZoom(16);
+    if (isWatching) {
+      // Stop watching if currently watching
+      stopWatching();
     } else {
-      // Otherwise, get current position
-      getCurrentPosition();
+      // Start watching
+      startWatching();
     }
   };
 
-  // Center on position when it's obtained
-  React.useEffect(() => {
-    if (position) {
-      setMapCenter({
-        lat: position.latitude,
-        lng: position.longitude,
-      });
-      setMapZoom(16);
+
+  const fitBoundsToIncludeCurrentLocation = React.useCallback(() => {
+    if (!mapInstance || !position) return;
+
+    const bounds = new google.maps.LatLngBounds();
+    
+    // Add current location
+    bounds.extend({
+      lat: position.latitude,
+      lng: position.longitude,
+    });
+
+    // Add selected machine's latest position if available
+    if (selectedMachineId) {
+      const latestPoint = getLatestDataPoint(selectedMachineId);
+      if (latestPoint) {
+        bounds.extend({
+          lat: latestPoint.latitude,
+          lng: latestPoint.longitude,
+        });
+      }
     }
-  }, [position, setMapCenter, setMapZoom]);
+
+    // Fit bounds with padding
+    mapInstance.fitBounds(bounds, { top: 100, right: 100, bottom: 100, left: 100 });
+  }, [mapInstance, position, selectedMachineId, getLatestDataPoint]);
+
+  // Fit bounds when position changes
+  React.useEffect(() => {
+    if (position && isWatching) {
+      fitBoundsToIncludeCurrentLocation();
+    }
+  }, [position, isWatching, fitBoundsToIncludeCurrentLocation]);
 
   return (
     <div className="relative">
@@ -38,18 +57,14 @@ export const CurrentLocationButton: React.FC = () => {
         onClick={handleClick}
         disabled={isLoading}
         className="p-3 bg-light-surface dark:bg-dark-surface rounded-lg hover:bg-light-hover dark:hover:bg-dark-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        title={error || "Show current location"}
+        title={error || (isWatching ? "Stop tracking location" : "Start tracking location")}
       >
         {isLoading ? (
           <Loader className="w-5 h-5 animate-spin text-light-muted dark:text-dark-muted" />
+        ) : isWatching ? (
+          <MapPinOff className="w-5 h-5 text-light-accent dark:text-dark-accent" />
         ) : (
-          <MapPin 
-            className={`w-5 h-5 ${
-              position 
-                ? 'text-light-accent dark:text-dark-accent' 
-                : 'text-light-muted dark:text-dark-muted'
-            }`} 
-          />
+          <MapPin className="w-5 h-5 text-light-muted dark:text-dark-muted" />
         )}
       </button>
       
