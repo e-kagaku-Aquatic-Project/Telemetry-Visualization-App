@@ -193,12 +193,15 @@ When modifying data fields, update both:
 ## Key Dependencies and Versions
 
 - **Node.js**: Version 18+ required
-- **React**: 19.0.0 (latest version)
-- **TypeScript**: 5.7.3 with strict mode
-- **Webpack**: 5.x (not Vite despite env variable naming)
-- **Zustand**: 5.0.3 for state management
-- **SWR**: 2.3.0 for data fetching
-- **Google Maps**: @react-google-maps/api 2.20.3
+- **React**: 19.1.0 (latest version)
+- **TypeScript**: 5.8.3 with strict mode
+- **Webpack**: 5.97.1 (not Vite despite env variable naming)
+- **Zustand**: 5.0.5 for state management
+- **SWR**: 2.3.3 for data fetching
+- **Google Maps**: @react-google-maps/api 2.20.6
+- **Framer Motion**: 12.18.1 for animations
+- **Tailwind CSS**: 3.4.17 for styling
+- **React Router DOM**: 7.7.0 for routing
 
 ## Error Handling Patterns
 
@@ -210,10 +213,7 @@ When modifying data fields, update both:
 ## Common Development Tasks
 
 ### Running a Single Component Test
-Currently no test framework is configured. Consider adding:
-```bash
-npm install --save-dev @testing-library/react @testing-library/jest-dom vitest
-```
+Currently no test framework is configured. The project focuses on integration testing through the GAS backend test scripts in the `GAS/` directory.
 
 ### Debugging API Calls
 1. Open browser DevTools Network tab
@@ -242,3 +242,9 @@ Edit `MONOCHROME_MAP_STYLE` in `src/constants/map.ts`. Use [Google Maps Styling 
 - Monitor bundle size with `npm run build` output
 - Check for memory leaks in long-running sessions
 - Profile with Chrome DevTools Performance tab
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

@@ -129,6 +129,27 @@ function initialSetup() {
 }
 
 /**
+ * Update reminder interval for lost machine notifications
+ * @param {number} minutes - Interval in minutes (default: 10)
+ */
+function updateReminderInterval(minutes = 10) {
+  try {
+    setScriptProperty('REMINDER_INTERVAL_MINUTES', minutes.toString());
+    console.log(`Reminder interval updated to ${minutes} minutes`);
+    return {
+      status: 'success',
+      message: `Reminder interval updated to ${minutes} minutes. Please restart triggers to apply changes.`
+    };
+  } catch (error) {
+    console.error('Error updating reminder interval:', error);
+    return {
+      status: 'error',
+      message: error.toString()
+    };
+  }
+}
+
+/**
  * Get current configuration status
  * @returns {Object} Configuration status
  */
