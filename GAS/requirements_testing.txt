@@ -1,4 +1,0 @@
-# Python Requirements for Notification System Testing
-# Install with: pip install -r requirements_testing.txt
-
-requests>=2.28.0
