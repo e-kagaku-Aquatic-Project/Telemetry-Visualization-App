@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '../../store';
 import { motion } from 'framer-motion';
 
 export const MachineTabs: React.FC = () => {
@@ -38,7 +38,7 @@ export const MachineTabs: React.FC = () => {
   if (machineIds.length === 0) {
     return (
       <div className="card p-4 mb-4">
-        <div className="text-center text-dark-muted">
+        <div className="text-center text-light-muted dark:text-dark-muted">
           No machines found. Check your connection or data source.
         </div>
       </div>
@@ -46,15 +46,15 @@ export const MachineTabs: React.FC = () => {
   }
 
   return (
-    <div className="flex space-x-2 overflow-x-auto scrollbar-thin scrollbar-thumb-dark-muted/30 scrollbar-track-transparent">
+    <div className="flex space-x-2 overflow-x-auto scrollbar-thin scrollbar-thumb-light-muted/30 dark:scrollbar-thumb-dark-muted/30 scrollbar-track-transparent">
       {/* All Machines Tab */}
       <motion.button
         onClick={() => handleTabClick('all')}
         className={`
           flex-shrink-0 px-3 py-2 rounded border transition-all duration-150 ease-out min-w-0
           ${viewMode === 'all'
-            ? 'bg-dark-accent text-white border-dark-accent' 
-            : 'bg-dark-surface text-dark-text border-dark-muted/30 hover:border-dark-accent/50'
+            ? 'bg-light-accent dark:bg-dark-accent text-white border-light-accent dark:border-dark-accent' 
+            : 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border-light-muted/30 dark:border-dark-muted/30 hover:border-light-accent/50 dark:hover:border-dark-accent/50'
           }
         `}
         whileHover={{ scale: 1.02 }}
@@ -80,8 +80,8 @@ export const MachineTabs: React.FC = () => {
             className={`
               flex-shrink-0 px-3 py-2 rounded border transition-all duration-150 ease-out min-w-0
               ${isSelected 
-                ? 'bg-dark-accent text-white border-dark-accent' 
-                : 'bg-dark-surface text-dark-text border-dark-muted/30 hover:border-dark-accent/50'
+                ? 'bg-light-accent dark:bg-dark-accent text-white border-light-accent dark:border-dark-accent' 
+                : 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border-light-muted/30 dark:border-dark-muted/30 hover:border-light-accent/50 dark:hover:border-dark-accent/50'
               }
             `}
             whileHover={{ scale: 1.02 }}
@@ -91,7 +91,7 @@ export const MachineTabs: React.FC = () => {
               <span className="font-medium text-sm truncate">
                 {machineId}
               </span>
-              <span className="text-xs opacity-70 bg-dark-bg/50 px-1.5 py-0.5 rounded flex-shrink-0">
+              <span className="text-xs opacity-70 bg-light-bg/50 dark:bg-dark-bg/50 px-1.5 py-0.5 rounded flex-shrink-0">
                 {dataCount}
               </span>
             </div>

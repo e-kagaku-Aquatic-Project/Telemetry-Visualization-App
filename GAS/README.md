@@ -1,32 +1,229 @@
-# Google Apps Script (GAS) Telemetry System
+# Google Apps Script (GAS) Telemetry System v2.0.0
 
-Google Apps Script を使用したテレメトリデータの送信・取得システム  
-スプレッドシート : https://docs.google.com/spreadsheets/d/1SocK5ILBHp-xWsAR6KiKkStret4O1lXqKA0zkAOyIwk/edit?usp=sharing
+リアルタイム機体テレメトリ収集・監視システム - Google Sheets + Discord通知機能付き
+
 ## 🚀 クイックスタート
 
-### 提供される WebApp URL
+### 前提条件
 
-GAS WebApp は既に設定済みです。以下の URL を使用してください：
+- Google アカウント
+- Google Sheets へのアクセス権限
+- Python 3.7+ (テスト用)
 
+### WebApp URL
+
+**現在のデプロイ済みURL:**
 ```
 https://script.google.com/macros/s/AKfycbys_1sl065_wV_0RusA_aIOxtA3HUuqizsItE7q8g6Qq9vyrd836MtfSKtc5oRh0PRCcA/exec
 ```
 
-### Python サンプルの準備
+**スプレッドシート:**
+https://docs.google.com/spreadsheets/d/1SocK5ILBHp-xWsAR6KiKkStret4O1lXqKA0zkAOyIwk/edit?usp=sharing
 
-```bash
-pip install requests
+## 📁 プロジェクト構造
+
+```
+GAS/
+├── README.md                    # このファイル
+├── SpreadSheets_GAS.gs          # 統合デプロイファイル
+├── src/                         # ソースコード
+│   ├── Main.gs                 # エントリポイント・ルーティング
+│   ├── Config.gs               # 設定管理・環境変数
+│   ├── DataManager.gs          # データ処理・保存
+│   ├── MachineMonitor.gs       # 機体監視・タイムアウト検知
+│   ├── WebhookNotification.gs  # Discord通知機能
+│   ├── Utils.gs                # 共通ユーティリティ
+│   └── SpreadSheets_GAS.gs     # 統合ファイル（src/配下の全コード）
+├── examples/                   # サンプルコード・データ
+│   ├── python/                 # Python実装例
+│   │   ├── simple_sender.py    # 基本的な送信テスト
+│   │   ├── simple_getter.py    # 基本的な取得テスト
+│   │   ├── register_machine.py # 機体登録
+│   │   ├── test_sender.py      # 高機能送信テスト
+│   │   └── test_*.py          # 各種テストスクリプト
+│   └── json/                   # JSONデータサンプル
+│       ├── telemetry_data.json
+│       └── register_machine.json
+└── docs/                       # ドキュメント
+    └── webhook_design.md       # Discord通知システム設計書
 ```
 
-## 📤 データ送信（POST）
+## 🔄 API フロー図
 
-### API 仕様
+### データ送信フロー（POST）
 
-**エンドポイント:** `https://script.google.com/macros/s/AKfycbys_1sl065_wV_0RusA_aIOxtA3HUuqizsItE7q8g6Qq9vyrd836MtfSKtc5oRh0PRCcA/exec`  
-**メソッド:** POST  
-**Content-Type:** application/json
+```mermaid
+sequenceDiagram
+    participant Client as クライアント<br/>(Python/IoT機器)
+    participant GAS as Google Apps Script<br/>(WebApp)
+    participant Sheet as Google Sheets<br/>(データベース)
+    participant Discord as Discord<br/>(通知)
 
-#### テレメトリデータ送信
+    Note over Client, Discord: テレメトリデータ送信シーケンス
+    
+    Client->>+GAS: POST /exec<br/>JSON データ送信
+    Note right of Client: {"DataType": "HK",<br/>"MachineID": "004353",<br/>"GPS": {...}, "BAT": 3.45}
+    
+    GAS->>GAS: データ検証<br/>(MachineID, GPS等)
+    
+    alt データ形式が正しい場合
+        GAS->>+Sheet: Machine_{ID} シート確認
+        alt シートが存在しない場合
+            Sheet-->>GAS: シート未存在
+            GAS->>+Sheet: 新規シート作成<br/>ヘッダー設定
+            Sheet-->>-GAS: シート作成完了
+        else シートが存在する場合
+            Sheet-->>-GAS: シート存在確認
+        end
+        
+        GAS->>+Sheet: データ行追加<br/>(timestamp, GPS, battery等)
+        Sheet-->>-GAS: 保存完了(行番号)
+        
+        GAS->>GAS: 監視ステータス更新<br/>(lastSeen時刻更新)
+        
+        GAS-->>-Client: 成功レスポンス<br/>{"status": "success",<br/>"rowNumber": 15}
+        
+    else データ形式が不正な場合
+        GAS-->>-Client: エラーレスポンス<br/>{"status": "error",<br/>"message": "Invalid format"}
+    end
+
+    Note over Client, Discord: 機体登録シーケンス
+    
+    Client->>+GAS: POST /exec<br/>機体登録リクエスト
+    Note right of Client: {"action": "registerMachine",<br/>"MachineID": "004353"}
+    
+    GAS->>+Sheet: Machine_{ID} シート作成
+    Sheet-->>-GAS: シート作成完了
+    
+    GAS->>GAS: 監視対象として登録<br/>(Active: true)
+    
+    GAS-->>-Client: 登録完了レスポンス<br/>{"status": "success"}
+```
+
+### データ受信フロー（GET）
+
+```mermaid
+sequenceDiagram
+    participant Frontend as フロントエンド<br/>(React App)
+    participant GAS as Google Apps Script<br/>(WebApp)
+    participant Sheet as Google Sheets<br/>(データベース)
+
+    Note over Frontend, Sheet: 全機体データ取得シーケンス
+    
+    Frontend->>+GAS: GET /exec?action=getAllMachines
+    
+    GAS->>+Sheet: 全シート一覧取得
+    Sheet-->>-GAS: Machine_* シートリスト
+    
+    loop 各機体シートに対して
+        GAS->>+Sheet: Machine_{ID} データ読み取り
+        Sheet-->>-GAS: 機体データ(全行)
+        GAS->>GAS: データ変換<br/>(LAT→latitude,<br/>LNG→longitude等)
+    end
+    
+    GAS->>GAS: レスポンス形式整形<br/>(machines配列作成)
+    
+    GAS-->>-Frontend: 統合データレスポンス<br/>{"status": "success",<br/>"machines": [...]}
+
+    Note over Frontend, Sheet: 特定機体データ取得シーケンス
+    
+    Frontend->>+GAS: GET /exec?action=getMachine<br/>&machineId=004353
+    
+    GAS->>GAS: MachineID検証
+    
+    alt 有効なMachineIDの場合
+        GAS->>+Sheet: Machine_004353 データ読み取り
+        Sheet-->>-GAS: 機体データ(全行)
+        
+        GAS->>GAS: データ変換・整形
+        
+        GAS-->>-Frontend: 機体データレスポンス<br/>{"status": "success",<br/>"machines": [single_machine]}
+        
+    else 無効なMachineIDの場合
+        GAS-->>-Frontend: エラーレスポンス<br/>{"status": "error",<br/>"message": "Machine not found"}
+    end
+
+    Note over Frontend, Sheet: 機体リスト取得シーケンス
+    
+    Frontend->>+GAS: GET /exec?action=getMachineList
+    
+    GAS->>+Sheet: 全シート一覧取得
+    Sheet-->>-GAS: Machine_* シートリスト
+    
+    GAS->>GAS: 機体ID抽出<br/>(シート名から)
+    
+    loop 各機体に対して
+        GAS->>+Sheet: 最新データ1行取得
+        Sheet-->>-GAS: 最新レコード
+        GAS->>GAS: 基本情報抽出<br/>(lastUpdate, dataCount)
+    end
+    
+    GAS-->>-Frontend: 機体リスト<br/>{"machineIds": [...],<br/>"lastUpdates": {...}}
+```
+
+### Discord通知フロー
+
+```mermaid
+sequenceDiagram
+    participant Trigger as 時刻トリガー<br/>(1分間隔)
+    participant GAS as Google Apps Script<br/>(監視システム)
+    participant Sheet as Google Sheets<br/>(データベース)
+    participant Discord as Discord<br/>(Webhook)
+
+    Note over Trigger, Discord: 機体監視・通知シーケンス
+    
+    Trigger->>+GAS: checkAllMachines()<br/>定期実行
+    
+    GAS->>+Sheet: 全機体シート取得
+    Sheet-->>-GAS: Machine_* シートリスト
+    
+    loop 各機体に対して
+        GAS->>+Sheet: 最新データ取得<br/>(timestamp確認)
+        Sheet-->>-GAS: 最新レコード
+        
+        GAS->>GAS: タイムアウト判定<br/>(現在時刻 - 最新時刻 > 10分)
+        
+        alt 初回タイムアウト検知
+            GAS->>GAS: 機体ステータス更新<br/>(LOST状態に変更)
+            GAS->>+Discord: Webhook送信<br/>🚨 機体途絶通知
+            Discord-->>-GAS: 通知送信完了
+            
+        else 継続タイムアウト(10分間隔)
+            GAS->>GAS: 継続通知タイミング判定
+            GAS->>+Discord: Webhook送信<br/>⚠️ 継続途絶通知
+            Discord-->>-GAS: 通知送信完了
+            
+        else 通信復旧検知
+            GAS->>GAS: 機体ステータス更新<br/>(ACTIVE状態に変更)
+            GAS->>+Discord: Webhook送信<br/>✅ 通信復旧通知
+            Discord-->>-GAS: 通知送信完了
+        end
+    end
+    
+    GAS-->>-Trigger: 監視処理完了
+
+    Note over Trigger, Discord: 手動通知制御シーケンス
+    
+    participant Admin as 管理者
+    
+    Admin->>+GAS: updateReminderInterval(10)<br/>通知間隔変更
+    GAS->>GAS: 設定更新<br/>(ScriptProperties)
+    GAS-->>-Admin: 設定完了
+    
+    Admin->>+GAS: resetMachineMonitorStatus("004353")<br/>状態リセット
+    GAS->>GAS: 機体監視状態初期化
+    GAS-->>-Admin: リセット完了
+```
+
+## 📤 データ送信 API (POST)
+
+### エンドポイント仕様
+
+- **URL:** WebApp URL
+- **Method:** POST
+- **Content-Type:** application/json
+
+### テレメトリデータ送信
 
 ```json
 {
@@ -40,11 +237,11 @@ pip install requests
     "SAT": 43
   },
   "BAT": 3.45,
-  "CMT": "MODE:NORMAL,COMM:OK,GPS:LOCKED,SENSOR:TEMP_OK,PRESSURE:STABLE,ERROR:NONE"
+  "CMT": "MODE:NORMAL,COMM:OK,GPS:LOCKED"
 }
 ```
 
-#### 機体登録
+### 機体登録
 
 ```json
 {
@@ -53,203 +250,60 @@ pip install requests
 }
 ```
 
-### Python サンプルプログラム
+### レスポンス例
 
-#### 1. `simple_sender.py` - 最速テスト送信
-
-```bash
-python simple_sender.py
-```
-
-**機能:**
-
-- 固定値でテレメトリデータを即座に送信
-- URL と machine_id はコード内で設定
-- エラーハンドリングなし、レスポンスを生表示
-
-**用途:** 動作確認、デバッグ、シンプルな送信テスト
-
-#### 2. `register_machine.py` - 機体登録
-
-```bash
-python register_machine.py
-```
-
-**機能:**
-
-- 機体 ID を入力して新しい機体を登録
-- スプレッドシートに `Machine_{機体ID}` シートを作成
-- 単一・複数機体の一括登録対応
-
-**用途:** 新しい機体の初期設定
-
-#### 3. `test_sender.py` - 高機能送信テスト
-
-```bash
-python test_sender.py
-```
-
-**機能:**
-
-- 対話型メニューで詳細設定
-- 複数機体への送信
-- 連続送信テスト（回数・間隔設定）
-- 完全なエラーハンドリング
-
-**用途:** 本格的なテスト、負荷試験、複数機体管理
-
-## 📥 データ取得（GET）
-
-### API 仕様
-
-**エンドポイント:** `https://script.google.com/macros/s/AKfycbys_1sl065_wV_0RusA_aIOxtA3HUuqizsItE7q8g6Qq9vyrd836MtfSKtc5oRh0PRCcA/exec`  
-**メソッド:** GET
-
-#### 全機体データ取得
-
-```
-?action=getAllMachines
-```
-
-#### 特定機体データ取得
-
-```
-?action=getMachine&machineId=004353
-```
-
-#### 機体リスト取得
-
-```
-?action=getMachineList
-```
-
-### Python サンプルプログラム
-
-#### 1. `simple_getter.py` - 最速データ取得
-
-```bash
-python simple_getter.py
-```
-
-**機能:**
-
-- 全機体データ・特定機体データ・機体リストを自動取得
-- URL はコード内で設定
-- 最新 5 件のデータを表示
-
-**用途:** データ確認、監視、デバッグ
-
-### cURL での直接アクセス例
-
-```bash
-# 全機体データ
-curl "https://script.google.com/macros/s/AKfycbys_1sl065_wV_0RusA_aIOxtA3HUuqizsItE7q8g6Qq9vyrd836MtfSKtc5oRh0PRCcA/exec?action=getAllMachines"
-
-# 特定機体データ
-curl "https://script.google.com/macros/s/AKfycbys_1sl065_wV_0RusA_aIOxtA3HUuqizsItE7q8g6Qq9vyrd836MtfSKtc5oRh0PRCcA/exec?action=getMachine&machineId=004353"
-
-# 機体リスト
-curl "https://script.google.com/macros/s/AKfycbys_1sl065_wV_0RusA_aIOxtA3HUuqizsItE7q8g6Qq9vyrd836MtfSKtc5oRh0PRCcA/exec?action=getMachineList"
-```
-
-## 🔧 システム仕様
-
-### データフロー
-
-#### テレメトリデータ送信フロー
-
-```mermaid
-sequenceDiagram
-    participant Client as 任意のプログラム
-    participant GAS as GAS WebApp
-    participant Sheets as Google Sheets
-    
-    Client->>GAS: POST /exec<br/>{"DataType":"HK", "MachineID":"004353", ...}
-    GAS->>Sheets: Check if Machine_004353 sheet exists
-    alt Sheet doesn't exist
-        GAS->>Sheets: Create Machine_004353 sheet
-        GAS->>Sheets: Add headers
-    end
-    GAS->>Sheets: Add GAS Time column
-    GAS->>Sheets: Insert telemetry data row
-    GAS->>Sheets: Auto-resize columns
-    GAS->>Client: {"status":"success", "rowNumber":15, "sheetName":"Machine_004353"}
-```
-
-#### データ取得フロー
-
-```mermaid
-sequenceDiagram
-    participant Client as 任意のプログラム
-    participant GAS as GAS WebApp
-    participant Sheets as Google Sheets
-    
-    Client->>GAS: GET /exec?action=getAllMachines
-    GAS->>Sheets: Get all Machine_* sheets
-    loop For each sheet
-        GAS->>Sheets: Read sheet data
-        GAS->>GAS: Format data to JSON
-    end
-    GAS->>Client: {"status":"success", "machines":[...], "totalMachines":3}
-    
-    Client->>GAS: GET /exec?action=getMachine&machineId=004353
-    GAS->>Sheets: Read Machine_004353 sheet
-    GAS->>GAS: Format data to JSON
-    GAS->>Client: {"status":"success", "data":[...], "dataCount":25}
-```
-
-#### 機体登録フロー
-
-```mermaid
-sequenceDiagram
-    participant Client as 任意のプログラム
-    participant GAS as GAS WebApp
-    participant Sheets as Google Sheets
-    
-    Client->>GAS: POST /exec<br/>{"action":"registerMachine", "MachineID":"004353"}
-    GAS->>Sheets: Check if Machine_004353 sheet exists
-    alt Sheet doesn't exist
-        GAS->>Sheets: Create Machine_004353 sheet
-        GAS->>Sheets: Add headers only
-        GAS->>Client: {"status":"success", "sheetName":"Machine_004353", "machineId":"004353"}
-    else Sheet exists
-        GAS->>Client: {"status":"error", "message":"Machine already registered"}
-    end
-```
-
-### スプレッドシートの構造
-
-各機体ごとに `Machine_{機体ID}` のシートが作成されます：
-
-| GAS Time           | MachineTime         | MachineID | DataType | Latitude  | Longitude  | Altitude | GPS Satellites | Battery | Comment        |
-| ------------------ | ------------------- | --------- | -------- | --------- | ---------- | -------- | -------------- | ------- | -------------- |
-| 2025/07/16 1:38:59 | 2025/07/16 01:38:59 | 004353    | HK       | 34.124125 | 153.131241 | 342.5    | 43             | 3.45    | MODE:NORMAL... |
-
-### レスポンス形式
-
-#### 送信成功時
-
+**成功時:**
 ```json
 {
   "status": "success",
   "message": "Data saved successfully",
   "rowNumber": 15,
-  "sheetName": "Machine_004353"
+  "sheetName": "Machine_004353",
+  "timestamp": "2025-07-24T11:30:00.000Z"
 }
 ```
 
-#### 取得成功時
+**エラー時:**
+```json
+{
+  "status": "error",
+  "message": "Invalid MachineID format",
+  "timestamp": "2025-07-24T11:30:00.000Z"
+}
+```
+
+## 📥 データ取得 API (GET)
+
+### 全機体データ取得
+```
+?action=getAllMachines
+```
+
+### 特定機体データ取得
+```
+?action=getMachine&machineId=004353
+```
+
+### 機体リスト取得
+```
+?action=getMachineList
+```
+
+### レスポンス例
 
 ```json
 {
   "status": "success",
+  "timestamp": "2025-07-24T11:30:00.000Z",
   "machines": [
     {
       "machineId": "004353",
+      "lastUpdate": "2025-07-24T11:29:45.000Z",
+      "dataCount": 147,
       "data": [
         {
-          "timestamp": "2025-07-16T01:38:59.000Z",
-          "machineTime": "2025/07/16 01:38:59",
+          "timestamp": "2025-07-24T11:29:45.000Z",
+          "machineTime": "2025/07/24 11:29:45",
           "machineId": "004353",
           "dataType": "HK",
           "latitude": 34.124125,
@@ -257,7 +311,7 @@ sequenceDiagram
           "altitude": 342.5,
           "satellites": 43,
           "battery": 3.45,
-          "comment": "MODE:NORMAL,COMM:OK,GPS:LOCKED,SENSOR:TEMP_OK,PRESSURE:STABLE,ERROR:NONE"
+          "comment": "MODE:NORMAL,COMM:OK,GPS:LOCKED"
         }
       ]
     }
@@ -266,71 +320,183 @@ sequenceDiagram
 }
 ```
 
-## 📂 サンプルファイル
+## 🔔 Discord通知システム
 
+### 機能概要
+
+システムは自動的に機体の通信状態を監視し、異常を検知した際にDiscordに通知を送信します。
+
+### 通知タイプ
+
+1. **信号途絶通知** - 機体からの通信が途絶えた際の初回通知
+2. **継続通知** - 通信途絶が継続している場合の定期通知（10分間隔）
+3. **復旧通知** - 通信が復旧した際の通知
+
+### 設定方法
+
+1. **Discord Webhook URL設定:**
+   ```javascript
+   // GASエディタで実行
+   setScriptProperty('DISCORD_WEBHOOK_URL', 'your_webhook_url_here');
+   ```
+
+2. **通知間隔設定:**
+   ```javascript
+   // 継続通知間隔を10分に設定
+   updateReminderInterval(10);
+   ```
+
+3. **監視システム初期化:**
+   ```javascript
+   // 初回セットアップ実行
+   initialSetup();
+   ```
+
+### 通知設定パラメータ
+
+| パラメータ | デフォルト値 | 説明 |
+|-----------|-------------|------|
+| TIMEOUT_MINUTES | 10分 | 通信途絶判定時間 |
+| REMINDER_INTERVAL_MINUTES | 10分 | 継続通知間隔 |
+| CHECK_INTERVAL_MINUTES | 1分 | 監視チェック間隔 |
+| ENABLE_NOTIFICATIONS | true | 通知機能ON/OFF |
+
+## 💻 Python サンプル使用方法
+
+### 環境準備
+
+```bash
+cd examples/python
+pip install requests
 ```
-GAS/
-├── SpreadSheets_GAS.gs     # GAS メインファイル（参考）
-├── simple_sender.py        # 📤 最速送信サンプル
-├── simple_getter.py        # 📥 最速取得サンプル
-├── test_sender.py          # 📤 高機能送信サンプル
-├── register_machine.py     # 🆔 機体登録サンプル
-├── example_json/           # JSONサンプル
-└── README.md              # このファイル
+
+### 基本テスト
+
+```bash
+# 最速送信テスト
+python simple_sender.py
+
+# 最速取得テスト  
+python simple_getter.py
+
+# 機体登録
+python register_machine.py
+
+# 高機能送信テスト
+python test_sender.py
+```
+
+### テストスクリプト
+
+```bash
+# API互換性テスト
+python test_api_compatibility.py
+
+# 通知システムテスト
+python test_notification_system.py
+
+# リアルな使用シナリオテスト
+python test_realistic_scenario.py
+
+# タイムアウト動作テスト
+python test_timeout_simulation.py
+```
+
+## 🗄️ データベース構造
+
+### スプレッドシート構造
+
+各機体ごとに `Machine_{機体ID}` シートが作成されます：
+
+| GAS Time | MachineTime | MachineID | DataType | Latitude | Longitude | Altitude | GPS Satellites | Battery | Comment | Active |
+|----------|-------------|-----------|----------|----------|-----------|----------|----------------|---------|---------|--------|
+| システム受信時刻 | 機体時刻 | 機体ID | データタイプ | 緯度 | 経度 | 高度 | 衛星数 | バッテリー | コメント | 監視ON/OFF |
+
+### データ変換
+
+**POST時の入力形式:**
+```json
+{"GPS": {"LAT": 34.124, "LNG": 153.131, "ALT": 342.5, "SAT": 43}}
+```
+
+**GET時の出力形式:**
+```json
+{"latitude": 34.124, "longitude": 153.131, "altitude": 342.5, "satellites": 43}
+```
+
+## 🔧 システム管理
+
+### 監視システム制御
+
+```javascript
+// 監視統計取得
+getMachineMonitoringStats()
+
+// 特定機体の強制チェック
+checkSpecificMachine("004353")
+
+// 監視ステータスリセット
+resetMachineMonitorStatus("004353")
+
+// 設定状況確認
+getConfigStatus()
+```
+
+### トリガー管理
+
+```javascript
+// 監視トリガー設定
+setupTriggers()
+
+// 全トリガー削除
+deleteTriggers()
 ```
 
 ## 🐛 トラブルシューティング
 
 ### よくあるエラー
 
-| HTTP ステータス           | 原因                 | 解決方法                |
-| ------------------------- | -------------------- | ----------------------- |
-| 403 Forbidden             | WebApp 公開設定      | 管理者に連絡            |
-| 404 Not Found             | URL 間違い           | URL を確認              |
-| 500 Internal Server Error | リクエスト形式エラー | JSON フォーマットを確認 |
+| HTTPステータス | 原因 | 解決方法 |
+|----------------|------|----------|
+| 403 Forbidden | WebApp公開設定 | Apps Scriptで「全員」に公開設定 |
+| 404 Not Found | URL間違い | WebApp URLを再確認 |
+| 500 Internal Server Error | JSONフォーマットエラー | リクエスト形式を確認 |
 
-### 正常な動作確認
+### デバッグ方法
 
-```bash
-# 最速確認
-python simple_sender.py  # 送信テスト
-python simple_getter.py  # 取得テスト
-```
+1. **GASログ確認:**
+   - Apps Script エディタ → 実行 → ログを確認
 
-## 📋 他言語での実装例
+2. **通知システム状態確認:**
+   ```javascript
+   getMachineMonitoringStats()
+   ```
 
-### JavaScript (Node.js)
+3. **設定確認:**
+   ```javascript
+   getConfigStatus()
+   ```
 
-```javascript
-// 送信例
-const response = await fetch(
-  "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      DataType: "HK",
-      MachineID: "004353",
-      MachineTime: "2025/07/16 01:38:59",
-      GPS: { LAT: 34.124125, LNG: 153.131241, ALT: 342.5, SAT: 43 },
-      BAT: 3.45,
-      CMT: "MODE:NORMAL,COMM:OK,GPS:LOCKED,SENSOR:TEMP_OK,PRESSURE:STABLE,ERROR:NONE",
-    }),
-  }
-);
+## 🔄 バージョン履歴
 
-// 取得例
-const data = await fetch(
-  "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=getAllMachines"
-);
-```
+### v2.0.0 (Current)
+- Discord通知システム追加
+- 機体監視・タイムアウト検知機能
+- モジュラー構造に再設計
+- 設定管理システム強化
+- テストスイート拡充
 
-### cURL
+### v1.0.0
+- 基本的なテレメトリ送受信機能
+- Google Sheets連携
+- 機体別データ管理
 
-```bash
-# 送信
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"DataType":"HK","MachineID":"004353","MachineTime":"2025/07/16 01:38:59","GPS":{"LAT":34.124125,"LNG":153.131241,"ALT":342.5,"SAT":43},"BAT":3.45,"CMT":"MODE:NORMAL,COMM:OK,GPS:LOCKED,SENSOR:TEMP_OK,PRESSURE:STABLE,ERROR:NONE"}' \
-  https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
-```
+## 📞 サポート
+
+- **技術的な問題:** GASエディタのログを確認
+- **Discord通知:** webhook設定とスクリプトプロパティを確認
+- **データ形式:** example_json/ ディレクトリのサンプルを参照
+
+---
+
+**開発者向け:** `src/` ディレクトリの各ファイルを確認して詳細な実装を理解してください。

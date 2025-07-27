@@ -14,6 +14,13 @@ export default {
           accent: '#58a6ff',
           text: '#c9d1d9',
           muted: '#8b949e',
+        },
+        light: {
+          bg: '#ffffff',
+          surface: '#f6f8fa',
+          accent: '#0969da',
+          text: '#1f2328',
+          muted: '#656d76',
         }
       },
       borderRadius: {

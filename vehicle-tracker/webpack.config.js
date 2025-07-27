@@ -1,11 +1,17 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const webpack = require('webpack');
-require('dotenv').config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import webpack from 'webpack';
+import dotenv from 'dotenv';
 
-module.exports = (env, argv) => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
+
+export default (env, argv) => {
   const isProduction = argv.mode === 'production';
 
   return {
@@ -49,6 +55,7 @@ module.exports = (env, argv) => {
           MODE: isProduction ? 'production' : 'development',
           VITE_GMAPS_API_KEY: process.env.VITE_GMAPS_API_KEY,
           VITE_GAS_ENDPOINT: process.env.VITE_GAS_ENDPOINT,
+          VITE_APP_PASSWORD: process.env.VITE_APP_PASSWORD,
         }),
       }),
       ...(isProduction ? [new MiniCssExtractPlugin({

@@ -1,303 +1,359 @@
-# Vehicle Tracker Web App
+# 機体追跡可視化 WebApp
 
-リアルタイム車両追跡Webアプリケーション - Google Mapsを使って車両の位置とセンサーデータを可視化します。
+リアルタイム機体追跡・センサーデータ監視のためのReact WebApplicationです。
 
-## 🚀 初期環境設定（必須）
+## 🚀 クイックスタート
 
-このリポジトリをクローンした後、以下の手順で環境を構築してください。
+### 前提条件
+- Node.js 18以上
+- npm (Node.jsに含まれます)
+- Google Maps API キー
+- Google Apps Script (GAS) エンドポイント
 
-### 1. 必要なソフトウェア
-
-- **Node.js 18以上** - [nodejs.org](https://nodejs.org/) からダウンロード
-- **npm** (Node.jsに含まれています)
-- **Google Maps API キー** - [Google Cloud Console](https://console.cloud.google.com/)で取得
-
-### 2. プロジェクトのセットアップ
-
+### セットアップ
 ```bash
-# 1. このリポジトリをクローン
-git clone <repository-url>
-cd vehicle-tracker
-
-# 2. 必要なライブラリをインストール
+# 1. 依存関係のインストール
 npm install
 
-# 3. 環境設定ファイルを作成
+# 2. 環境設定ファイルの作成
 cp .env.example .env
+
+# 3. .envファイルを編集して以下を設定
+VITE_GMAPS_API_KEY=your_google_maps_api_key
+VITE_GAS_ENDPOINT=your_gas_endpoint_url
+VITE_APP_PASSWORD=your_secure_password
 ```
 
-### 3. APIキーの設定
-
-`.env`ファイルを編集して以下を設定：
-
+### 開発・実行コマンド
 ```bash
-# Google Maps APIキー（必須）
-VITE_GMAPS_API_KEY=your_google_maps_api_key_here
-
-# データ取得先のGoogle Apps Script URL（必須）
-VITE_GAS_ENDPOINT=your_google_apps_script_web_app_url_here
+npm run dev      # 開発サーバー起動 (http://localhost:4000)
+npm run build    # 本番用ビルド
+npm run preview  # ビルド結果のプレビュー
+npm run lint     # コード品質チェック
 ```
 
-### 4. アプリケーションの起動
+## 🏗️ 技術仕様
 
-```bash
-# 開発サーバーを起動
-npm run dev
-
-# ブラウザで http://localhost:4000 にアクセス
+### アーキテクチャ概要
+```
+[機体センサー] → [Google Apps Script] → [React WebApp] → [ユーザー]
 ```
 
-### 5. 本番用ビルド（オプション）
+### 技術スタック
+- **フレームワーク**: React 19 + TypeScript
+- **ビルドツール**: Webpack 5 (開発サーバー: webpack-dev-server)
+- **状態管理**: Zustand (軽量Redux代替)
+- **データ取得**: SWR (HTTP Client + キャッシング)
+- **UI**: Tailwind CSS + Framer Motion
+- **マップ**: Google Maps JavaScript API
+- **グラフ**: Recharts
+- **エクスポート**: PapaParse (CSV/JSON)
 
-```bash
-# 本番用にビルド
-npm run build
-
-# ビルドした結果をプレビュー
-npm run preview
-```
-
----
-
-## 📖 技術仕様書（エンジニア向け）
-
-### システム概要
-
-このWebアプリケーションは、車両のリアルタイム位置追跡とセンサーデータ監視を行います。車両に搭載されたGPSとセンサーからのデータをWebブラウザ上の地図に表示し、運行状況を可視化します。
-
-### アーキテクチャ
-
-```
-[車両センサー] → [Google Sheets + GAS] → [React Webアプリ] → [ユーザー]
-```
-
-1. **データ収集層**: 車両のGPS・センサーデータをGoogle Sheetsに蓄積
-2. **API層**: Google Apps Script (GAS) がREST APIとしてデータを提供
-3. **表示層**: React Webアプリがリアルタイムでデータを取得・表示
-
-### 主要技術スタック
-
-- **フロントエンド**: React 18 + TypeScript
-- **ビルドツール**: Webpack 5 
-- **スタイリング**: Tailwind CSS（ダークテーマ）
-- **地図表示**: Google Maps JavaScript API
-- **状態管理**: Zustand（軽量Redux代替）
-- **データ取得**: SWR（自動リフレッシュ付きHTTPクライアント）
-- **アニメーション**: Framer Motion
-
-### 機能仕様
-
-#### 🗺️ 地図表示機能
-- **リアルタイム位置表示**: 車両の現在位置をマーカーで表示
-- **移動軌跡**: 過去の移動履歴をカラフルな線で描画
-- **経過点表示**: 選択した車両の詳細な移動経路を点で表示
-- **自動追従**: 車両選択時に地図が自動的に中心移動
-
-#### 📊 センサーデータ表示
-- **GPS情報**: 緯度経度、高度、衛星数
-- **環境センサー**: 水温、気圧、気温
-- **タイムスタンプ**: データ取得時刻
-- **Raw JSONデータ**: 技術者向け詳細情報
-
-#### ⚡ リアルタイム更新
-- **自動更新**: 5秒〜60秒間隔で設定可能
-- **接続状態監視**: データ取得の成功/失敗状況を表示
-- **エラー処理**: 接続障害時の自動リトライ機能
-
-#### 💾 データエクスポート
-- **CSV形式**: Excel等で開ける形式でデータ出力
-- **JSON形式**: プログラム処理用のデータ形式
-- **選択エクスポート**: 特定車両または全車両データ
-
-#### 🎮 操作性
-- **キーボードショートカット**: 素早い車両切り替え（1-9キー、矢印キー等）
-- **レスポンシブ対応**: PC・タブレット・スマートフォンで最適表示
-- **タッチ操作**: モバイルデバイスでの直感的操作
-
-### データフォーマット
-
-#### 車両テレメトリーデータ
-```typescript
-interface TelemetryDataPoint {
-  timestamp: string;        // ISO 8601形式の時刻
-  vehicleId: string;       // 車両識別子
-  latitude: number;        // 緯度（度）
-  longitude: number;       // 経度（度）
-  altitude: number;        // 高度（メートル）
-  satellites: number;      // GPS衛星数
-  waterTemperature: number; // 水温（摂氏）
-  airPressure: number;     // 気圧（hPa）
-  airTemperature: number;  // 気温（摂氏）
-}
-```
-
-### APIエンドポイント仕様
-
-Google Apps Scriptは以下のエンドポイントを提供する必要があります：
-
-- `GET ?action=getAllVehicles` - 全車両の最新データ取得
-- `GET ?action=getVehicle&vehicleId=XXX` - 特定車両の履歴データ取得
-- `GET ?action=getVehicleList` - 車両一覧取得
-
-### パフォーマンス最適化
-
-- **マーカー制限**: 経過点表示を最大10個に制限してレンダリング負荷軽減
-- **データ間引き**: 非選択車両は10番目ごとにポイント表示
-- **メモリ管理**: 不要なイベントハンドラーのクリーンアップ
-- **バンドルサイズ**: Webpackによるコード分割とminification
-
-### セキュリティ
-
-- **APIキー保護**: 環境変数による機密情報の管理
-- **CORS対応**: 適切なオリジン制限
-- **XSS対策**: React標準のエスケープ処理
-
----
-
-## 📱 ユーザー操作ガイド
-
-### 基本操作
-
-| 操作 | 方法 |
-|------|------|
-| 車両選択 | 上部タブクリックまたは1-9キー |
-| 車両切り替え | `[` / `]` キーまたは矢印キー |
-| データ更新間隔変更 | 右上の「Refresh」ドロップダウン |
-| 更新一時停止 | `P`キーまたは「Pause」ボタン |
-| データエクスポート | `E`キーまたは下部エクスポートボタン |
-| センサー詳細表示 | マーカークリックまたは情報ボタン |
-| 詳細パネル閉じる | `ESC`キーまたは×ボタン |
-
-### レスポンシブデザイン
-
-- **デスクトップ（1280px以上）**: 地図＋固定サイドパネル
-- **タブレット（1024px-1279px）**: 地図メイン＋オーバーレイパネル  
-- **モバイル（1023px以下）**: フルスクリーン地図＋オーバーレイパネル
-
----
-
-## 🔧 Google Apps Script設定
-
-データ提供用のGoogle Apps Scriptは以下のエンドポイントをサポートする必要があります：
-
-### 必要なAPIエンドポイント
-
-- `GET ?action=getAllVehicles` - 全車両の最新データを返す
-- `GET ?action=getVehicle&vehicleId=車両ID` - 特定車両の履歴データを返す  
-- `GET ?action=getVehicleList` - 利用可能な車両の一覧を返す
-
-### データ形式仕様
-
-Google Apps Scriptが返すJSONデータの形式：
-
-```json
-{
-  "status": "success",
-  "timestamp": "2025-06-16T12:00:00.000Z",
-  "vehicles": [
-    {
-      "vehicleId": "DRONE_001",
-      "data": [
-        {
-          "timestamp": "2025-06-16T12:00:00.000Z",
-          "vehicleId": "DRONE_001",
-          "latitude": 35.6762,
-          "longitude": 139.6503,
-          "altitude": 120.5,
-          "satellites": 8,
-          "waterTemperature": 22.3,
-          "airPressure": 1013.25,
-          "airTemperature": 25.1
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-## 🏗️ プロジェクト構造
-
+### プロジェクト構造
 ```
 src/
-├── api/               # データ取得API層
-├── components/        # React UIコンポーネント
-│   ├── TopBar.tsx    # ヘッダー（更新間隔設定等）
-│   ├── VehicleTabs.tsx # 車両選択タブ
-│   ├── MapContainer.tsx # Google Maps表示
-│   ├── VehicleMarker.tsx # 車両位置マーカー
-│   ├── WaypointMarker.tsx # 経過点マーカー
-│   ├── TrackPolyline.tsx # 移動軌跡線
-│   ├── SidePanel.tsx # センサー詳細パネル
-│   └── StatusBar.tsx # 接続状態・エクスポート
-├── hooks/            # カスタムReactフック
-├── store/            # グローバル状態管理
-├── types/            # TypeScript型定義
-├── utils/            # ユーティリティ関数
-├── constants/        # 設定定数
-└── assets/           # 静的ファイル
+├── components/           # Reactコンポーネント
+│   ├── auth/            # 認証関連コンポーネント
+│   ├── features/        # 機能特化コンポーネント
+│   │   ├── MachineTabs.tsx      # 機体タブ切り替え
+│   │   ├── SensorGraphs.tsx     # センサーグラフ表示
+│   │   ├── GradientLegend.tsx   # グラデーション凡例
+│   │   └── PredictionControls.tsx # 予測機能制御
+│   ├── map/             # マップ関連コンポーネント
+│   │   ├── MapContainer.tsx         # メインマップコンテナ
+│   │   ├── MachineMarker.tsx        # 機体位置マーカー
+│   │   ├── WaypointMarker.tsx       # 経過点マーカー
+│   │   ├── TrackPolyline.tsx        # 基本軌跡線
+│   │   ├── DirectGradientPolyline.tsx # グラデーション軌跡線
+│   │   ├── PredictionMarker.tsx     # 位置予測マーカー
+│   │   └── GradientMapOverlay.tsx   # グラデーションオーバーレイ
+│   └── ui/              # 汎用UIコンポーネント
+│       ├── TopBar.tsx           # ヘッダーバー
+│       ├── StatusBar.tsx        # ステータスバー
+│       ├── SidePanel.tsx        # 詳細情報パネル
+│       └── ViewToggle.tsx       # ビュー切り替え
+├── hooks/               # カスタムReactフック
+│   ├── useMachineData.ts        # 機体データ取得・管理
+│   └── useKeyboardShortcuts.ts  # キーボードショートカット
+├── store/               # グローバル状態管理
+│   └── index.ts         # Zustand ストア定義
+├── utils/               # ユーティリティ関数
+│   ├── auth.ts          # 認証処理
+│   ├── export.ts        # データエクスポート
+│   ├── gradientColors.ts # グラデーション色計算
+│   └── prediction.ts    # 位置予測計算
+├── types/               # TypeScript型定義
+│   └── index.ts         # アプリケーション型定義
+├── constants/           # 定数定義
+│   └── map.ts           # マップスタイル・設定
+├── api/                 # API通信
+│   └── gas.ts           # Google Apps Script API
+├── App.tsx              # メインアプリケーション
+├── main.tsx             # エントリーポイント
+├── index.css            # グローバルスタイル
+└── App.css              # アプリケーション専用スタイル
 ```
 
----
+## 📊 データフロー
 
-## ⚙️ カスタマイズ
+### 1. データ取得フロー
+```typescript
+// SWRによる自動データ取得・リフレッシュ
+useMachineData() → GAS API → Zustand Store → React Components
+```
 
-### 地図スタイルの変更
-`src/constants/map.ts`の`MONOCHROME_MAP_STYLE`を編集することで、地図の見た目をカスタマイズできます。
+### 2. 状態管理パターン
+```typescript
+// Zustand による集中状態管理
+interface AppState {
+  machineTracks: MachineTracks;        // 機体軌跡データ
+  selectedMachineId: string | null;    // 選択中機体
+  gradientVisualization: GradientVisualizationState;
+  predictionConfig: PredictionConfig;
+  connectionStatus: ConnectionStatus;
+}
+```
 
-### 更新間隔の変更  
-`src/components/TopBar.tsx`の`intervalOptions`配列を編集することで、データ更新間隔の選択肢を変更できます。
+### 3. API通信仕様
+```typescript
+// Google Apps Script エンドポイント
+GET ?action=getAllMachines     // 全機体データ
+GET ?action=getMachine&id=XXX  // 特定機体データ
+GET ?action=getMachineList     // 機体一覧
+```
 
-### 色テーマの変更
-`tailwind.config.js`でダークテーマの色を設定しています：
-- Background: `#0d1117` (GitHub風ダークグレー)
-- Surface: `#161b22` (カード背景色)
-- Accent: `#58a6ff` (アクセントブルー)
-- Text: `#c9d1d9` (メインテキスト色)
+## 🎨 UI/UX仕様
 
----
+### レスポンシブデザイン
+- **デスクトップ (1280px+)**: 固定サイドパネル + マップ
+- **タブレット (1024-1279px)**: オーバーレイパネル + マップ  
+- **モバイル (~1023px)**: フルスクリーンマップ + モーダルパネル
 
-## 🚀 デプロイ
+### テーマ設計
+アプリケーションは**ダークモード**と**ライトモード**の両方をサポートしています。
+
+#### ダークテーマ（GitHub風）
+```scss
+--dark-bg: #0d1117;       // メイン背景色
+--dark-surface: #161b22;  // カード・パネル背景
+--dark-accent: #58a6ff;   // アクセントカラー (青)
+--dark-text: #c9d1d9;     // メインテキスト
+--dark-muted: #8b949e;    // 補助テキスト
+```
+
+#### ライトテーマ（GitHub風）
+```scss
+--light-bg: #ffffff;      // メイン背景色
+--light-surface: #f6f8fa; // カード・パネル背景
+--light-accent: #0969da;  // アクセントカラー (青)
+--light-text: #1f2328;    // メインテキスト
+--light-muted: #656d76;   // 補助テキスト
+```
+
+#### テーマ切り替え機能
+- **切り替え方法**: ヘッダー右上の太陽/月アイコン、またはログイン画面のトグルボタン
+- **自動保存**: 選択したテーマはlocalStorageに保存され、次回起動時に復元
+- **対応範囲**: UI全体（マップスタイル、グラフ、パネル、コンポーネント）
+
+### キーボードショートカット
+| キー | 機能 |
+|------|------|
+| `1-9` | 機体選択 |
+| `[` / `]` | 機体切り替え |
+| `P` | 更新の一時停止/再開 |
+| `E` | データエクスポート |
+| `ESC` | パネル閉じる |
+
+## ⚙️ 機能仕様
+
+### 1. リアルタイム追跡
+- **更新間隔**: 5秒〜60秒 (設定可能)
+- **自動フェッチ**: SWRによるバックグラウンド更新
+- **エラーハンドリング**: 自動リトライ + 接続状態表示
+
+### 2. 地図表示機能
+- **テーマ対応マップ**: ダークモード（黒基調）/ ライトモード（白基調）
+- **自動スタイル切り替え**: テーマ変更時にマップも自動で再描画
+- **自動中心移動**: 機体選択時の地図追従
+- **ズーム制御**: 全機体表示 ↔ 個別機体詳細
+
+### 3. 軌跡可視化
+- **基本軌跡**: シンプルな移動履歴線
+- **グラデーション軌跡**: パラメータ連動色変化
+  - 対応パラメータ: 高度、衛星数、バッテリー
+  - リアルタイム色計算・更新
+
+### 4. 位置予測機能
+```typescript
+interface PredictionConfig {
+  isEnabled: boolean;
+  predictionMinutes: number;    // 1-60分
+  referencePoints: number;      // 2-10点
+}
+
+// Haversine公式による球面距離計算
+// 線形外挿による位置予測
+```
+
+### 5. データエクスポート
+- **CSV形式**: Excel互換
+- **JSON形式**: プログラム処理用
+- **エクスポート範囲**: 個別機体 / 全機体
+
+### 6. 認証システム
+- **パスワード認証**: 設定可能なアクセス制御
+- **セッション管理**: 24時間自動期限切れ
+- **ローカルストレージ**: セッション情報の永続化
+
+## 🔧 開発ガイド
+
+### 新機能追加手順
+
+#### 1. コンポーネント追加
+```typescript
+// 1. 適切なディレクトリに配置
+src/components/features/NewFeature.tsx
+
+// 2. 型定義の追加
+src/types/index.ts
+
+// 3. 状態管理への統合
+src/store/index.ts
+```
+
+#### 2. APIエンドポイント追加
+```typescript
+// 1. GAS側の実装
+// 2. TypeScript型定義
+// 3. APIクライアント更新
+src/api/gas.ts
+```
+
+### コーディング規約
+- **TypeScript**: strict mode使用
+- **インポート順序**: React → サードパーティ → 内部モジュール
+- **コンポーネント命名**: PascalCase
+- **ファイル命名**: camelCase
+
+### パフォーマンス最適化
+```typescript
+// 1. React.memo による無駄な再レンダー防止
+export const MachineMarker = React.memo<Props>(({ ... }) => {
+  // ...
+});
+
+// 2. useMemo によるコンピューテッド値キャッシュ
+const expensiveValue = useMemo(() => calculateHeavyOperation(data), [data]);
+
+// 3. マーカー数制限 (最大10個の経過点)
+const limitedWaypoints = waypoints.slice(-10);
+```
+
+## 🐛 トラブルシューティング
+
+### よくある問題
+
+#### 1. ビルドエラー
+```bash
+# 依存関係の再インストール
+rm -rf node_modules package-lock.json
+npm install
+
+# キャッシュクリア
+npm run build
+```
+
+#### 2. 環境変数が読み込まれない
+```bash
+# .envファイルの確認
+cat .env
+
+# Webpack設定の確認
+# import.meta.env.VITE_* の形式で定義されているか
+```
+
+#### 3. Maps API エラー
+- APIキーの有効性確認
+- APIキーの制限設定確認
+- 課金アカウントの有効化確認
+
+### ログ・デバッグ
+```typescript
+// 1. Zustand DevTools
+useAppStore.getState() // 現在の状態確認
+
+// 2. SWR DevTools
+// データ取得状態の監視
+
+// 3. Network タブ
+// GAS APIレスポンスの確認
+```
+
+## 🚀 デプロイメント
 
 ### 本番ビルド
 ```bash
 npm run build
+# dist/ フォルダが生成される
 ```
 
-### Vercel/Netlifyへのデプロイ
-1. GitHubリポジトリをVercel/Netlifyに接続
-2. 環境変数を設定：
-   - `VITE_GMAPS_API_KEY`
-   - `VITE_GAS_ENDPOINT`
-3. 自動デプロイが開始されます
+### デプロイ先選択肢
+1. **Vercel** (推奨)
+2. **Netlify**
+3. **GitHub Pages**
+4. **静的ホスティング**
 
----
-
-## 🧑‍💻 開発者向け情報
-
-### コード品質
-- TypeScript strict mode使用
-- ESLint設定済み
-- 統一的なコーディングスタイル
-
-### ビルドコマンド
-```bash
-npm run build    # 本番用ビルド
-npm run lint     # コード品質チェック  
-npm run preview  # ビルド結果のプレビュー
+### 環境変数設定
+デプロイ時に以下を設定:
+```
+VITE_GMAPS_API_KEY=production_key
+VITE_GAS_ENDPOINT=production_gas_url  
+VITE_APP_PASSWORD=production_password
 ```
 
+## 📊 データスキーマ
+
+### 機体テレメトリーデータ
+```typescript
+interface TelemetryDataPoint {
+  timestamp: string;        // ISO 8601形式の時刻
+  machineTime?: string;     // 機体側の時刻
+  machineId: string;        // 機体識別子
+  dataType?: string;        // データタイプ
+  latitude: number;         // 緯度（度）
+  longitude: number;        // 経度（度）
+  altitude: number;         // 高度（メートル）
+  satellites: number;       // GPS衛星数
+  battery?: number;         // バッテリー残量（%）
+  comment?: string;         // コメント・注記
+}
+```
+
+**注意**: 水温、気圧、気温センサーは将来実装予定です。
+
+## 📝 更新履歴
+
+### v2.1.0 (最新)
+- ✅ ディレクトリ構造の最適化
+- ✅ Vite → Webpack 完全移行
+- ✅ 不要ファイルの削除・クリーンアップ
+- ✅ ESモジュール対応
+- ✅ インポートパスの統一
+- ✅ 技術仕様書READMEの全面改訂
+- ✅ **ダーク/ライトテーマ機能**: 完全対応（UI、マップ、グラフ全て）
+- ✅ **テーマ自動保存**: localStorage連携でユーザー設定永続化
+
+### v2.0.0
+- ✅ Vehicle → Machine 用語統一
+- ✅ 認証システム実装
+- ✅ 位置予測機能追加
+- ✅ グラデーション可視化改善
+
+## 👤 開発者情報
+
+**Created by**: Shintaro Matsumoto  
+**Repository**: 機体追跡可視化 WebApp  
+**License**: MIT
+
 ---
-
-## 📄 ライセンス
-
-MIT License - 詳細はLICENSEファイルを参照
-
-## 🤝 コントリビューション
-
-1. このリポジトリをフォーク
-2. 機能ブランチを作成
-3. 変更を実装  
-4. テスト追加（該当する場合）
-5. プルリクエストを送信
+**Note**: このREADMEは技術仕様書として作成されており、開発・保守の参考資料として使用してください。

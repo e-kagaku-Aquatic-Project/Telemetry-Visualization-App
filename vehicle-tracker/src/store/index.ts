@@ -3,6 +3,8 @@ import { TelemetryDataPoint, MachineTracks, ConnectionStatus, GradientVisualizat
 import { PredictionConfig, PredictedPosition, predictPosition, DEFAULT_PREDICTION_CONFIG } from '../utils/prediction';
 import { verifyPassword, generateSessionToken, saveSession, getSession, clearSession, checkAuthStatus as checkAuthStatusUtil } from '../utils/auth';
 
+export type Theme = 'light' | 'dark';
+
 interface AuthState {
   isAuthenticated: boolean;
   sessionToken: string | null;
@@ -13,7 +15,13 @@ interface AuthState {
   initializeAuth: () => void;
 }
 
-interface AppState extends AuthState {
+interface ThemeState {
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+}
+
+interface AppState extends AuthState, ThemeState {
   // Machine data
   machineTracks: MachineTracks;
   selectedMachineId: string | null;
@@ -101,6 +109,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   isAuthenticated: false,
   sessionToken: null,
   sessionTimestamp: null,
+  
+  // Theme state
+  theme: 'dark', // Default to dark theme
   
   // Actions
   setMachineTracks: (tracks) => set({ machineTracks: tracks }),
@@ -216,6 +227,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     return predictions;
   },
   
+  // Theme actions
+  setTheme: (theme: Theme) => {
+    set({ theme });
+    // Apply theme to document root
+    if (typeof document !== 'undefined') {
+      document.documentElement.className = theme === 'dark' ? 'dark' : '';
+      localStorage.setItem('theme', theme);
+    }
+  },
+  
+  toggleTheme: () => {
+    const { theme } = get();
+    const newTheme: Theme = theme === 'dark' ? 'light' : 'dark';
+    get().setTheme(newTheme);
+  },
+  
   // Auth actions
   login: (password: string) => {
     const isValid = verifyPassword(password);
@@ -257,5 +284,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       sessionToken: isValid ? token : null,
       sessionTimestamp: isValid ? timestamp : null,
     });
+    
+    // Initialize theme from localStorage
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme') as Theme | null;
+      const theme: Theme = savedTheme || 'dark';
+      get().setTheme(theme);
+    }
   },
 }));

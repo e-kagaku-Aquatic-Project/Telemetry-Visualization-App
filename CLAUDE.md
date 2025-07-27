@@ -60,6 +60,7 @@ npm run preview      # Preview production build (uses serve)
 - **Component Structure**: Modular components for map, panels, and controls
 - **Animations**: Framer Motion for smooth UI transitions
 - **Gradient Visualization**: `DirectGradientPolyline` component for parameter-based track coloring
+- **Authentication**: Password-based session management with local storage
 
 ### Environment Configuration
 
@@ -67,7 +68,10 @@ Frontend requires these environment variables:
 ```
 VITE_GMAPS_API_KEY=your_google_maps_api_key
 VITE_GAS_ENDPOINT=your_google_apps_script_web_app_url
+VITE_APP_PASSWORD=your_secure_password
 ```
+
+Copy `.env.example` to `.env` and configure these values before running the application.
 
 ### Data Schema
 
@@ -82,13 +86,12 @@ interface TelemetryDataPoint {
   longitude: number;
   altitude: number;
   satellites: number;
-  waterTemperature: number;
-  airPressure: number;
-  airTemperature: number;
   battery?: number;
   comment?: string;
 }
 ```
+
+**Note**: The current implementation stores only core GPS and system data. Water temperature, air pressure, and air temperature sensors are planned but not yet implemented in the frontend data structure.
 
 ### Key Technical Decisions
 
@@ -98,6 +101,7 @@ interface TelemetryDataPoint {
 - **Error Handling**: Custom `GASApiError` class with retry logic
 - **Keyboard Navigation**: Comprehensive shortcuts (1-9: select machine, [/]: switch, P: pause, E: export, ESC: close)
 - **Dark Theme**: GitHub-style colors (#0d1117 background, #161b22 surface, #58a6ff accent)
+- **Authentication**: Session-based login with configurable password protection
 
 ### Performance Optimizations
 
@@ -123,6 +127,14 @@ The app uses a custom monochrome map style. Modify `MONOCHROME_MAP_STYLE` in `sr
 2. Modify GAS sheet headers in `createNewSheet()` function
 3. Update data parsing in `getMachineDataFromSheet()`
 4. Add UI elements in relevant components
+
+### Authentication Setup
+
+The application includes password-based authentication:
+1. Set `VITE_APP_PASSWORD` in your `.env` file
+2. Users must enter the correct password on first access
+3. Sessions are stored in localStorage and expire after 24 hours
+4. Authentication components are in `src/components/auth/`
 
 ### Testing GAS Functions
 
@@ -177,3 +189,62 @@ When modifying data fields, update both:
 - All component names, API endpoints, and data structures have been updated accordingly
 - The GAS backend is now at version 2.0.0 with new field additions (battery, comment, dataType, machineTime)
 - Frontend fully supports the new GAS API structure and additional telemetry fields
+
+## Key Dependencies and Versions
+
+- **Node.js**: Version 18+ required
+- **React**: 19.1.0 (latest version)
+- **TypeScript**: 5.8.3 with strict mode
+- **Webpack**: 5.97.1 (not Vite despite env variable naming)
+- **Zustand**: 5.0.5 for state management
+- **SWR**: 2.3.3 for data fetching
+- **Google Maps**: @react-google-maps/api 2.20.6
+- **Framer Motion**: 12.18.1 for animations
+- **Tailwind CSS**: 3.4.17 for styling
+- **React Router DOM**: 7.7.0 for routing
+
+## Error Handling Patterns
+
+- **API Errors**: Custom `GASApiError` class with automatic retry logic
+- **Map Loading**: Fallback UI while Google Maps loads
+- **Data Fetching**: SWR error boundaries with user-friendly messages
+- **Authentication**: Session expiry handling with automatic redirect to login
+
+## Common Development Tasks
+
+### Running a Single Component Test
+Currently no test framework is configured. The project focuses on integration testing through the GAS backend test scripts in the `GAS/` directory.
+
+### Debugging API Calls
+1. Open browser DevTools Network tab
+2. Filter by XHR/Fetch requests
+3. Look for requests to your GAS endpoint
+4. Check response format matches `TelemetryDataPoint` interface
+
+### Modifying Map Styles
+Edit `MONOCHROME_MAP_STYLE` in `src/constants/map.ts`. Use [Google Maps Styling Wizard](https://mapstyle.withgoogle.com/) for visual editing.
+
+### Adding New Keyboard Shortcuts
+1. Update `useKeyboardShortcuts` hook in `src/hooks/useKeyboardShortcuts.ts`
+2. Add shortcut documentation to `HelpPanel` component
+3. Test for conflicts with existing shortcuts
+
+## Performance Profiling
+
+### Key Metrics to Monitor
+- Initial page load time (target: < 3s)
+- Map marker rendering with 100+ points
+- Memory usage during extended sessions
+- Network requests during polling
+
+### Optimization Strategies
+- Use React DevTools Profiler for component rendering
+- Monitor bundle size with `npm run build` output
+- Check for memory leaks in long-running sessions
+- Profile with Chrome DevTools Performance tab
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

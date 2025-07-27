@@ -8,11 +8,11 @@
   }
   
   body {
-    @apply bg-dark-bg text-dark-text antialiased m-0 min-h-screen;
+    @apply bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text antialiased m-0 min-h-screen transition-colors duration-300;
   }
   
   * {
-    @apply border-dark-muted/20;
+    @apply border-light-muted/20 dark:border-dark-muted/20;
   }
 }
 
@@ -22,19 +22,28 @@
   }
   
   .btn-primary {
-    @apply bg-dark-accent text-white hover:bg-dark-accent/80;
+    @apply bg-light-accent dark:bg-dark-accent text-white hover:bg-light-accent/80 dark:hover:bg-dark-accent/80;
   }
   
   .btn-secondary {
-    @apply bg-dark-surface text-dark-text hover:bg-dark-surface/80 border border-dark-muted/30;
+    @apply bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text 
+           hover:bg-light-surface/80 dark:hover:bg-dark-surface/80 
+           border border-light-muted/30 dark:border-dark-muted/30;
   }
   
   .card {
-    @apply bg-dark-surface rounded-card border border-dark-muted/20 shadow-lg;
+    @apply bg-light-surface dark:bg-dark-surface rounded-card 
+           border border-light-muted/20 dark:border-dark-muted/20 shadow-lg;
   }
   
   .input {
-    @apply bg-dark-surface border border-dark-muted/30 rounded-inner px-3 py-2 text-dark-text placeholder-dark-muted focus:border-dark-accent focus:outline-none;
+    @apply bg-light-surface dark:bg-dark-surface 
+           border border-light-muted/30 dark:border-dark-muted/30 
+           rounded-inner px-3 py-2 
+           text-light-text dark:text-dark-text 
+           placeholder-light-muted dark:placeholder-dark-muted 
+           focus:border-light-accent dark:focus:border-dark-accent 
+           focus:outline-none;
   }
 }
 

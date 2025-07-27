@@ -1,34 +1,34 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '../store';
-import { COLOR_PALETTES, getDataRange, getColorForValue, normalizeValue } from '../utils/gradientColors';
+import { useAppStore } from '../../store';
+import { COLOR_PALETTES, getDataRange, getColorForValue, normalizeValue } from '../../utils/gradientColors';
 
 export const GradientLegend: React.FC = () => {
   const { 
     gradientVisualization,
-    selectedVehicleId,
-    vehicleTracks,
+    selectedMachineId,
+    machineTracks,
     viewMode,
   } = useAppStore();
 
-  // Get current vehicle data
-  const vehicleData = useMemo(() => {
-    if (viewMode !== 'individual' || !selectedVehicleId || !vehicleTracks[selectedVehicleId]) {
+  // Get current machine data
+  const machineData = useMemo(() => {
+    if (viewMode !== 'individual' || !selectedMachineId || !machineTracks[selectedMachineId]) {
       return [];
     }
-    return vehicleTracks[selectedVehicleId];
-  }, [viewMode, selectedVehicleId, vehicleTracks]);
+    return machineTracks[selectedMachineId];
+  }, [viewMode, selectedMachineId, machineTracks]);
 
   // Calculate data range and create legend scale
   const legendData = useMemo(() => {
     if (!gradientVisualization.isEnabled || 
         !gradientVisualization.selectedParameter || 
-        vehicleData.length === 0) {
+        machineData.length === 0) {
       return null;
     }
 
     const parameter = gradientVisualization.selectedParameter;
-    const range = getDataRange(vehicleData, parameter);
+    const range = getDataRange(machineData, parameter);
     const palette = COLOR_PALETTES[parameter];
     
     // Create 50 steps for smooth gradient display
@@ -49,7 +49,7 @@ export const GradientLegend: React.FC = () => {
       palette,
       parameter
     };
-  }, [gradientVisualization, vehicleData]);
+  }, [gradientVisualization, machineData]);
 
   if (!legendData) return null;
 
@@ -63,18 +63,18 @@ export const GradientLegend: React.FC = () => {
         className="absolute bottom-4 left-4 right-80 z-10 pointer-events-none"
       >
         <div className="max-w-sm">
-          <div className="card p-3 bg-dark-surface/95 backdrop-blur-sm border border-dark-muted/20">
+          <div className="card p-3 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-sm border border-light-muted/20 dark:border-dark-muted/20">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-xs font-medium text-dark-text">
+              <h4 className="text-xs font-medium text-light-text dark:text-dark-text">
                 {legendData.palette.name} ({legendData.palette.unit})
               </h4>
-              <div className="text-xs text-dark-muted">
-                {vehicleData.length} data points
+              <div className="text-xs text-light-muted dark:text-dark-muted">
+                {machineData.length} data points
               </div>
             </div>
             
             {/* Color gradient bar */}
-            <div className="relative h-4 rounded-inner overflow-hidden border border-dark-muted/30">
+            <div className="relative h-4 rounded-inner overflow-hidden border border-light-muted/30 dark:border-dark-muted/30">
               <div className="absolute inset-0 flex">
                 {legendData.steps.map((step, index) => (
                   <div
@@ -87,7 +87,7 @@ export const GradientLegend: React.FC = () => {
             </div>
             
             {/* Value labels */}
-            <div className="flex justify-between mt-2 text-xs text-dark-muted">
+            <div className="flex justify-between mt-2 text-xs text-light-muted dark:text-dark-muted">
               <span className="font-mono">
                 {legendData.range.min.toFixed(1)}
               </span>
@@ -100,8 +100,8 @@ export const GradientLegend: React.FC = () => {
             </div>
             
             {/* Additional info */}
-            <div className="mt-2 text-xs text-dark-muted/70 text-center">
-              Darker colors indicate higher values • Track segments: {Math.max(0, (vehicleData.length - 1) * 5)}
+            <div className="mt-2 text-xs text-light-muted/70 dark:text-dark-muted/70 text-center">
+              Darker colors indicate higher values • Track segments: {Math.max(0, (machineData.length - 1) * 5)}
             </div>
           </div>
         </div>
