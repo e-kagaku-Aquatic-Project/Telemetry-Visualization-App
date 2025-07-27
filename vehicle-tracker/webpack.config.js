@@ -20,6 +20,7 @@ export default (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       filename: isProduction ? '[name].[contenthash].js' : '[name].js',
       clean: true,
+      publicPath: process.env.PUBLIC_PATH || '/',
     },
     resolve: {
       extensions: ['.tsx', '.ts', '.js', '.jsx'],
