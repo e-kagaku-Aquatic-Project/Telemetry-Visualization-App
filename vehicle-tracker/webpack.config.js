@@ -50,6 +50,7 @@ export default (env, argv) => {
       new HtmlWebpackPlugin({
         template: './index.html',
         favicon: false,
+        publicPath: process.env.PUBLIC_PATH || '/',
       }),
       new webpack.DefinePlugin({
         'import.meta.env': JSON.stringify({
