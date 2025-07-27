@@ -316,7 +316,7 @@ function App() {
   }, [initializeAuth]);
 
   return (
-    <Router>
+    <Router basename={process.env.NODE_ENV === 'production' ? '/Telemetry-Visualization-App' : '/'}>
       <Routes>
         <Route path="/login" element={<LoginForm />} />
         <Route
