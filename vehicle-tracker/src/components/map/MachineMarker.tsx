@@ -41,21 +41,24 @@ export const MachineMarker: React.FC<MachineMarkerProps> = ({
 
   // Create custom marker icon (special icons for specific machines)
   const getMarkerIcon = () => {
+    // Get the base path for GitHub Pages deployment
+    const basePath = process.env.NODE_ENV === 'production' ? '/Telemetry-Visualization-App' : '';
+    
     if (machineId === 'Godzilla') {
       return {
-        url: '/godzilla-icon.png', // PNG image for Godzilla
+        url: `${basePath}/godzilla-icon.png`, // PNG image for Godzilla
         scaledSize: new google.maps.Size(isSelected ? 48 : 36, isSelected ? 48 : 36),
         anchor: new google.maps.Point(isSelected ? 24 : 18, isSelected ? 48 : 36), // Anchor at bottom center
       };
     } else if (machineId === 'iseki') {
       return {
-        url: '/iseki-icon.png', // PNG image for iseki
+        url: `${basePath}/iseki-icon.png`, // PNG image for iseki
         scaledSize: new google.maps.Size(isSelected ? 48 : 36, isSelected ? 48 : 36),
         anchor: new google.maps.Point(isSelected ? 24 : 18, isSelected ? 48 : 36), // Anchor at bottom center
       };
     } else if (machineId === 'kitahara') {
       return {
-        url: '/kitahara-icon.png', // PNG image for kitahara
+        url: `${basePath}/kitahara-icon.png`, // PNG image for kitahara
         scaledSize: new google.maps.Size(isSelected ? 48 : 36, isSelected ? 48 : 36),
         anchor: new google.maps.Point(isSelected ? 24 : 18, isSelected ? 48 : 36), // Anchor at bottom center
       };
