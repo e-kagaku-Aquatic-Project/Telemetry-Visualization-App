@@ -23,6 +23,7 @@ export const MapContainer: React.FC = () => {
     viewMode,
     gradientVisualization,
     theme,
+    mapType,
   } = useAppStore();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -122,7 +123,7 @@ export const MapContainer: React.FC = () => {
         zoom={mapZoom}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        options={getMapOptions(theme)}
+        options={getMapOptions(theme, mapType)}
       >
         {/* Render polylines managed outside React-Google-Maps */}
         {/* This is handled by DirectGradientPolyline component outside GoogleMap */}
