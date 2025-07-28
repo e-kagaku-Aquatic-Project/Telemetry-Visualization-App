@@ -11,6 +11,7 @@ export const MachineTabs: React.FC = () => {
     setMapCenter,
     viewMode,
     setViewMode,
+    mapMarkerLimit, // New: Get mapMarkerLimit from store
   } = useAppStore();
 
   const machineIds = Object.keys(machineTracks);
@@ -92,7 +93,7 @@ export const MachineTabs: React.FC = () => {
                 {machineId}
               </span>
               <span className="text-xs opacity-70 bg-light-bg/50 dark:bg-dark-bg/50 px-1.5 py-0.5 rounded flex-shrink-0">
-                {dataCount}
+                {Math.min(dataCount, mapMarkerLimit)}/{dataCount}
               </span>
             </div>
           </motion.button>
