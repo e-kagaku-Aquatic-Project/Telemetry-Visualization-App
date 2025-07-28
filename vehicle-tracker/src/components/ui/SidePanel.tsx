@@ -134,7 +134,7 @@ const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({
         )}
         <div className="flex justify-between">
           <span className="text-light-muted dark:text-dark-muted text-xs">Loss Time:</span>
-          <span className={`font-mono text-light-text dark:text-dark-text text-xs ${isDelayed ? 'text-red-500' : ''}`}>{lossTime}</span>
+          <span className={`font-mono text-xs ${isDelayed ? 'text-red-500' : 'text-light-text dark:text-dark-text'}`}>{lossTime}</span>
         </div>
         {selectedDataPoint.dataType && (
           <div className="flex justify-between">
