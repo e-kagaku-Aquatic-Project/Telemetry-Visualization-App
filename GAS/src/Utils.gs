@@ -125,17 +125,48 @@ function getMonitorStatus(spreadsheet) {
     data.forEach(row => {
       if (row[0]) {
         status[row[0]] = {
-          lastNotified: row[1],
+          lastNotified: convertToDateString(row[1]),
           status: row[2],
-          lastDataReceived: row[3],
+          lastDataReceived: convertToDateString(row[3]),
           notificationCount: row[4] || 0,
-          firstLostTime: row[5]
+          firstLostTime: convertToDateString(row[5])
         };
       }
     });
   }
   
   return status;
+}
+
+/**
+ * Convert various date formats to ISO string
+ * @param {Date|string|null} dateValue - Date value to convert
+ * @returns {string|null} ISO string or null
+ */
+function convertToDateString(dateValue) {
+  try {
+    if (!dateValue) return null;
+    
+    if (dateValue instanceof Date) {
+      return dateValue.toISOString();
+    } else if (typeof dateValue === 'string') {
+      // Already in ISO format
+      if (dateValue.includes('T') && dateValue.includes('Z')) {
+        return dateValue;
+      }
+      // Try to convert string to Date
+      const date = new Date(dateValue);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    }
+    
+    console.warn(`Invalid date value: ${dateValue}`);
+    return null;
+  } catch (error) {
+    console.error(`Error converting date: ${dateValue}`, error);
+    return null;
+  }
 }
 
 /**

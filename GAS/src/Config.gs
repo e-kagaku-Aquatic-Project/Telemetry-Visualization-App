@@ -165,3 +165,33 @@ function getConfigStatus() {
     ).length
   };
 }
+
+/**
+ * Debug function to verify reminder interval configuration
+ * @returns {Object} Detailed configuration debug info
+ */
+function debugReminderInterval() {
+  const rawProperty = getScriptProperty('REMINDER_INTERVAL_MINUTES');
+  const configValue = CONFIG.REMINDER_INTERVAL_MINUTES;
+  
+  console.log(`Reminder interval debug:
+    - Raw script property: ${rawProperty}
+    - CONFIG value: ${configValue}
+    - Type: ${typeof configValue}
+    - Is number: ${typeof configValue === 'number'}
+    - Is valid: ${configValue > 0}`);
+  
+  return {
+    raw_script_property: rawProperty,
+    config_value: configValue,
+    config_type: typeof configValue,
+    is_number: typeof configValue === 'number',
+    is_valid: configValue > 0,
+    all_properties: {
+      timeout_minutes: CONFIG.TIMEOUT_MINUTES,
+      check_interval_minutes: CONFIG.CHECK_INTERVAL_MINUTES,
+      reminder_interval_minutes: CONFIG.REMINDER_INTERVAL_MINUTES,
+      notifications_enabled: CONFIG.ENABLE_NOTIFICATIONS
+    }
+  };
+}

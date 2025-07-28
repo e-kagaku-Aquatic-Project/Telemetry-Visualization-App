@@ -115,11 +115,9 @@ function checkMachineTimeout(machine, monitorStatus) {
         console.log(`Signal lost detected for machine ${machine.machineId}`);
       } else {
         // Continuing signal lost - check if reminder notification needed
-        const lastNotified = new Date(currentStatus.lastNotified);
-        const minutesSinceLastNotification = (now - lastNotified) / (1000 * 60);
-        
-        if (minutesSinceLastNotification >= CONFIG.REMINDER_INTERVAL_MINUTES) {
-          // Send reminder notification
+        if (!currentStatus.lastNotified) {
+          console.warn(`Machine ${machine.machineId}: lastNotified is empty, sending immediate reminder`);
+          // Send immediate reminder if lastNotified is missing
           const notificationCount = currentStatus.notificationCount + 1;
           sendLostReminderNotification(machine, notificationCount, diffMinutes);
           monitorStatus[machine.machineId] = {
@@ -127,7 +125,46 @@ function checkMachineTimeout(machine, monitorStatus) {
             lastNotified: now.toISOString(),
             notificationCount: notificationCount
           };
-          console.log(`Reminder notification #${notificationCount} sent for machine ${machine.machineId}`);
+          console.log(`Immediate reminder notification #${notificationCount} sent for machine ${machine.machineId} (missing lastNotified)`);
+        } else {
+          // Parse lastNotified time safely
+          const lastNotified = new Date(currentStatus.lastNotified);
+          if (isNaN(lastNotified.getTime())) {
+            console.error(`Machine ${machine.machineId}: Invalid lastNotified format: ${currentStatus.lastNotified}`);
+            // Treat as immediate reminder needed
+            const notificationCount = currentStatus.notificationCount + 1;
+            sendLostReminderNotification(machine, notificationCount, diffMinutes);
+            monitorStatus[machine.machineId] = {
+              ...currentStatus,
+              lastNotified: now.toISOString(),
+              notificationCount: notificationCount
+            };
+            console.log(`Immediate reminder notification #${notificationCount} sent for machine ${machine.machineId} (invalid lastNotified)`);
+          } else {
+            const minutesSinceLastNotification = (now - lastNotified) / (1000 * 60);
+            
+            // Debug logging
+            console.log(`Machine ${machine.machineId} reminder check:
+              - Now: ${now.toISOString()}
+              - Last notified: ${lastNotified.toISOString()}
+              - Minutes since last notification: ${minutesSinceLastNotification.toFixed(2)}
+              - Reminder interval: ${CONFIG.REMINDER_INTERVAL_MINUTES}
+              - Should send reminder: ${minutesSinceLastNotification >= CONFIG.REMINDER_INTERVAL_MINUTES}`);
+            
+            if (minutesSinceLastNotification >= CONFIG.REMINDER_INTERVAL_MINUTES) {
+              // Send reminder notification
+              const notificationCount = currentStatus.notificationCount + 1;
+              sendLostReminderNotification(machine, notificationCount, diffMinutes);
+              monitorStatus[machine.machineId] = {
+                ...currentStatus,
+                lastNotified: now.toISOString(),
+                notificationCount: notificationCount
+              };
+              console.log(`Reminder notification #${notificationCount} sent for machine ${machine.machineId}`);
+            } else {
+              console.log(`Machine ${machine.machineId}: Reminder not needed yet (${minutesSinceLastNotification.toFixed(2)} < ${CONFIG.REMINDER_INTERVAL_MINUTES} minutes)`);
+            }
+          }
         }
       }
     } else {
