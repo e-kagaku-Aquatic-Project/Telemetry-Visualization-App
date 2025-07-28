@@ -4,6 +4,7 @@ import { useAppStore } from '../../store';
 import { X } from 'lucide-react';
 import type { TelemetryDataPoint } from '../../types';
 import { formatTimestamp, parseComment, getStatusColor, getStatusLabel } from '../../utils/export';
+import { MachineInformationCard } from './MachineInformationCard';
 
 interface SidePanelProps {
   isDesktop?: boolean;
@@ -16,24 +17,44 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
     setSidePanelOpen,
     selectedMachineId,
     getLatestDataPoint,
+    machineTracks,
+    viewMode,
   } = useAppStore();
 
   const latestPoint = selectedMachineId ? getLatestDataPoint(selectedMachineId) : null;
   const displayPoint = selectedDataPoint || latestPoint;
 
-  if (!displayPoint || (!isDesktop && !isSidePanelOpen)) return null;
+  if (!isDesktop && !isSidePanelOpen) return null;
 
   if (isDesktop) {
     // Desktop: Static side panel
     return (
       <div className="h-full bg-light-surface dark:bg-dark-surface border border-light-muted/20 dark:border-dark-muted/20 rounded-lg overflow-y-auto">
         <div className="p-2 lg:p-3">
-          <div className="flex items-center justify-between mb-2 lg:mb-3">
-            <h2 className="text-sm lg:text-base font-semibold text-light-text dark:text-white">
-              {selectedDataPoint ? 'Sensor Details' : 'Machine Details'}
-            </h2>
-          </div>
-          <SidePanelContent selectedDataPoint={displayPoint} />
+          {viewMode === 'all' ? (
+            <div className="space-y-4">
+              <h2 className="text-sm lg:text-base font-semibold text-light-text dark:text-white mb-2 lg:mb-3">
+                All Machine Information
+              </h2>
+              {Object.entries(machineTracks).map(([machineId, track]) => {
+                const latest = track[track.length - 1];
+                return latest ? (
+                  <MachineInformationCard key={machineId} dataPoint={latest} />
+                ) : null;
+              })}
+            </div>
+          ) : (
+            displayPoint && (
+              <>
+                <div className="flex items-center justify-between mb-2 lg:mb-3">
+                  <h2 className="text-sm lg:text-base font-semibold text-light-text dark:text-white">
+                    {selectedDataPoint ? 'Sensor Details' : 'Machine Details'}
+                  </h2>
+                </div>
+                <SidePanelContent selectedDataPoint={displayPoint} />
+              </>
+            )
+          )}
         </div>
       </div>
     );
