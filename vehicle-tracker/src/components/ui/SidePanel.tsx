@@ -29,7 +29,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
       <div className="h-full bg-light-surface dark:bg-dark-surface border border-light-muted/20 dark:border-dark-muted/20 rounded-lg overflow-y-auto">
         <div className="p-2 lg:p-3">
           <div className="flex items-center justify-between mb-2 lg:mb-3">
-            <h2 className="text-sm lg:text-base font-semibold text-light-text dark:text-light-text dark:text-dark-text">
+            <h2 className="text-sm lg:text-base font-semibold text-light-text dark:text-white">
               {selectedDataPoint ? 'Sensor Details' : 'Machine Details'}
             </h2>
           </div>
@@ -52,7 +52,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
         >
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-light-text dark:text-light-text dark:text-dark-text">
+              <h2 className="text-lg font-semibold text-light-text dark:text-white">
                 {selectedDataPoint ? 'Sensor Details' : 'Machine Details'}
               </h2>
               <button
@@ -112,7 +112,7 @@ const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({
   <div className="space-y-3">
     {/* Machine Info */}
     <div className="card p-3">
-      <h3 className="font-medium text-light-text dark:text-light-text dark:text-dark-text mb-2 text-sm">Machine Information</h3>
+      <h3 className="font-medium text-light-text dark:text-white mb-2 text-sm">Machine Information</h3>
       <div className="space-y-1.5">
         <div className="flex justify-between">
           <span className="text-light-muted dark:text-light-muted dark:text-dark-muted text-xs">Machine ID:</span>
