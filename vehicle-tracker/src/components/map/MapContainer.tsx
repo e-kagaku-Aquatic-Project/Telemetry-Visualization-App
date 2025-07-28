@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { useAppStore } from '../../store';
 import { getMapOptions, DEFAULT_CENTER } from '../../constants/map';
@@ -26,6 +26,9 @@ export const MapContainer: React.FC = () => {
   } = useAppStore();
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const programmaticChangeRef = useRef(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -34,9 +37,11 @@ export const MapContainer: React.FC = () => {
   });
 
 
-  // Auto-center logic based on view mode
+  // Auto-center logic based on view mode (only when user hasn't interacted with map)
   useEffect(() => {
-    if (!map) return;
+    if (!map || userInteracted) return;
+
+    programmaticChangeRef.current = true;
 
     if (viewMode === 'all') {
       // Fit bounds to show all machines
@@ -71,11 +76,36 @@ export const MapContainer: React.FC = () => {
         map.panTo(center);
       }
     }
-  }, [viewMode, selectedMachineId, machineTracks, map, getLatestDataPoint]);
+
+    // Clear programmatic change flag after a delay
+    setTimeout(() => {
+      programmaticChangeRef.current = false;
+    }, 200);
+  }, [viewMode, selectedMachineId, map, getLatestDataPoint, userInteracted]);
+
+  // Reset userInteracted when view mode or selected machine changes
+  useEffect(() => {
+    setUserInteracted(false);
+    setIsInitialized(false);
+  }, [viewMode, selectedMachineId]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
-  }, []);
+    
+    // Set initial zoom level
+    map.setZoom(mapZoom);
+    setIsInitialized(true);
+    
+    // Add event listeners to detect user interactions
+    map.addListener('drag', () => setUserInteracted(true));
+    map.addListener('dragstart', () => setUserInteracted(true));
+    map.addListener('zoom_changed', () => {
+      // Only set userInteracted if it's not a programmatic change
+      if (!programmaticChangeRef.current) {
+        setUserInteracted(true);
+      }
+    });
+  }, [mapZoom]);
 
   const onUnmount = useCallback(() => {
     setMap(null);
@@ -112,14 +142,13 @@ export const MapContainer: React.FC = () => {
   return (
     <div className="card overflow-hidden w-full h-full relative">
       <GoogleMap
-        key={`${viewMode}-${theme}`} // Force remount when viewMode or theme changes
+        key={theme} // Only remount when theme changes
         mapContainerStyle={{ 
           width: '100%', 
           height: '100%',
           display: 'block'
         }}
         center={currentCenter}
-        zoom={mapZoom}
         onLoad={onLoad}
         onUnmount={onUnmount}
         options={getMapOptions(theme)}
