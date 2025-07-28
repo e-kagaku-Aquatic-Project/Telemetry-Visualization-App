@@ -41,6 +41,7 @@ interface AppState extends AuthState, ThemeState {
   // Map state
   mapCenter: google.maps.LatLngLiteral | null;
   mapZoom: number;
+  mapMarkerLimit: number; // New: Limit for markers displayed on map
   
   // Gradient visualization state
   gradientVisualization: GradientVisualizationState;
@@ -97,6 +98,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   mapCenter: null,
   mapZoom: 12,
+  mapMarkerLimit: 10, // Default limit
   gradientVisualization: {
     isEnabled: false,
     selectedParameter: null,

@@ -18,6 +18,7 @@ export const MapContainer: React.FC = () => {
     machineTracks, 
     mapCenter, 
     mapZoom, 
+    mapMarkerLimit, // New: Get mapMarkerLimit from store
     getLatestDataPoint,
     viewMode,
     gradientVisualization,
@@ -127,7 +128,9 @@ export const MapContainer: React.FC = () => {
         {/* This is handled by DirectGradientPolyline component outside GoogleMap */}
 
         {/* Render markers for latest positions only */}
-        {Object.entries(machineTracks).map(([machineId, data]) => {
+        {Object.entries(machineTracks)
+          .slice(0, mapMarkerLimit) // Apply limit from store
+          .map(([machineId, data]) => {
           const latestPoint = data[data.length - 1];
           if (!latestPoint) return null;
           
@@ -144,7 +147,7 @@ export const MapContainer: React.FC = () => {
         {/* Render additional waypoint markers for selected machine only (in individual mode) */}
         {viewMode === 'individual' && selectedMachineId && machineTracks[selectedMachineId] && (
           machineTracks[selectedMachineId]
-            .slice(0, -1) // Exclude latest point (already shown by MachineMarker)
+            .slice(-mapMarkerLimit, -1) // Limit to the last 'mapMarkerLimit' points, excluding the very last one
             .map((dataPoint, index) => (
               <WaypointMarker
                 key={`${selectedMachineId}-waypoint-${index}`}
@@ -157,7 +160,9 @@ export const MapContainer: React.FC = () => {
         )}
 
         {/* Render prediction visualizations - only when map is available */}
-        {map && Object.keys(machineTracks).map((machineId) => {
+        {map && Object.keys(machineTracks)
+          .slice(0, mapMarkerLimit) // Apply limit to prediction visualizations
+          .map((machineId) => {
           const shouldShowPrediction = viewMode === 'individual' ? 
             machineId === selectedMachineId : 
             true; // Show all predictions in 'all' mode
@@ -179,7 +184,7 @@ export const MapContainer: React.FC = () => {
           key={`direct-${selectedMachineId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.refreshKey}`}
           map={map}
           machineId={selectedMachineId}
-          data={machineTracks[selectedMachineId]}
+          data={machineTracks[selectedMachineId].slice(-mapMarkerLimit)}
           isSelected={true}
           gradientParameter={gradientVisualization.isEnabled ? gradientVisualization.selectedParameter : null}
         />
