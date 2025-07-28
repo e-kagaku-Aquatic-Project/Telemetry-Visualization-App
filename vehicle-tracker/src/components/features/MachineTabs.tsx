@@ -76,8 +76,8 @@ export const MachineTabs: React.FC = () => {
         
         const latestPoint = getLatestDataPoint(machineId);
         let isDelayed = false;
-        if (latestPoint) {
-          const machineTime = new Date(latestPoint.timestamp);
+        if (latestPoint && latestPoint.machineTime) {
+          const machineTime = new Date(latestPoint.machineTime.replace(/\//g, '-'));
           const now = new Date();
           const diffMinutes = (now.getTime() - machineTime.getTime()) / (1000 * 60);
           if (diffMinutes > 10) {
@@ -87,7 +87,7 @@ export const MachineTabs: React.FC = () => {
 
         return (
           <motion.button
-            key={machineId}text
+            key={machineId}
             onClick={() => handleTabClick(machineId)}
             className={`
               flex-shrink-0 px-3 py-2 rounded border transition-all duration-150 ease-out min-w-0
@@ -100,7 +100,7 @@ export const MachineTabs: React.FC = () => {
             whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <span className={`font-medium text-sm truncate ${isDelayed ? '-red-500' : ''}`}>
+              <span className={`font-medium text-sm truncate ${isDelayed ? 'text-red-500' : ''}`}>
                 {machineId}
               </span>
               <span className="text-xs opacity-70 bg-light-bg/50 dark:bg-dark-bg/50 px-1.5 py-0.5 rounded flex-shrink-0">
