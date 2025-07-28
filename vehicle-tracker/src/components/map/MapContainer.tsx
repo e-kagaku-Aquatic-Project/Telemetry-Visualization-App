@@ -166,7 +166,7 @@ export const MapContainer: React.FC = () => {
           .map((machineId) => {
           const shouldShowPrediction = viewMode === 'individual' ? 
             machineId === selectedMachineId : 
-            true; // Show all predictions in 'all' mode
+            false; // Only show predictions in 'individual' mode
             
           return shouldShowPrediction ? (
             <PredictionVisualization
