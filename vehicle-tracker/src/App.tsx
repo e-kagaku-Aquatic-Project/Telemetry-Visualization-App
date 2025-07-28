@@ -13,6 +13,8 @@ import { Info, Wifi, WifiOff, LogOut } from 'lucide-react';
 import { exportToCSV, exportToJSON, exportAllMachinesToCSV } from './utils/export';
 import { LoginForm } from './components/auth/LoginForm';
 import { PrivateRoute } from './components/auth/PrivateRoute';
+import { MapTypeToggle } from './components/ui/MapTypeToggle';
+
 
 function MainApplication() {
   const { machineTracks, error, isLoading } = useMachineData();
@@ -144,6 +146,8 @@ function MainApplication() {
                 </div>
                 
                 <ViewToggle />
+                
+                <MapTypeToggle />
                 
                 <ThemeToggle />
                 

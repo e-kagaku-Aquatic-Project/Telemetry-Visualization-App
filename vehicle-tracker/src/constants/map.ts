@@ -347,12 +347,12 @@ export const LIGHT_MAP_STYLE: google.maps.MapTypeStyle[] = [
   }
 ];
 
-export const getMapOptions = (theme: 'light' | 'dark'): google.maps.MapOptions => ({
+export const getMapOptions = (theme: 'light' | 'dark', mapType: 'roadmap' | 'satellite'): google.maps.MapOptions => ({
   disableDefaultUI: true,
   gestureHandling: 'greedy',
   styles: theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
   zoom: 12,
-  mapTypeId: 'roadmap',
+  mapTypeId: mapType,
   backgroundColor: theme === 'dark' ? '#0d1117' : '#ffffff',
 });
 
