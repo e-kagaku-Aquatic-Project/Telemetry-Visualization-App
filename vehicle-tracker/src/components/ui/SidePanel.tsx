@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../../store';
 import { X } from 'lucide-react';
@@ -14,9 +14,14 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
     selectedDataPoint, 
     isSidePanelOpen, 
     setSidePanelOpen,
+    selectedMachineId,
+    getLatestDataPoint,
   } = useAppStore();
 
-  if (!selectedDataPoint || (!isDesktop && !isSidePanelOpen)) return null;
+  const latestPoint = selectedMachineId ? getLatestDataPoint(selectedMachineId) : null;
+  const displayPoint = selectedDataPoint || latestPoint;
+
+  if (!displayPoint || (!isDesktop && !isSidePanelOpen)) return null;
 
   if (isDesktop) {
     // Desktop: Static side panel
@@ -25,10 +30,10 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
         <div className="p-2 lg:p-3">
           <div className="flex items-center justify-between mb-2 lg:mb-3">
             <h2 className="text-sm lg:text-base font-semibold text-light-text dark:text-light-text dark:text-dark-text">
-              Sensor Details
+              {selectedDataPoint ? 'Sensor Details' : 'Machine Details'}
             </h2>
           </div>
-          <SidePanelContent selectedDataPoint={selectedDataPoint} />
+          <SidePanelContent selectedDataPoint={displayPoint} />
         </div>
       </div>
     );
@@ -48,7 +53,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-light-text dark:text-light-text dark:text-dark-text">
-                Sensor Details
+                {selectedDataPoint ? 'Sensor Details' : 'Machine Details'}
               </h2>
               <button
                 onClick={() => setSidePanelOpen(false)}
@@ -57,7 +62,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
                 <X size={20} className="text-light-muted dark:text-light-muted dark:text-dark-muted" />
               </button>
             </div>
-            <SidePanelContent selectedDataPoint={selectedDataPoint} />
+            <SidePanelContent selectedDataPoint={displayPoint} />
           </div>
         </motion.div>
       )}
@@ -66,7 +71,44 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
 };
 
 // Extracted content component to avoid duplication
-const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({ selectedDataPoint }) => (
+const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({ selectedDataPoint }) => {
+  const [lossTime, setLossTime] = useState<string>('');
+  const [isDelayed, setIsDelayed] = useState<boolean>(false);
+
+  useEffect(() => {
+    const calculateLossTime = () => {
+      if (selectedDataPoint.machineTime) {
+        const machineTime = new Date(selectedDataPoint.machineTime.replace(/\//g, '-')); // More reliable parsing
+        const now = new Date();
+        const diffSeconds = Math.round((now.getTime() - machineTime.getTime()) / 1000);
+        
+        setIsDelayed(diffSeconds > 600); // 10 minutes
+
+        const days = Math.floor(diffSeconds / 86400);
+        const hours = Math.floor((diffSeconds % 86400) / 3600);
+        const minutes = Math.floor((diffSeconds % 3600) / 60);
+        const seconds = diffSeconds % 60;
+
+        let timeString = '';
+        if (days > 0) timeString += `${days}d `;
+        if (hours > 0) timeString += `${hours}h `;
+        if (minutes > 0) timeString += `${minutes}m `;
+        timeString += `${seconds}s`;
+
+        setLossTime(timeString.trim());
+      } else {
+        setLossTime('N/A');
+        setIsDelayed(false);
+      }
+    };
+
+    calculateLossTime();
+    const interval = setInterval(calculateLossTime, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, [selectedDataPoint.machineTime]);
+
+  return (
   <div className="space-y-3">
     {/* Machine Info */}
     <div className="card p-3">
@@ -90,6 +132,10 @@ const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({
             </span>
           </div>
         )}
+        <div className="flex justify-between">
+          <span className="text-light-muted dark:text-dark-muted text-xs">Loss Time:</span>
+          <span className={`font-mono text-light-text dark:text-dark-text text-xs ${isDelayed ? 'text-red-500' : ''}`}>{lossTime}</span>
+        </div>
         {selectedDataPoint.dataType && (
           <div className="flex justify-between">
             <span className="text-light-muted dark:text-dark-muted text-xs">Data Type:</span>
@@ -166,7 +212,7 @@ const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({
       </pre>
     </details>
   </div>
-);
+)};
 
 // Status Display Component for parsed comment data
 const StatusDisplay: React.FC<{ comment: string }> = ({ comment }) => {
