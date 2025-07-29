@@ -99,7 +99,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   mapCenter: null,
   mapZoom: 12,
-  mapMarkerLimit: 10, // Default limit
+  mapMarkerLimit: 20, // Default limit
   mapType: 'roadmap', // Default map type
   gradientVisualization: {
     isEnabled: false,
