@@ -1,5 +1,5 @@
 // Utils.gs - Utility Functions
-// Discord WebHook Notification System v1.0.0
+// Discord WebHook Notification System v1.1.0
 
 /**
  * Format timestamp to ISO string

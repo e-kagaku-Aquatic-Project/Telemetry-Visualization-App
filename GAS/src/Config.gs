@@ -1,5 +1,6 @@
 // Config.gs - Settings and Configuration Management
-// Discord WebHook Notification System v1.0.0
+// Discord WebHook Notification System v1.1.0
+// Changed: Reminder notifications deprecated - only lost/recovery notifications
 
 /**
  * Configuration constants loaded from script properties
@@ -8,7 +9,7 @@ const CONFIG = {
   DISCORD_WEBHOOK_URL: getScriptProperty('DISCORD_WEBHOOK_URL'),
   TIMEOUT_MINUTES: parseInt(getScriptProperty('TIMEOUT_MINUTES') || '10'),
   CHECK_INTERVAL_MINUTES: parseInt(getScriptProperty('CHECK_INTERVAL_MINUTES') || '1'),
-  REMINDER_INTERVAL_MINUTES: parseInt(getScriptProperty('REMINDER_INTERVAL_MINUTES') || '10'),
+  REMINDER_INTERVAL_MINUTES: parseInt(getScriptProperty('REMINDER_INTERVAL_MINUTES') || '10'), // Deprecated in v1.1.0 - no longer used
   ENABLE_NOTIFICATIONS: getScriptProperty('ENABLE_NOTIFICATIONS') === 'true',
   MAX_RETRY_COUNT: 3,
   RETRY_DELAY_MS: 1000
@@ -130,6 +131,7 @@ function initialSetup() {
 
 /**
  * Update reminder interval for lost machine notifications
+ * @deprecated Since v1.1.0 - Reminder notifications have been removed
  * @param {number} minutes - Interval in minutes (default: 10)
  */
 function updateReminderInterval(minutes = 10) {

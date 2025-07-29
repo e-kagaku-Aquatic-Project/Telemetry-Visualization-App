@@ -1,5 +1,6 @@
 // MachineMonitor.gs - Machine Monitoring and Status Management
-// Discord WebHook Notification System v1.0.0
+// Discord WebHook Notification System v1.1.0
+// Changed: Notifications only on signal lost and recovery (no reminders)
 
 /**
  * Main monitoring function triggered every minute
@@ -114,21 +115,9 @@ function checkMachineTimeout(machine, monitorStatus) {
         };
         console.log(`Signal lost detected for machine ${machine.machineId}`);
       } else {
-        // Continuing signal lost - check if reminder notification needed
-        const lastNotified = new Date(currentStatus.lastNotified);
-        const minutesSinceLastNotification = (now - lastNotified) / (1000 * 60);
-        
-        if (minutesSinceLastNotification >= CONFIG.REMINDER_INTERVAL_MINUTES) {
-          // Send reminder notification
-          const notificationCount = currentStatus.notificationCount + 1;
-          sendLostReminderNotification(machine, notificationCount, diffMinutes);
-          monitorStatus[machine.machineId] = {
-            ...currentStatus,
-            lastNotified: now.toISOString(),
-            notificationCount: notificationCount
-          };
-          console.log(`Reminder notification #${notificationCount} sent for machine ${machine.machineId}`);
-        }
+        // Continuing signal lost - no reminder notifications
+        // Just keep the status as lost without sending additional notifications
+        console.log(`Machine ${machine.machineId} still in lost state (no reminder sent)`);
       }
     } else {
       // Normal communication
