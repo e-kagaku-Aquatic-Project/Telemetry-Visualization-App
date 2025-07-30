@@ -42,6 +42,7 @@ interface AppState extends AuthState, ThemeState {
   mapCenter: google.maps.LatLngLiteral | null;
   mapZoom: number;
   mapMarkerLimit: number; // New: Limit for markers displayed on map
+  setMapMarkerLimit: (limit: number) => void; // New: Action to set the limit
   mapType: 'roadmap' | 'satellite'; // New: Map type
   
   // Gradient visualization state
@@ -99,7 +100,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   mapCenter: null,
   mapZoom: 12,
-  mapMarkerLimit: 10, // Default limit
+  mapMarkerLimit: 50, // Default limit
   mapType: 'roadmap', // Default map type
   gradientVisualization: {
     isEnabled: false,
@@ -144,6 +145,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setMapCenter: (center) => set({ mapCenter: center }),
   
   setMapZoom: (zoom) => set({ mapZoom: zoom }),
+  setMapMarkerLimit: (limit) => set({ mapMarkerLimit: limit }),
   setMapType: (type: 'roadmap' | 'satellite') => set({ mapType: type }),
   
   setCurrentView: (view) => set((state) => ({ 
