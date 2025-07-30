@@ -150,11 +150,18 @@ function MainApplication() {
                 <div className="hidden sm:flex items-center space-x-2">
                   <label className="text-xs text-light-muted dark:text-dark-muted">Points:</label>
                   <select
-                    value={mapMarkerLimit}
-                    onChange={(e) => setMapMarkerLimit(Number(e.target.value))}
+                    value={mapMarkerLimit === Infinity ? 'Unlimited' : mapMarkerLimit}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === 'Unlimited') {
+                        setMapMarkerLimit(Infinity);
+                      } else {
+                        setMapMarkerLimit(Number(value));
+                      }
+                    }}
                     className="input text-xs"
                   >
-                    {[1, 2, 5, 10, 20, 50, 100, 200].map(limit => (
+                    {[1, 2, 5, 10, 20, 50, 100, 200, 500, "Unlimited"].map(limit => (
                       <option key={limit} value={limit}>
                         {limit}
                       </option>

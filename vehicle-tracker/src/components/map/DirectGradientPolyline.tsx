@@ -24,6 +24,14 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
   isSelected,
   gradientParameter,
 }) => {
+  const getGPSErrorStatusFromComment = (comment: string | undefined): string | undefined => {
+    if (!comment) return undefined;
+    const match = comment.match(/GPS_ERROR:([A-Z_]+)/);
+    return match ? match[1] : undefined;
+  };
+
+  const filteredData = data.filter(p => getGPSErrorStatusFromComment(p.comment) === 'NONE');
+
   const { getMachineIds } = useAppStore();
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
 
@@ -36,7 +44,7 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
   };
 
   useEffect(() => {
-    if (!map || data.length < 2) {
+    if (!map || filteredData.length < 2) {
       clearPolylines();
       return;
     }
@@ -46,7 +54,7 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
 
     if (!gradientParameter) {
       // Create regular polyline
-      const path = data.map(point => ({
+      const path = filteredData.map(point => ({
         lat: point.latitude,
         lng: point.longitude,
       }));
@@ -68,12 +76,12 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
       polylinesRef.current.push(polyline);
     } else {
       // Create gradient polylines
-      const range = getDataRange(data, gradientParameter);
+      const range = getDataRange(filteredData, gradientParameter);
       const subsegmentsPerSegment = 5;
 
-      for (let i = 0; i < data.length - 1; i++) {
-        const startPoint = data[i];
-        const endPoint = data[i + 1];
+      for (let i = 0; i < filteredData.length - 1; i++) {
+        const startPoint = filteredData[i];
+        const endPoint = filteredData[i + 1];
         const startValue = startPoint[gradientParameter];
         const endValue = endPoint[gradientParameter];
 
@@ -111,7 +119,7 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
     return () => {
       clearPolylines();
     };
-  }, [map, data, gradientParameter, machineId, isSelected, getMachineIds]);
+  }, [map, filteredData, gradientParameter, machineId, isSelected, getMachineIds]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -122,4 +130,4 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
 
   // This component renders nothing - it only manages Google Maps polylines
   return null;
-};
+}
