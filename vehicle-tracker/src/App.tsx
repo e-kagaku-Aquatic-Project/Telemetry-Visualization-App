@@ -31,7 +31,9 @@ function MainApplication() {
     refreshInterval,
     setRefreshInterval,
     getSelectedMachineData,
-    logout
+    logout,
+    mapMarkerLimit,
+    setMapMarkerLimit
   } = useAppStore();
 
   // Enable keyboard shortcuts
@@ -145,6 +147,21 @@ function MainApplication() {
                   </select>
                 </div>
                 
+                <div className="hidden sm:flex items-center space-x-2">
+                  <label className="text-xs text-light-muted dark:text-dark-muted">Points:</label>
+                  <select
+                    value={mapMarkerLimit}
+                    onChange={(e) => setMapMarkerLimit(Number(e.target.value))}
+                    className="input text-xs"
+                  >
+                    {[1, 2, 5, 10, 20, 50, 100, 200].map(limit => (
+                      <option key={limit} value={limit}>
+                        {limit}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <ViewToggle />
                 
                 <MapTypeToggle />

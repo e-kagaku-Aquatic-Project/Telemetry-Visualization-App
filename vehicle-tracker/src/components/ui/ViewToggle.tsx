@@ -15,7 +15,7 @@ export const ViewToggle: React.FC = () => {
       <motion.button
         onClick={() => toggleView('map')}
         className={`
-          flex items-center gap-2 px-3 py-2 rounded-card transition-all duration-150 text-sm font-medium
+          flex items-center justify-center p-2 rounded-card transition-all duration-150
           ${currentView === 'map' 
             ? 'bg-light-accent dark:bg-dark-accent text-white shadow-sm' 
             : 'text-light-muted dark:text-dark-muted hover:text-light-text dark:hover:text-dark-text hover:bg-light-muted/10 dark:hover:bg-dark-muted/10'
@@ -23,15 +23,15 @@ export const ViewToggle: React.FC = () => {
         `}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        aria-label="Map view"
       >
-        <MapPin size={16} />
-        Map
+        <MapPin size={20} />
       </motion.button>
       
       <motion.button
         onClick={() => toggleView('graphs')}
         className={`
-          flex items-center gap-2 px-3 py-2 rounded-card transition-all duration-150 text-sm font-medium
+          flex items-center justify-center p-2 rounded-card transition-all duration-150
           ${currentView === 'graphs' 
             ? 'bg-light-accent dark:bg-dark-accent text-white shadow-sm' 
             : 'text-light-muted dark:text-dark-muted hover:text-light-text dark:hover:text-dark-text hover:bg-light-muted/10 dark:hover:bg-dark-muted/10'
@@ -39,9 +39,9 @@ export const ViewToggle: React.FC = () => {
         `}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        aria-label="Graph view"
       >
-        <BarChart3 size={16} />
-        Graphs
+        <BarChart3 size={20} />
       </motion.button>
     </div>
   );
