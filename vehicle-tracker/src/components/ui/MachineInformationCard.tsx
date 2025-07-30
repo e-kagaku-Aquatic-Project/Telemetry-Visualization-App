@@ -45,14 +45,12 @@ export const MachineInformationCard: React.FC<MachineInformationCardProps> = ({ 
             </span>
           </div>
         )}
-        {dataPoint.comment && (
-          <div className="flex justify-between">
-            <span className="text-light-muted dark:text-dark-muted text-xs">Status:</span>
-            <span className="font-mono text-light-text dark:text-dark-text text-xs">
-              {parseComment(dataPoint.comment).status || 'N/A'}
-            </span>
-          </div>
-        )}
+        <div className="flex justify-between">
+          <span className="text-light-muted dark:text-dark-muted text-xs">Error:</span>
+          <span className={`font-mono text-xs ${parseComment(dataPoint.comment).error === 'NONE' ? 'text-light-text dark:text-dark-text' : 'text-red-500'}`}>
+            {parseComment(dataPoint.comment).error || 'N/A'}
+          </span>
+        </div>
       </div>
     </div>
   );
