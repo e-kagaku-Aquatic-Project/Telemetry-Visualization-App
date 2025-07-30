@@ -340,7 +340,10 @@ function App() {
   const { initializeAuth } = useAppStore();
 
   useEffect(() => {
-    initializeAuth();
+    const init = async () => {
+      await initializeAuth();
+    };
+    init();
   }, [initializeAuth]);
 
   return (

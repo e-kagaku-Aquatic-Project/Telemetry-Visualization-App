@@ -2,90 +2,111 @@
  * Authentication utility functions
  */
 
-const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-const SESSION_TOKEN_KEY = 'auth_session_token';
-const SESSION_TIMESTAMP_KEY = 'auth_session_timestamp';
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const SESSION_TOKEN_NAME = 'auth_session_token'; // Name for the session cookie
 
 /**
- * Simple hash function for password (for demo purposes only)
- * In production, use proper hashing like bcrypt
+ * Helper to set a cookie
  */
-export const hashPassword = (password: string): string => {
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+const setCookie = (name: string, value: string, days: number): void => {
+  let expires = '';
+  if (days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * SESSION_DURATION_MS));
+    expires = '; expires=' + date.toUTCString();
   }
-  return Math.abs(hash).toString(36);
+  const cookieString = name + '=' + (value || '') + expires + '; path=/; SameSite=Lax';
+  document.cookie = cookieString;
+  console.log('setCookie: ', cookieString);
+  console.log('document.cookie after set: ', document.cookie);
 };
 
 /**
- * Verify password against environment variable
+ * Helper to get a cookie
  */
-export const verifyPassword = (inputPassword: string): boolean => {
-  const appPassword = import.meta.env.VITE_APP_PASSWORD || 'ultrathink'; // Fallback for development
-  if (!import.meta.env.VITE_APP_PASSWORD) {
-    console.warn('VITE_APP_PASSWORD not set in environment variables, using default');
-    console.log('Available env vars:', Object.keys(import.meta.env));
+const getCookie = (name: string): string | null => {
+  console.log('getCookie: current document.cookie: ', document.cookie);
+  const nameEQ = name + '=';
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) {
+      console.log('getCookie: found cookie ', name, ': ', c.substring(nameEQ.length, c.length));
+      return c.substring(nameEQ.length, c.length);
+    }
   }
-  return inputPassword === appPassword;
+  console.log('getCookie: cookie ', name, ' not found.');
+  return null;
 };
 
 /**
- * Generate a random session token
+ * Helper to erase a cookie
  */
-export const generateSessionToken = (): string => {
+const eraseCookie = (name: string): void => {
+  document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+};
+
+/**
+ * Simulate a backend login call.
+ * In a real application, this would send credentials to a server and receive a token.
+ * For this demo, we'll use a hardcoded password and generate a token.
+ */
+export const loginUser = async (password: string): Promise<boolean> => {
+  // In a real app, this would be an API call to your backend
+  // const response = await fetch('/api/login', { method: 'POST', body: JSON.stringify({ password }) });
+  // const data = await response.json();
+  // if (data.success) {
+  //   setCookie(SESSION_TOKEN_NAME, data.token, 1); // Set cookie for 1 day
+  //   return true;
+  // }
+  // return false;
+
+  const appPassword = import.meta.env.VITE_APP_PASSWORD || 'ultrathink';
+
+  if (password === appPassword) {
+    const token = generateSessionToken(); // Simulate token generation
+    console.log('loginUser: generated token:', token);
+    setCookie(SESSION_TOKEN_NAME, token, 1); // Set cookie for 1 day
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Simulate a backend session validation call.
+ * In a real application, this would send the token to a server for validation.
+ */
+export const validateSession = async (): Promise<boolean> => {
+  const token = getCookie(SESSION_TOKEN_NAME);
+  if (!token) {
+    console.log('validateSession: No token found in cookie. Returning false.');
+    return false;
+  }
+  console.log('validateSession: Token found in cookie. Returning true.');
+  // For demo, any token present is considered valid for SESSION_DURATION_MS
+  return true;
+};
+
+/**
+ * Generate a random session token (client-side for demo)
+ */
+const generateSessionToken = (): string => {
   const array = new Uint8Array(32);
   window.crypto.getRandomValues(array);
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 };
 
 /**
- * Check if session is valid
- */
-export const isSessionValid = (token: string | null, timestamp: number | null): boolean => {
-  if (!token || !timestamp) {
-    return false;
-  }
-  
-  const currentTime = Date.now();
-  const sessionAge = currentTime - timestamp;
-  
-  return sessionAge < SESSION_DURATION;
-};
-
-/**
- * Save session to localStorage
- */
-export const saveSession = (token: string): void => {
-  localStorage.setItem(SESSION_TOKEN_KEY, token);
-  localStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
-};
-
-/**
- * Get session from localStorage
- */
-export const getSession = (): { token: string | null; timestamp: number | null } => {
-  const token = localStorage.getItem(SESSION_TOKEN_KEY);
-  const timestampStr = localStorage.getItem(SESSION_TIMESTAMP_KEY);
-  const timestamp = timestampStr ? parseInt(timestampStr, 10) : null;
-  
-  return { token, timestamp };
-};
-
-/**
- * Clear session from localStorage
+ * Clear session cookie
  */
 export const clearSession = (): void => {
-  localStorage.removeItem(SESSION_TOKEN_KEY);
-  localStorage.removeItem(SESSION_TIMESTAMP_KEY);
+  eraseCookie(SESSION_TOKEN_NAME);
 };
 
 /**
- * Check current authentication status
+ * Check current authentication status using session validation
  */
-export const checkAuthStatus = (): boolean => {
-  const { token, timestamp } = getSession();
-  return isSessionValid(token, timestamp);
+export const checkAuthStatus = async (): Promise<boolean> => {
+  return await validateSession();
 };

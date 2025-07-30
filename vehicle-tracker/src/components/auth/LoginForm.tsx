@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { useAppStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { loginUser } from '../../utils/auth'; // Import the new loginUser function
 
 export const LoginForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const login = useAppStore((state) => state.login);
+  const setAuthenticated = useAppStore((state) => state.setAuthenticated); // Get setAuthenticated from store
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,17 +17,21 @@ export const LoginForm: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    // Simulate a slight delay for better UX
-    setTimeout(() => {
-      const success = login(password);
+    try {
+      const success = await loginUser(password); // Use the async loginUser
       if (success) {
+        setAuthenticated(true); // Update authentication state in store
         navigate('/');
       } else {
         setError('Incorrect password');
         setPassword('');
       }
+    } catch (err) {
+      setError('An error occurred during login.');
+      console.error('Login error:', err);
+    } finally {
       setIsLoading(false);
-    }, 300);
+    }
   };
 
   return (
@@ -103,7 +108,7 @@ export const LoginForm: React.FC = () => {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-light-muted dark:text-gray-500">
+          <p className="text-xs text-light-muted dark:text-dark-muted">
             © 2025 Machine Tracking System
           </p>
           <p className="text-xs text-light-muted dark:text-gray-400 mt-1">
