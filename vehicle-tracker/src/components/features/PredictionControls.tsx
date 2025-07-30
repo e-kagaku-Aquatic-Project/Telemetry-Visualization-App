@@ -39,11 +39,15 @@ export const PredictionControls: React.FC = () => {
   };
 
   const handleReferencePointsChange = (points: number) => {
-    setPredictionReferencePoints(points);
+    if (points === Infinity) {
+      setPredictionReferencePoints(selectedMachineData.length);
+    } else {
+      setPredictionReferencePoints(points);
+    }
   };
 
   const minuteOptions = [1, 2, 5, 10, 15, 30, 60];
-  const pointOptions = [2, 3, 4, 5, 6, 8, 10];
+  const pointOptions = [2, 3, 4, 5, 6, 8, 10, 500, Infinity];
 
   return (
     <div className="absolute top-16 right-4 z-10">
@@ -135,22 +139,27 @@ export const PredictionControls: React.FC = () => {
                   Reference Points:
                 </label>
                 <div className="flex flex-wrap gap-1">
-                  {pointOptions.map(points => (
-                    <button
-                      key={points}
-                      onClick={() => handleReferencePointsChange(points)}
-                      disabled={selectedMachineData.length < points}
-                      className={`px-2 py-1 text-xs rounded transition-colors ${
-                        predictionConfig.referencePoints === points
-                          ? 'bg-dark-accent text-white'
-                          : selectedMachineData.length >= points
-                          ? 'bg-dark-bg text-dark-text hover:bg-dark-muted/20'
-                          : 'bg-dark-bg/50 text-dark-muted/50 cursor-not-allowed'
-                      }`}
-                    >
-                      {points}
-                    </button>
-                  ))}
+                  {pointOptions.map(points => {
+                    const isInfinity = points === Infinity;
+                    const isDisabled = selectedMachineData.length < (isInfinity ? 2 : points);
+
+                    return (
+                      <button
+                        key={isInfinity ? 'all' : points}
+                        onClick={() => handleReferencePointsChange(points)}
+                        disabled={isDisabled}
+                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                          predictionConfig.referencePoints === points
+                            ? 'bg-dark-accent text-white'
+                            : isDisabled
+                            ? 'bg-dark-bg/50 text-dark-muted/50 cursor-not-allowed'
+                            : 'bg-dark-bg text-dark-text hover:bg-dark-muted/20'
+                        }`}
+                      >
+                        {isInfinity ? 'All' : points}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
