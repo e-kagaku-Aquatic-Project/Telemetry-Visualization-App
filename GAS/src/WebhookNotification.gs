@@ -1,5 +1,6 @@
 // WebhookNotification.gs - Discord WebHook Notification System
-// Discord WebHook Notification System v1.0.0
+// Discord WebHook Notification System v1.1.0
+// Changed: Removed reminder notifications - only lost/recovery notifications
 
 /**
  * Send signal lost notification (initial)
@@ -67,63 +68,8 @@ function sendLostNotification(machine, notificationCount, lostDurationMinutes) {
   }
 }
 
-/**
- * Send signal lost reminder notification (every 10 minutes)
- * @param {Object} machine - Machine data object
- * @param {number} notificationCount - Current notification count
- * @param {number} lostDurationMinutes - Duration since signal lost
- */
-function sendLostReminderNotification(machine, notificationCount, lostDurationMinutes) {
-  try {
-    const lastData = machine.lastData;
-    const embed = {
-      title: "⚠️ Machine Signal Lost Continues",
-      description: `Machine ${machine.machineId} signal loss continues (notification #${notificationCount})`,
-      color: 16753920, // Orange color
-      fields: [
-        {
-          name: "Machine ID",
-          value: machine.machineId,
-          inline: true
-        },
-        {
-          name: "Lost Duration",
-          value: `${Math.floor(lostDurationMinutes)} minutes`,
-          inline: true
-        },
-        {
-          name: "Notification Count",
-          value: `#${notificationCount}`,
-          inline: true
-        },
-        {
-          name: "Last Data Received",
-          value: formatDateTimeJST(machine.lastDataTime),
-          inline: true
-        },
-        {
-          name: "Last Position",
-          value: `Lat: ${lastData[4]}\nLng: ${lastData[5]}`,
-          inline: true
-        },
-        {
-          name: "Last Battery",
-          value: `${lastData[8]}V`,
-          inline: true
-        }
-      ],
-      timestamp: new Date().toISOString(),
-      footer: {
-        "text": "Telemetry Monitoring System - Reminder"
-      }
-    };
-    
-    sendDiscordNotification({ embeds: [embed] });
-    console.log(`Reminder notification #${notificationCount} sent for machine ${machine.machineId}`);
-  } catch (error) {
-    logError('sendLostReminderNotification', error);
-  }
-}
+// Reminder notification function removed in v1.1.0
+// Notifications are now sent only on signal lost and recovery
 
 /**
  * Send signal recovery notification
@@ -234,20 +180,7 @@ function sendTestNotification(testType = 'connection') {
         };
         break;
         
-      case 'reminder':
-        embed = {
-          title: "🧪 Test - Signal Lost Reminder",
-          description: "This is a test notification for reminder",
-          color: 16753920,
-          fields: [
-            { name: "Machine ID", value: "TEST001", inline: true },
-            { name: "Test Type", value: "Reminder Test", inline: true },
-            { name: "Status", value: "Test notification", inline: true }
-          ],
-          timestamp: new Date().toISOString(),
-          footer: { text: "Telemetry Monitoring System - Test" }
-        };
-        break;
+      // Reminder test case removed in v1.1.0
         
       case 'recovery':
         embed = {

@@ -1,5 +1,5 @@
 // Utils.gs - Utility Functions
-// Discord WebHook Notification System v1.0.0
+// Discord WebHook Notification System v1.1.0
 
 /**
  * Format timestamp to ISO string
@@ -135,6 +135,7 @@ function getMonitorStatus(spreadsheet) {
     });
   }
   
+  console.log(`[DEBUG] Retrieved monitor status: ${JSON.stringify(status)}`);
   return status;
 }
 
@@ -146,9 +147,23 @@ function getMonitorStatus(spreadsheet) {
 function updateMonitorStatus(spreadsheet, status) {
   const sheet = getOrCreateMonitorSheet(spreadsheet);
   
-  // Clear existing data
-  if (sheet.getLastRow() > 1) {
-    sheet.deleteRows(2, sheet.getLastRow() - 1);
+  // Clear existing data (safely)
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    try {
+      sheet.getRange(2, 1, lastRow - 1, 6).clearContent();
+    } catch (error) {
+      console.error('Error clearing content:', error);
+      // If clearing fails, try to delete rows one by one
+      for (let i = lastRow; i > 1; i--) {
+        try {
+          sheet.deleteRow(i);
+        } catch (deleteError) {
+          console.error(`Error deleting row ${i}:`, deleteError);
+          break;
+        }
+      }
+    }
   }
   
   // Write new data
@@ -168,6 +183,8 @@ function updateMonitorStatus(spreadsheet, status) {
   if (data.length > 0) {
     sheet.getRange(2, 1, data.length, 6).setValues(data);
   }
+  
+  console.log(`[DEBUG] Updated monitor status with ${data.length} entries`);
 }
 
 /**

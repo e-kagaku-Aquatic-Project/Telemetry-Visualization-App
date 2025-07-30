@@ -1,5 +1,6 @@
 // Test.gs - Test Functions
-// Discord WebHook Notification System v1.0.0
+// Discord WebHook Notification System v1.1.0
+// Changed: Removed reminder notification tests
 
 /**
  * Test function for manual execution (legacy)
@@ -80,11 +81,7 @@ function testDiscordNotifications() {
     
     Utilities.sleep(2000);
     
-    // Test reminder notification
-    console.log("Testing reminder notification...");
-    sendTestNotification('reminder');
-    
-    Utilities.sleep(2000);
+    // Reminder notification removed in v1.1.0
     
     // Test recovery notification
     console.log("Testing recovery notification...");

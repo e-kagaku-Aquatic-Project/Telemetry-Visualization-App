@@ -1,6 +1,7 @@
 // Main.gs - Main Entry Points for WebApp
-// Discord WebHook Notification System v1.0.0
+// Discord WebHook Notification System v1.1.0
 // Made by Shintaro Matsumoto
+// Changed: Reminder notifications removed - only lost/recovery notifications
 
 /**
  * WebApp main entry point for GET requests
