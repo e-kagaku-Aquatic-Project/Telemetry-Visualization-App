@@ -1,6 +1,7 @@
 # Telemetry-Visualization-App
 
 リアルタイム機体追跡 Web アプリケーション - Google Maps を使って機体の位置とセンサーデータを可視化します。
+動かないッピ
 
 ## 🚀 初期環境設定（必須）
 
