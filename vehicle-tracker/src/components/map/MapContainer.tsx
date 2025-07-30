@@ -28,7 +28,6 @@ export const MapContainer: React.FC = () => {
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userInteracted, setUserInteracted] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const programmaticChangeRef = useRef(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -82,12 +81,11 @@ export const MapContainer: React.FC = () => {
     setTimeout(() => {
       programmaticChangeRef.current = false;
     }, 200);
-  }, [viewMode, selectedMachineId, map, getLatestDataPoint, userInteracted]);
+  }, [viewMode, selectedMachineId, map, getLatestDataPoint, userInteracted, machineTracks]);
 
   // Reset userInteracted when view mode or selected machine changes
   useEffect(() => {
     setUserInteracted(false);
-    setIsInitialized(false);
   }, [viewMode, selectedMachineId]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
@@ -95,7 +93,6 @@ export const MapContainer: React.FC = () => {
     
     // Set initial zoom level
     map.setZoom(mapZoom);
-    setIsInitialized(true);
     
     // Add event listeners to detect user interactions
     map.addListener('drag', () => setUserInteracted(true));
