@@ -2,6 +2,9 @@
 // Discord WebHook Notification System v1.1.0
 // Changed: Notifications only on signal lost and recovery (no reminders)
 
+// In-memory cache to prevent duplicate notifications
+let lastNotificationCache = {};
+
 /**
  * Main monitoring function triggered every minute
  * Checks all active machines for signal timeout
@@ -22,6 +25,7 @@ function checkMachineSignals() {
     const monitorStatus = getMonitorStatus(spreadsheet);
     
     console.log(`Found ${activeMachines.length} active machines to monitor`);
+    console.log(`[DEBUG] Active machines: ${JSON.stringify(activeMachines.map(m => m.machineId))}`);
     
     let processedCount = 0;
     activeMachines.forEach(machine => {
@@ -36,7 +40,12 @@ function checkMachineSignals() {
     });
     
     // Update monitor status sheet
-    updateMonitorStatus(spreadsheet, monitorStatus);
+    try {
+      updateMonitorStatus(spreadsheet, monitorStatus);
+    } catch (error) {
+      console.error('Error updating monitor status:', error);
+      // Continue execution even if status update fails
+    }
     
     console.log(`Machine signal check completed. Processed ${processedCount} machines`);
   } catch (error) {
@@ -101,11 +110,26 @@ function checkMachineTimeout(machine, monitorStatus) {
       firstLostTime: null
     };
     
+    // Debug log to track status
+    console.log(`[DEBUG] Machine ${machine.machineId}: currentStatus = ${JSON.stringify(currentStatus)}, diffMinutes = ${diffMinutes}`);
+    
     if (diffMinutes >= CONFIG.TIMEOUT_MINUTES) {
       // Timeout detected
       if (currentStatus.status !== 'lost') {
-        // New signal lost - send initial notification
-        sendLostNotification(machine, 1, diffMinutes);
+        // Check in-memory cache to prevent duplicate notifications
+        const cacheKey = `${machine.machineId}_lost`;
+        const lastNotification = lastNotificationCache[cacheKey];
+        const timeSinceLastNotification = lastNotification ? (now - new Date(lastNotification)) / (1000 * 60) : 999;
+        
+        if (timeSinceLastNotification > 15) { // Only send if more than 15 minutes since last notification
+          // New signal lost - send initial notification
+          sendLostNotification(machine, 1, diffMinutes);
+          lastNotificationCache[cacheKey] = now.toISOString();
+          console.log(`Signal lost detected for machine ${machine.machineId}`);
+        } else {
+          console.log(`Machine ${machine.machineId} signal lost but notification recently sent (${timeSinceLastNotification.toFixed(1)} min ago)`);
+        }
+        
         monitorStatus[machine.machineId] = {
           status: 'lost',
           lastNotified: now.toISOString(),
@@ -113,7 +137,6 @@ function checkMachineTimeout(machine, monitorStatus) {
           notificationCount: 1,
           firstLostTime: now.toISOString()
         };
-        console.log(`Signal lost detected for machine ${machine.machineId}`);
       } else {
         // Continuing signal lost - no reminder notifications
         // Just keep the status as lost without sending additional notifications
