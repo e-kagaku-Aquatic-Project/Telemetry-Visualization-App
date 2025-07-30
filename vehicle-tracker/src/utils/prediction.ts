@@ -95,19 +95,40 @@ export function predictPosition(
   dataPoints: TelemetryDataPoint[],
   config: PredictionConfig
 ): PredictedPosition | null {
-  if (!config.isEnabled || dataPoints.length < config.referencePoints) {
+  if (!config.isEnabled) {
     return null;
   }
 
-  // Sort by timestamp and take the most recent points
-  const sortedPoints = dataPoints
+  // Normalize gps_error values: convert string 'undefined' or 'null' to actual undefined
+  dataPoints.forEach(point => {
+    if (point.gps_error === undefined || point.gps_error === null) {
+      point.gps_error = undefined;
+    }
+  });
+
+  // Log all gps_error values for debugging
+  
+
+  // Filter out data points where GPS_ERROR is not NONE
+  const filteredDataPoints = dataPoints.filter(point => point.gps_error === 'GPS_ERROR:NONE' || point.gps_error === undefined);
+  
+
+  // Sort all filtered data points by timestamp (most recent first)
+  const allNoneSortedPoints = filteredDataPoints
     .slice()
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, config.referencePoints);
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-  if (sortedPoints.length < 2) {
+  // Determine the actual number of reference points to use.
+  // It should be at most config.referencePoints, but at least 2 if available.
+  const actualReferencePoints = Math.min(config.referencePoints, allNoneSortedPoints.length);
+
+  // If we don't have at least 2 valid points, we cannot predict.
+  if (actualReferencePoints < 2) {
     return null;
   }
+
+  // Take the most recent 'actualReferencePoints' for prediction
+  const sortedPoints = allNoneSortedPoints.slice(0, actualReferencePoints);
 
   // Calculate vectors between consecutive points
   const vectors: Array<{

@@ -27,6 +27,7 @@ export interface TelemetryDataPoint {
   satellites: number;
   battery?: number;
   comment?: string;
+  gps_error?: string; // Added gps_error property
 }
 
 export type MachineTracks = Record<string, TelemetryDataPoint[]>;
