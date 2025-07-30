@@ -47,7 +47,7 @@ export const PredictionControls: React.FC = () => {
   };
 
   const minuteOptions = [1, 2, 5, 10, 15, 30, 60];
-  const pointOptions = [2, 3, 4, 5, 6, 8, 10];
+  const pointOptions = [2, 3, 4, 5, 6, 8, 10, 20, 30, 50];
 
   return (
     <div className="absolute top-16 right-4 z-10">
