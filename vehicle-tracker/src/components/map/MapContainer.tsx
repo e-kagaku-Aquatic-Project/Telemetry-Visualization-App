@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { useAppStore } from '../../store';
 import { getMapOptions, DEFAULT_CENTER } from '../../constants/map';
@@ -18,8 +18,7 @@ export const MapContainer: React.FC = () => {
     machineTracks, 
     mapCenter, 
     mapZoom, 
-    mapMarkerLimit, // New: Get mapMarkerLimit from store
-    getLatestDataPoint,
+    mapMarkerLimit,
     viewMode,
     gradientVisualization,
     theme,
@@ -29,6 +28,12 @@ export const MapContainer: React.FC = () => {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [userInteracted, setUserInteracted] = useState(false);
   const programmaticChangeRef = useRef(false);
+  const tracksRef = useRef(machineTracks);
+
+  // Keep a ref to the latest tracks to avoid adding it to the auto-center effect's dependencies
+  useEffect(() => {
+    tracksRef.current = machineTracks;
+  }, [machineTracks]);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -36,73 +41,76 @@ export const MapContainer: React.FC = () => {
     libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
+  const mapOptions = useMemo(() => getMapOptions(theme, mapType), [theme, mapType]);
 
-  // Auto-center logic based on view mode (only when user hasn't interacted with map)
+  // Manually update map options to prevent remounting
   useEffect(() => {
+    if (map) {
+      map.setOptions(mapOptions);
+    }
+  }, [map, mapOptions]);
+
+  // Auto-center logic - runs only when view changes, not on data refresh
+  useEffect(() => {
+    // Don't center if user has already interacted with the map
     if (!map || userInteracted) return;
+
+    // Use the ref to get the latest tracks without making the effect dependent on them
+    const currentTracks = tracksRef.current;
+    const hasTracks = Object.keys(currentTracks).length > 0;
+    if (!hasTracks) return;
 
     programmaticChangeRef.current = true;
 
     if (viewMode === 'all') {
-      // Fit bounds to show all machines
       const bounds = new google.maps.LatLngBounds();
       let hasPoints = false;
-
-      Object.values(machineTracks).forEach(track => {
+      Object.values(currentTracks).forEach(track => {
         if (track.length > 0) {
           const latestPoint = track[track.length - 1];
-          bounds.extend({
-            lat: latestPoint.latitude,
-            lng: latestPoint.longitude,
-          });
-          hasPoints = true;
+          if (getGPSErrorStatusFromComment(latestPoint.comment) === 'NONE') {
+            bounds.extend({ lat: latestPoint.latitude, lng: latestPoint.longitude });
+            hasPoints = true;
+          }
         }
       });
 
       if (hasPoints) {
-        map.fitBounds(bounds);
-        // Add padding to ensure markers are not at the edge
-        const padding = { top: 50, right: 50, bottom: 50, left: 50 };
-        map.fitBounds(bounds, padding);
+        map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
       }
     } else if (viewMode === 'individual' && selectedMachineId) {
-      // Center on selected machine's latest position
-      const latestPoint = getLatestDataPoint(selectedMachineId);
-      if (latestPoint) {
-        const center = {
-          lat: latestPoint.latitude,
-          lng: latestPoint.longitude,
-        };
-        map.panTo(center);
+      const track = currentTracks[selectedMachineId];
+      const latestPoint = track && track.length > 0 ? track[track.length - 1] : undefined;
+      
+      if (latestPoint && getGPSErrorStatusFromComment(latestPoint.comment) === 'NONE') {
+        map.panTo({ lat: latestPoint.latitude, lng: latestPoint.longitude });
       }
     }
 
-    // Clear programmatic change flag after a delay
+    // Allow user interaction to take over after programmatic change
     setTimeout(() => {
       programmaticChangeRef.current = false;
     }, 200);
-  }, [viewMode, selectedMachineId, map, getLatestDataPoint, userInteracted, machineTracks]);
+    // This effect should only run when the view changes, not when data updates.
+  }, [viewMode, selectedMachineId, map, userInteracted]); // Dependency array is now clean
 
-  // Reset userInteracted when view mode or selected machine changes
+  // Reset interaction flag when view changes, allowing auto-center to run again
   useEffect(() => {
     setUserInteracted(false);
   }, [viewMode, selectedMachineId]);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
-    
-    // Set initial zoom level
     map.setZoom(mapZoom);
     
-    // Add event listeners to detect user interactions
-    map.addListener('drag', () => setUserInteracted(true));
-    map.addListener('dragstart', () => setUserInteracted(true));
-    map.addListener('zoom_changed', () => {
-      // Only set userInteracted if it's not a programmatic change
+    const handleInteraction = () => {
       if (!programmaticChangeRef.current) {
         setUserInteracted(true);
       }
-    });
+    };
+
+    map.addListener('dragstart', handleInteraction);
+    map.addListener('zoom_changed', handleInteraction);
   }, [mapZoom]);
 
   const onUnmount = useCallback(() => {
@@ -139,47 +147,35 @@ export const MapContainer: React.FC = () => {
     );
   }
 
-  const currentCenter = mapCenter || DEFAULT_CENTER;
-
   return (
     <div className="card overflow-hidden w-full h-full relative">
       <GoogleMap
-        key={theme} // Only remount when theme changes
-        mapContainerStyle={{ 
-          width: '100%', 
-          height: '100%',
-          display: 'block'
-        }}
-        center={currentCenter}
+        mapContainerStyle={{ width: '100%', height: '100%', display: 'block' }}
+        center={mapCenter || DEFAULT_CENTER}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        options={getMapOptions(theme, mapType)}
+        options={mapOptions}
       >
-        {/* Render polylines managed outside React-Google-Maps */}
-        {/* This is handled by DirectGradientPolyline component outside GoogleMap */}
-
-        {/* Render markers for latest positions only */}
         {Object.entries(machineTracks)
-          .slice(0, mapMarkerLimit === Infinity ? undefined : mapMarkerLimit) // Apply limit from store
+          .slice(0, mapMarkerLimit === Infinity ? undefined : mapMarkerLimit)
           .map(([machineId, data]) => {
-          const latestPoint = data[data.length - 1];
-          if (!latestPoint || getGPSErrorStatusFromComment(latestPoint.comment) !== 'NONE') return null;
-          
-          return (
-            <MachineMarker
-              key={machineId}
-              machineId={machineId}
-              dataPoint={latestPoint}
-              isSelected={machineId === selectedMachineId}
-            />
-          );
-        })}
+            const latestPoint = data[data.length - 1];
+            if (!latestPoint || getGPSErrorStatusFromComment(latestPoint.comment) !== 'NONE') return null;
+            
+            return (
+              <MachineMarker
+                key={machineId}
+                machineId={machineId}
+                dataPoint={latestPoint}
+                isSelected={machineId === selectedMachineId}
+              />
+            );
+          })}
 
-        {/* Render additional waypoint markers for selected machine only (in individual mode) */}
         {viewMode === 'individual' && selectedMachineId && machineTracks[selectedMachineId] && (
           machineTracks[selectedMachineId]
-            .slice(mapMarkerLimit === Infinity ? 0 : -mapMarkerLimit, -1) // Limit to the last 'mapMarkerLimit' points, excluding the very last one
-            .filter(dataPoint => getGPSErrorStatusFromComment(dataPoint.comment) === 'NONE') // Filter for GPS_ERROR:NONE in comment
+            .slice(mapMarkerLimit === Infinity ? 0 : -mapMarkerLimit, -1)
+            .filter(dataPoint => getGPSErrorStatusFromComment(dataPoint.comment) === 'NONE')
             .map((dataPoint, index) => (
               <WaypointMarker
                 key={`${selectedMachineId}-waypoint-${index}`}
@@ -191,26 +187,21 @@ export const MapContainer: React.FC = () => {
             ))
         )}
 
-        {/* Render prediction visualizations - only when map is available */}
         {map && Object.keys(machineTracks)
-          .slice(0, mapMarkerLimit) // Apply limit to prediction visualizations
+          .slice(0, mapMarkerLimit)
           .map((machineId) => {
-          const shouldShowPrediction = viewMode === 'individual' ? 
-            machineId === selectedMachineId : 
-            false; // Only show predictions in 'individual' mode
-            
-          return shouldShowPrediction ? (
-            <PredictionVisualization
-              key={`prediction-${machineId}`}
-              machineId={machineId}
-              isSelected={machineId === selectedMachineId}
-              map={map}
-            />
-          ) : null;
-        })}
+            const shouldShowPrediction = viewMode === 'individual' ? machineId === selectedMachineId : false;
+            return shouldShowPrediction ? (
+              <PredictionVisualization
+                key={`prediction-${machineId}`}
+                machineId={machineId}
+                isSelected={machineId === selectedMachineId}
+                map={map}
+              />
+            ) : null;
+          })}
       </GoogleMap>
       
-      {/* Direct Google Maps polyline management */}
       {viewMode === 'individual' && selectedMachineId && machineTracks[selectedMachineId] && map && (
         <DirectGradientPolyline
           key={`direct-${selectedMachineId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.refreshKey}`}
@@ -222,14 +213,11 @@ export const MapContainer: React.FC = () => {
         />
       )}
       
-      {/* Gradient controls overlay */}
       <GradientMapOverlay />
-      
-      {/* Prediction controls overlay */}
       <PredictionControls />
-      
-      {/* Gradient legend overlay */}
       <GradientLegend />
     </div>
   );
 };
+
+export default React.memo(MapContainer);
