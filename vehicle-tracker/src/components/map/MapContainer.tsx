@@ -134,7 +134,7 @@ export const MapContainer: React.FC = () => {
 
         {/* Render markers for latest positions only */}
         {Object.entries(machineTracks)
-          .slice(0, mapMarkerLimit) // Apply limit from store
+          .slice(0, mapMarkerLimit === Infinity ? undefined : mapMarkerLimit) // Apply limit from store
           .map(([machineId, data]) => {
           const latestPoint = data[data.length - 1];
           if (!latestPoint || getGPSErrorStatusFromComment(latestPoint.comment) !== 'NONE') return null;
@@ -152,7 +152,7 @@ export const MapContainer: React.FC = () => {
         {/* Render additional waypoint markers for selected machine only (in individual mode) */}
         {viewMode === 'individual' && selectedMachineId && machineTracks[selectedMachineId] && (
           machineTracks[selectedMachineId]
-            .slice(-mapMarkerLimit, -1) // Limit to the last 'mapMarkerLimit' points, excluding the very last one
+            .slice(mapMarkerLimit === Infinity ? 0 : -mapMarkerLimit, -1) // Limit to the last 'mapMarkerLimit' points, excluding the very last one
             .filter(dataPoint => getGPSErrorStatusFromComment(dataPoint.comment) === 'NONE') // Filter for GPS_ERROR:NONE in comment
             .map((dataPoint, index) => (
               <WaypointMarker
@@ -190,7 +190,7 @@ export const MapContainer: React.FC = () => {
           key={`direct-${selectedMachineId}-${gradientVisualization.selectedParameter || 'none'}-${gradientVisualization.refreshKey}`}
           map={map}
           machineId={selectedMachineId}
-          data={machineTracks[selectedMachineId].slice(-mapMarkerLimit)}
+          data={machineTracks[selectedMachineId].slice(mapMarkerLimit === Infinity ? 0 : -mapMarkerLimit)}
           isSelected={true}
           gradientParameter={gradientVisualization.isEnabled ? gradientVisualization.selectedParameter : null}
         />

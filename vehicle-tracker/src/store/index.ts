@@ -41,8 +41,8 @@ interface AppState extends AuthState, ThemeState {
   // Map state
   mapCenter: google.maps.LatLngLiteral | null;
   mapZoom: number;
-  mapMarkerLimit: number; // New: Limit for markers displayed on map
-  setMapMarkerLimit: (limit: number) => void; // New: Action to set the limit
+  mapMarkerLimit: number | 'Unlimited'; // New: Limit for markers displayed on map
+  setMapMarkerLimit: (limit: number | 'Unlimited') => void; // New: Action to set the limit
   mapType: 'roadmap' | 'satellite'; // New: Map type
   
   // Gradient visualization state
@@ -69,7 +69,7 @@ interface AppState extends AuthState, ThemeState {
   // Prediction actions
   setPredictionEnabled: (enabled: boolean) => void;
   setPredictionMinutes: (minutes: number) => void;
-  setPredictionReferencePoints: (points: number) => void;
+  setPredictionReferencePoints: (points: number | 'Unlimited') => void;
   updatePredictionConfig: (config: Partial<PredictionConfig>) => void;
   
   // Computed getters
