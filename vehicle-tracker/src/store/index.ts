@@ -41,7 +41,8 @@ interface AppState extends AuthState, ThemeState {
   // Map state
   mapCenter: google.maps.LatLngLiteral | null;
   mapZoom: number;
-  mapMarkerLimit: number; // New: Limit for markers displayed on map
+  mapMarkerLimit: number | 'Unlimited'; // New: Limit for markers displayed on map
+  setMapMarkerLimit: (limit: number | 'Unlimited') => void; // New: Action to set the limit
   mapType: 'roadmap' | 'satellite'; // New: Map type
   
   // Gradient visualization state
@@ -68,7 +69,7 @@ interface AppState extends AuthState, ThemeState {
   // Prediction actions
   setPredictionEnabled: (enabled: boolean) => void;
   setPredictionMinutes: (minutes: number) => void;
-  setPredictionReferencePoints: (points: number) => void;
+  setPredictionReferencePoints: (points: number | 'Unlimited') => void;
   updatePredictionConfig: (config: Partial<PredictionConfig>) => void;
   
   // Computed getters
@@ -99,7 +100,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   mapCenter: null,
   mapZoom: 12,
-  mapMarkerLimit: 20, // Default limit
+  mapMarkerLimit: 50, // Default limit
   mapType: 'roadmap', // Default map type
   gradientVisualization: {
     isEnabled: false,
@@ -144,6 +145,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setMapCenter: (center) => set({ mapCenter: center }),
   
   setMapZoom: (zoom) => set({ mapZoom: zoom }),
+  setMapMarkerLimit: (limit) => set({ mapMarkerLimit: limit }),
   setMapType: (type: 'roadmap' | 'satellite') => set({ mapType: type }),
   
   setCurrentView: (view) => set((state) => ({ 
