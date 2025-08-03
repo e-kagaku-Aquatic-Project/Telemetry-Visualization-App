@@ -1,18 +1,17 @@
 import { create } from 'zustand';
 import { TelemetryDataPoint, MachineTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
 import { PredictionConfig, PredictedPosition, predictPosition, DEFAULT_PREDICTION_CONFIG } from '../utils/prediction';
-import { verifyPassword, generateSessionToken, saveSession, getSession, clearSession, checkAuthStatus as checkAuthStatusUtil } from '../utils/auth';
+import { clearSession, checkAuthStatus as checkAuthStatusUtil } from '../utils/auth'; // Import only necessary auth functions
 
 export type Theme = 'light' | 'dark';
 
 interface AuthState {
   isAuthenticated: boolean;
-  sessionToken: string | null;
-  sessionTimestamp: number | null;
-  login: (password: string) => boolean;
+  isAuthLoading: boolean; // New: Indicates if authentication status is being loaded
+  setAuthenticated: (isAuthenticated: boolean) => void;
   logout: () => void;
-  checkAuthStatus: () => boolean;
-  initializeAuth: () => void;
+  checkAuthStatus: () => Promise<boolean>;
+  initializeAuth: () => Promise<void>;
 }
 
 interface ThemeState {
@@ -112,8 +111,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   
   // Auth state
   isAuthenticated: false,
-  sessionToken: null,
-  sessionTimestamp: null,
+  isAuthLoading: true, // Default to true on app start
   
   // Theme state
   theme: 'dark', // Default to dark theme
@@ -251,46 +249,31 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   
   // Auth actions
-  login: (password: string) => {
-    const isValid = verifyPassword(password);
-    if (isValid) {
-      const token = generateSessionToken();
-      saveSession(token);
-      set({
-        isAuthenticated: true,
-        sessionToken: token,
-        sessionTimestamp: Date.now(),
-      });
-      return true;
-    }
-    return false;
-  },
+  setAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
+  
   
   logout: () => {
     clearSession();
-    set({
-      isAuthenticated: false,
-      sessionToken: null,
-      sessionTimestamp: null,
-    });
+    set({ isAuthenticated: false });
   },
   
-  checkAuthStatus: () => {
-    const isValid = checkAuthStatusUtil();
-    if (!isValid) {
-      get().logout();
-    }
+  checkAuthStatus: async () => {
+    set({ isAuthLoading: true }); // Set loading to true
+    console.log('checkAuthStatus: Calling validateSession...');
+    const isValid = await checkAuthStatusUtil();
+    console.log('checkAuthStatus: validateSession returned:', isValid);
+    set({ isAuthenticated: isValid, isAuthLoading: false }); // Set loading to false
+    console.log('checkAuthStatus: isAuthenticated set to:', isValid);
     return isValid;
   },
   
-  initializeAuth: () => {
-    const { token, timestamp } = getSession();
-    const isValid = checkAuthStatusUtil();
-    set({
-      isAuthenticated: isValid,
-      sessionToken: isValid ? token : null,
-      sessionTimestamp: isValid ? timestamp : null,
-    });
+  initializeAuth: async () => {
+    set({ isAuthLoading: true }); // Set loading to true
+    console.log('initializeAuth: Calling checkAuthStatusUtil...');
+    const isValid = await checkAuthStatusUtil();
+    console.log('initializeAuth: checkAuthStatusUtil returned:', isValid);
+    set({ isAuthenticated: isValid, isAuthLoading: false }); // Set loading to false
+    console.log('initializeAuth: isAuthenticated set to:', isValid);
     
     // Initialize theme from localStorage
     if (typeof window !== 'undefined') {
