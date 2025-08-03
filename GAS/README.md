@@ -35,17 +35,6 @@
 - Google Sheets へのアクセス権限
 - Python 3.7+ (テスト用)
 
-### WebApp URL
-
-**現在のデプロイ済み URL:**
-
-```
-https://script.google.com/macros/s/AKfycbys_1sl065_wV_0RusA_aIOxtA3HUuqizsItE7q8g6Qq9vyrd836MtfSKtc5oRh0PRCcA/exec
-```
-
-**スプレッドシート:**
-https://docs.google.com/spreadsheets/d/1SocK5ILBHp-xWsAR6KiKkStret4O1lXqKA0zkAOyIwk/edit?usp=sharing
-
 ## 📁 プロジェクト構造
 
 ```
@@ -93,43 +82,43 @@ sequenceDiagram
 
     Note over Client, Discord: テレメトリデータ送信シーケンス
 
-    Client->>+GAS: POST /exec<br/>JSON データ送信
+    Client->>GAS: POST /exec<br/>JSON データ送信
     Note right of Client: {"DataType": "HK",<br/>"MachineID": "004353",<br/>"GPS": {...}, "BAT": 3.45}
 
     GAS->>GAS: データ検証<br/>(MachineID, GPS等)
 
     alt データ形式が正しい場合
-        GAS->>+Sheet: Machine_{ID} シート確認
+        GAS->>Sheet: Machine_{ID} シート確認
         alt シートが存在しない場合
             Sheet-->>GAS: シート未存在
-            GAS->>+Sheet: 新規シート作成<br/>ヘッダー設定
-            Sheet-->>-GAS: シート作成完了
+            GAS->>Sheet: 新規シート作成<br/>ヘッダー設定
+            Sheet-->>GAS: シート作成完了
         else シートが存在する場合
-            Sheet-->>-GAS: シート存在確認
+            Sheet-->>GAS: シート存在確認
         end
 
-        GAS->>+Sheet: データ行追加<br/>(timestamp, GPS, battery等)
-        Sheet-->>-GAS: 保存完了(行番号)
+        GAS->>Sheet: データ行追加<br/>(timestamp, GPS, battery等)
+        Sheet-->>GAS: 保存完了(行番号)
 
         GAS->>GAS: 監視ステータス更新<br/>(lastSeen時刻更新)
 
-        GAS-->>-Client: 成功レスポンス<br/>{"status": "success",<br/>"rowNumber": 15}
+        GAS-->>Client: 成功レスポンス<br/>{"status": "success",<br/>"rowNumber": 15}
 
     else データ形式が不正な場合
-        GAS-->>-Client: エラーレスポンス<br/>{"status": "error",<br/>"message": "Invalid format"}
+        GAS-->>Client: エラーレスポンス<br/>{"status": "error",<br/>"message": "Invalid format"}
     end
 
     Note over Client, Discord: 機体登録シーケンス
 
-    Client->>+GAS: POST /exec<br/>機体登録リクエスト
+    Client->>GAS: POST /exec<br/>機体登録リクエスト
     Note right of Client: {"action": "registerMachine",<br/>"MachineID": "004353"}
 
-    GAS->>+Sheet: Machine_{ID} シート作成
-    Sheet-->>-GAS: シート作成完了
+    GAS->>Sheet: Machine_{ID} シート作成
+    Sheet-->>GAS: シート作成完了
 
     GAS->>GAS: 監視対象として登録<br/>(Active: true)
 
-    GAS-->>-Client: 登録完了レスポンス<br/>{"status": "success"}
+    GAS-->>Client: 登録完了レスポンス<br/>{"status": "success"}
 ```
 
 ### データ受信フロー（GET）
@@ -142,55 +131,55 @@ sequenceDiagram
 
     Note over Frontend, Sheet: 全機体データ取得シーケンス
 
-    Frontend->>+GAS: GET /exec?action=getAllMachines
+    Frontend->>GAS: GET /exec?action=getAllMachines
 
-    GAS->>+Sheet: 全シート一覧取得
-    Sheet-->>-GAS: Machine_* シートリスト
+    GAS->>Sheet: 全シート一覧取得
+    Sheet-->>GAS: Machine_* シートリスト
 
     loop 各機体シートに対して
-        GAS->>+Sheet: Machine_{ID} データ読み取り
-        Sheet-->>-GAS: 機体データ(全行)
+        GAS->>Sheet: Machine_{ID} データ読み取り
+        Sheet-->>GAS: 機体データ(全行)
         GAS->>GAS: データ変換<br/>(LAT→latitude,<br/>LNG→longitude等)
     end
 
     GAS->>GAS: レスポンス形式整形<br/>(machines配列作成)
 
-    GAS-->>-Frontend: 統合データレスポンス<br/>{"status": "success",<br/>"machines": [...]}
+    GAS-->>Frontend: 統合データレスポンス<br/>{"status": "success",<br/>"machines": [...]}
 
     Note over Frontend, Sheet: 特定機体データ取得シーケンス
 
-    Frontend->>+GAS: GET /exec?action=getMachine<br/>&machineId=004353
+    Frontend->>GAS: GET /exec?action=getMachine<br/>&machineId=004353
 
     GAS->>GAS: MachineID検証
 
     alt 有効なMachineIDの場合
-        GAS->>+Sheet: Machine_004353 データ読み取り
-        Sheet-->>-GAS: 機体データ(全行)
+        GAS->>Sheet: Machine_004353 データ読み取り
+        Sheet-->>GAS: 機体データ(全行)
 
         GAS->>GAS: データ変換・整形
 
-        GAS-->>-Frontend: 機体データレスポンス<br/>{"status": "success",<br/>"machines": [single_machine]}
+        GAS-->>Frontend: 機体データレスポンス<br/>{"status": "success",<br/>"machines": [single_machine]}
 
     else 無効なMachineIDの場合
-        GAS-->>-Frontend: エラーレスポンス<br/>{"status": "error",<br/>"message": "Machine not found"}
+        GAS-->>Frontend: エラーレスポンス<br/>{"status": "error",<br/>"message": "Machine not found"}
     end
 
     Note over Frontend, Sheet: 機体リスト取得シーケンス
 
-    Frontend->>+GAS: GET /exec?action=getMachineList
+    Frontend->>GAS: GET /exec?action=getMachineList
 
-    GAS->>+Sheet: 全シート一覧取得
-    Sheet-->>-GAS: Machine_* シートリスト
+    GAS->>Sheet: 全シート一覧取得
+    Sheet-->>GAS: Machine_* シートリスト
 
     GAS->>GAS: 機体ID抽出<br/>(シート名から)
 
     loop 各機体に対して
-        GAS->>+Sheet: 最新データ1行取得
-        Sheet-->>-GAS: 最新レコード
+        GAS->>Sheet: 最新データ1行取得
+        Sheet-->>GAS: 最新レコード
         GAS->>GAS: 基本情報抽出<br/>(lastUpdate, dataCount)
     end
 
-    GAS-->>-Frontend: 機体リスト<br/>{"machineIds": [...],<br/>"lastUpdates": {...}}
+    GAS-->>Frontend: 機体リスト<br/>{"machineIds": [...],<br/>"lastUpdates": {...}}
 ```
 
 ### Discord 通知フロー
@@ -204,41 +193,46 @@ sequenceDiagram
 
     Note over Trigger, Discord: 機体監視・通知シーケンス
 
-    Trigger->>+GAS: checkMachineSignals()<br/>定期実行
+    Trigger->>GAS: checkMachineSignals()<br/>定期実行
 
-    GAS->>+Sheet: 全機体シート取得
-    Sheet-->>-GAS: Machine_* シートリスト
+    GAS->>Sheet: 全機体シート取得
+    Sheet-->>GAS: Machine_* シートリスト
 
     loop 各機体に対して
-        GAS->>+Sheet: 最新データ取得<br/>(timestamp確認)
-        Sheet-->>-GAS: 最新レコード
+        GAS->>Sheet: 最新データ取得<br/>(timestamp確認)
+        Sheet-->>GAS: 最新レコード
 
         GAS->>GAS: タイムアウト判定<br/>(現在時刻 - 最新時刻 > 10分)
 
         alt 初回タイムアウト検知
             GAS->>GAS: 機体ステータス更新<br/>(LOST状態に変更)
-            GAS->>+Discord: Webhook送信<br/>🚨 機体途絶通知
-            Discord-->>-GAS: 通知送信完了
+            GAS->>Discord: Webhook送信<br/>🚨 機体途絶通知
+            Discord-->>GAS: 通知送信完了
 
         else 継続タイムアウト(v2.0変更)
             GAS->>GAS: 通知なし<br/>(リマインダー廃止)
 
         else 通信復旧検知
             GAS->>GAS: 機体ステータス更新<br/>(ACTIVE状態に変更)
-            GAS->>+Discord: Webhook送信<br/>✅ 通信復旧通知
-            Discord-->>-GAS: 通知送信完了
+            GAS->>Discord: Webhook送信<br/>✅ 通信復旧通知
+            Discord-->>GAS: 通知送信完了
         end
     end
 
-    GAS-->>-Trigger: 監視処理完了
+    GAS-->>Trigger: 監視処理完了
 
-    Note over Trigger, Discord: 手動通知制御シーケンス
+```
 
+### 手動通知制御フロー
+
+```mermaid
+sequenceDiagram
     participant Admin as 管理者
+    participant GAS as Google Apps Script<br/>(WebApp)
 
-    Admin->>+GAS: resetMachineMonitorStatus("004353")<br/>状態リセット
+    Admin->>GAS: resetMachineMonitorStatus("004353")<br/>状態リセット
     GAS->>GAS: 機体監視状態初期化
-    GAS-->>-Admin: リセット完了
+    GAS-->>Admin: リセット完了
 ```
 
 ## 📤 データ送信 API (POST)
