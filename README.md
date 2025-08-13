@@ -2,6 +2,8 @@
 
 機体のリアルタイム位置追跡とセンサーデータ監視を行う統合 Web アプリケーションだっピ
 
+GAS・Webアプリの詳細情報については，各ディレクトリ内のREADME([GAS](https://github.com/e-kagaku-Aquatic-Project/Telemetry-Visualization-App/blob/main/GAS/README.md)，[WebAPP](https://github.com/e-kagaku-Aquatic-Project/Telemetry-Visualization-App/blob/main/vehicle-tracker/README.md))を確認するっピ！
+
 ## 📖 目次
 
 ### 基本情報
