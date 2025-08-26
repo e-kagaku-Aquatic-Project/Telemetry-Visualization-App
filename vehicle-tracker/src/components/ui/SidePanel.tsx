@@ -24,6 +24,23 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
   const latestPoint = selectedMachineId ? getLatestDataPoint(selectedMachineId) : null;
   const displayPoint = selectedDataPoint || latestPoint;
 
+  const continuousOperationTime = React.useMemo(() => {
+    if (selectedMachineId && machineTracks[selectedMachineId]) {
+      const track = machineTracks[selectedMachineId];
+      if (track.length > 1) {
+        const startTime = new Date(track[0].timestamp.replace(/\//g, '-'));
+        const endTime = new Date(track[track.length - 1].timestamp.replace(/\//g, '-'));
+        const diffMs = endTime.getTime() - startTime.getTime();
+        
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+        return `${diffHours}h ${diffMinutes}m`;
+      }
+    }
+    return 'N/A';
+  }, [selectedMachineId, machineTracks]);
+
   if (!isDesktop && !isSidePanelOpen) return null;
 
   if (isDesktop) {
@@ -51,7 +68,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
                     {selectedDataPoint ? 'Sensor Details' : 'Machine Details'}
                   </h2>
                 </div>
-                <SidePanelContent selectedDataPoint={displayPoint} />
+                <SidePanelContent selectedDataPoint={displayPoint} continuousOperationTime={continuousOperationTime} />
               </>
             )
           )}
@@ -83,7 +100,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
                 <X size={20} className="text-light-muted dark:text-light-muted dark:text-dark-muted" />
               </button>
             </div>
-            <SidePanelContent selectedDataPoint={displayPoint} />
+            <SidePanelContent selectedDataPoint={displayPoint} continuousOperationTime={continuousOperationTime} />
           </div>
         </motion.div>
       )}
@@ -92,7 +109,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isDesktop = false }) => {
 };
 
 // Extracted content component to avoid duplication
-const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({ selectedDataPoint }) => {
+const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint; continuousOperationTime: string }> = ({ selectedDataPoint, continuousOperationTime }) => {
   const [lossTime, setLossTime] = useState<string>('');
   const [isDelayed, setIsDelayed] = useState<boolean>(false);
 
@@ -136,8 +153,14 @@ const SidePanelContent: React.FC<{ selectedDataPoint: TelemetryDataPoint }> = ({
       <h3 className="font-medium text-light-text dark:text-white mb-2 text-sm">Machine Information</h3>
       <div className="space-y-1.5">
         <div className="flex justify-between">
-          <span className="text-light-muted dark:text-light-muted dark:text-dark-muted text-xs">Machine ID:</span>
-          <span className="font-mono text-light-text dark:text-light-text dark:text-dark-text text-xs">{selectedDataPoint.machineId}</span>
+          <span className="text-light-muted dark:text-dark-muted text-xs">Machine ID:</span>
+          <span className="font-mono text-light-text dark:text-dark-text text-xs">{selectedDataPoint.machineId}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-light-muted dark:text-dark-muted text-xs">Continuous Operation:</span>
+          <span className="font-mono text-light-text dark:text-dark-text text-xs">
+            {continuousOperationTime}
+          </span>
         </div>
         <div className="flex justify-between">
           <span className="text-light-muted dark:text-dark-muted text-xs">Timestamp:</span>
