@@ -2,9 +2,9 @@
 
 https://e-kagaku-aquatic-project.github.io/Telemetry-Visualization-App
 
-機体のリアルタイム位置追跡とセンサーデータ監視を行う統合 Web アプリケーションだっピ
+機体のリアルタイム位置追跡とセンサーデータ監視を行う統合 Web アプリケーションです。
 
-GAS・Webアプリの詳細情報については，各ディレクトリ内のREADME([GAS](https://github.com/e-kagaku-Aquatic-Project/Telemetry-Visualization-App/blob/main/GAS/README.md)，[WebAPP](https://github.com/e-kagaku-Aquatic-Project/Telemetry-Visualization-App/blob/main/vehicle-tracker/README.md))を確認するっピ！
+GAS・Webアプリの詳細情報については、各ディレクトリ内のREADME([GAS](https://github.com/e-kagaku-Aquatic-Project/Telemetry-Visualization-App/blob/main/GAS/README.md)、[WebAPP](https://github.com/e-kagaku-Aquatic-Project/Telemetry-Visualization-App/blob/main/vehicle-tracker/README.md))を確認してください。
 
 ## 📖 目次
 
@@ -33,13 +33,13 @@ GAS・Webアプリの詳細情報については，各ディレクトリ内のRE
 
 ## 🚀 クイックスタート
 
-### 必要なものだっピ
+### 必要なもの
 
-- **Node.js 18+** - [nodejs.org](https://nodejs.org/)からダウンロードするっピ
-- **Google Maps API キー** - [Google Cloud Console](https://console.cloud.google.com/)で取得するっピ
-- **Google Apps Script デプロイ** - バックエンド API 用だっピ
+- **Node.js 18+** - [nodejs.org](https://nodejs.org/)からダウンロードしてください
+- **Google Maps API キー** - [Google Cloud Console](https://console.cloud.google.com/)で取得してください
+- **Google Apps Script デプロイ** - バックエンド API 用です
 
-### 5 分で起動だっピ
+### 5 分で起動
 
 ```bash
 # 1. プロジェクトセットアップ
@@ -53,12 +53,12 @@ cp .env.example .env
 
 # 3. 開発サーバー起動
 npm run dev
-# → http://localhost:4000 でアクセスするっピ
+# → http://localhost:4000 でアクセスします
 ```
 
 ## 🏗️ システム概要
 
-### 全体アーキテクチャだっピ
+### 全体アーキテクチャ
 
 ```mermaid
 graph TB
@@ -98,98 +98,98 @@ graph TB
     Tablet --> Frontend
 ```
 
-### データフローだっピ
+### データフロー
 
-1. **データ収集**: 機体の GPS・センサーデータを Google Sheets に蓄積するっピ
-2. **API 提供**: Google Apps Script (GAS) が REST API としてデータを提供するっピ
-3. **リアルタイム表示**: React Web アプリが SWR で自動更新・可視化するっピ
-4. **監視・通知**: Discord Webhook で異常時の自動通知するっピ
+1. **データ収集**: 機体の GPS・センサーデータを Google Sheets に蓄積します
+2. **API 提供**: Google Apps Script (GAS) が REST API としてデータを提供します
+3. **リアルタイム表示**: React Web アプリが SWR で自動更新・可視化します
+4. **監視・通知**: Discord Webhook で異常時の自動通知を行います
 
 ## 📊 主要機能
 
-### 🗺️ リアルタイム地図追跡だっピ
+### 🗺️ リアルタイム地図追跡
 
-- **位置表示**: 機体の現在位置をマーカーで表示するっピ
-- **軌跡可視化**: 移動履歴をカラフルな線で描画するっピ
-- **グラデーション軌跡**: 高度・衛星数・バッテリーに連動した色変化するっピ
-- **自動追従**: 機体選択時の地図自動中心移動するっピ
+- **位置表示**: 機体の現在位置をマーカーで表示します
+- **軌跡可視化**: 移動履歴をカラフルな線で描画します
+- **グラデーション軌跡**: 高度・衛星数・バッテリーに連動した色変化を行います
+- **自動追従**: 機体選択時の地図自動中心移動を行います
 
-### 🔮 AI 位置予測だっピ
+### 🔮 AI 位置予測
 
-- **予測アルゴリズム**: 過去の移動データに基づく線形予測するっピ
-- **設定可能**: 予測時間(1-60 分)、参照ポイント数(2-10 点)だっピ
-- **精度表示**: 速度・方向の一貫性に基づく信頼度がわかるっピ
-- **視覚化**: 予測位置マーカーと予測軌跡が見えるっピ
+- **予測アルゴリズム**: 過去の移動データに基づく線形予測を行います
+- **設定可能**: 予測時間(1-60 分)、参照ポイント数(2-10 点)を設定できます
+- **精度表示**: 速度・方向の一貫性に基づく信頼度を表示します
+- **視覚化**: 予測位置マーカーと予測軌跡を表示します
 
-### 📊 センサーデータ監視だっピ
+### 📊 センサーデータ監視
 
-- **GPS 情報**: 緯度経度、高度、衛星数がわかるっピ
-- **システム情報**: バッテリー残量、機体時刻だっピ
-- **メタデータ**: データタイプ、コメントだっピ
-- **Raw JSON データ**: 技術者向け詳細情報だっピ
+- **GPS 情報**: 緯度経度、高度、衛星数を表示します
+- **システム情報**: バッテリー残量、機体時刻を表示します
+- **メタデータ**: データタイプ、コメントを表示します
+- **Raw JSON データ**: 技術者向け詳細情報を提供します
 
-### 🔔 監視・通知システムだっピ
+### 🔔 監視・通知システム
 
-- **通信監視**: 10 分間隔での機体状態チェックするっピ
-- **Discord 通知**: 通信途絶・復旧の自動通知するっピ
-- **状態管理**: 機体ごとの監視ステータス追跡するっピ
+- **通信監視**: 10 分間隔での機体状態チェックを行います
+- **Discord 通知**: 通信途絶・復旧の自動通知を行います
+- **状態管理**: 機体ごとの監視ステータスを追跡します
 
-### ⚡ リアルタイム更新だっピ
+### ⚡ リアルタイム更新
 
-- **自動更新**: 5 秒〜60 秒間隔で設定可能だっピ
-- **接続監視**: データ取得の成功/失敗状況表示するっピ
-- **エラー処理**: 接続障害時の自動リトライするっピ
+- **自動更新**: 5 秒〜60 秒間隔で設定可能です
+- **接続監視**: データ取得の成功/失敗状況を表示します
+- **エラー処理**: 接続障害時の自動リトライを行います
 
-### 💾 データエクスポートだっピ
+### 💾 データエクスポート
 
-- **CSV 形式**: Excel 等で開ける形式だっピ
-- **JSON 形式**: プログラム処理用だっピ
-- **選択エクスポート**: 特定機体または全機体だっピ
+- **CSV 形式**: Excel 等で開ける形式で出力します
+- **JSON 形式**: プログラム処理用の形式で出力します
+- **選択エクスポート**: 特定機体または全機体を選択できます
 
-### 🎨 ユーザーエクスペリエンスだっピ
+### 🎨 ユーザーエクスペリエンス
 
-- **テーマ対応**: ダーク/ライトテーマ切り替えできるっピ
-- **レスポンシブ**: PC・タブレット・スマートフォン対応だっピ
-- **認証システム**: パスワードベース認証だっピ
-- **キーボードショートカット**: 効率的な操作できるっピ
+- **テーマ対応**: ダーク/ライトテーマを切り替えできます
+- **レスポンシブ**: PC・タブレット・スマートフォンに対応しています
+- **認証システム**: パスワードベース認証を提供します
+- **キーボードショートカット**: 効率的な操作が可能です
 
 ## ⚙️ 技術スタック
 
-### フロントエンドだっピ
+### フロントエンド
 
-- **React 19.1.0** + **TypeScript 5.8.3** - UI 構築するっピ
-- **Webpack 5.97.1** - ビルドシステムだっピ
-- **Zustand 5.0.5** - 軽量状態管理だっピ
-- **SWR 2.3.3** - データフェッチング・キャッシュだっピ
-- **Tailwind CSS 3.4.17** - スタイリングだっピ
-- **Framer Motion 12.18.1** - アニメーションだっピ
-- **Google Maps JavaScript API** - 地図統合だっピ
+- **React 19.1.0** + **TypeScript 5.8.3** - UI 構築
+- **Webpack 5.97.1** - ビルドシステム
+- **Zustand 5.0.5** - 軽量状態管理
+- **SWR 2.3.3** - データフェッチング・キャッシュ
+- **Tailwind CSS 3.4.17** - スタイリング
+- **Framer Motion 12.18.1** - アニメーション
+- **Google Maps JavaScript API** - 地図統合
 
-### バックエンドだっピ
+### バックエンド
 
-- **Google Apps Script v2.0.0** - サーバーレス API だっピ
-- **Google Sheets** - NoSQL データベースだっピ
-- **Discord Webhooks** - 通知システムだっピ
+- **Google Apps Script v2.0.0** - サーバーレス API
+- **Google Sheets** - NoSQL データベース
+- **Discord Webhooks** - 通知システム
 
-### ビルド・開発ツールだっピ
+### ビルド・開発ツール
 
-- **Babel** + **PostCSS** - コード変換するっピ
-- **ESLint** - コード品質チェックするっピ
-- **Hot Module Replacement** - 開発効率化するっピ
+- **Babel** + **PostCSS** - コード変換
+- **ESLint** - コード品質チェック
+- **Hot Module Replacement** - 開発効率化
 
 ---
 
 ## 🔧 環境構築
 
-### 1. 前提条件だっピ
+### 1. 前提条件
 
 ```bash
 # Node.js バージョン確認
-node --version  # v18.0.0 以上が必要だっピ
-npm --version   # 8.0.0 以上が必要だっピ
+node --version  # v18.0.0 以上が必要です
+npm --version   # 8.0.0 以上が必要です
 ```
 
-### 2. プロジェクトセットアップだっピ
+### 2. プロジェクトセットアップ
 
 ```bash
 # リポジトリクローン
@@ -204,47 +204,47 @@ npm install
 cp .env.example .env
 ```
 
-### 3. 環境変数設定だっピ
+### 3. 環境変数設定
 
-`.env`ファイルを編集するっピ：
+`.env`ファイルを編集してください：
 
 ```bash
-# Google Maps APIキー（必須だっピ）
+# Google Maps APIキー（必須）
 VITE_GMAPS_API_KEY=your_google_maps_api_key_here
 
-# Google Apps Script WebApp URL（必須だっピ）
+# Google Apps Script WebApp URL（必須）
 VITE_GAS_ENDPOINT=https://script.google.com/macros/s/.../exec
 
-# 認証パスワード（オプションだっピ）
+# 認証パスワード（オプション）
 VITE_APP_PASSWORD=your_secure_password
 ```
 
-### 4. Google Maps API 設定だっピ
+### 4. Google Maps API 設定
 
-1. [Google Cloud Console](https://console.cloud.google.com/)にアクセスするっピ
-2. 新しいプロジェクトを作成またはプロジェクトを選択するっピ
-3. **APIs & Services > Library**で以下を有効化するっピ：
+1. [Google Cloud Console](https://console.cloud.google.com/)にアクセスしてください
+2. 新しいプロジェクトを作成またはプロジェクトを選択してください
+3. **APIs & Services > Library**で以下を有効化してください：
    - Maps JavaScript API
-   - Places API (オプションだっピ)
-4. **APIs & Services > Credentials**で API キーを作成するっピ
-5. API キーにドメイン制限を設定するっピ（セキュリティ推奨だっピ）
+   - Places API (オプション)
+4. **APIs & Services > Credentials**で API キーを作成してください
+5. API キーにドメイン制限を設定してください（セキュリティ推奨）
 
-### 5. 開発サーバー起動だっピ
+### 5. 開発サーバー起動
 
 ```bash
 npm run dev
-# ブラウザで http://localhost:4000 にアクセスするっピ
+# ブラウザで http://localhost:4000 にアクセスしてください
 ```
 
 ## 🗺️ Google Apps Script 設定
 
-### 1. GAS プロジェクト作成だっピ
+### 1. GAS プロジェクト作成
 
-1. [Google Sheets](https://sheets.google.com/)で新しいスプレッドシートを作成するっピ
-2. **拡張機能 > Apps Script**を選択するっピ
-3. `GAS/src/`内のファイルをコピーして配置するっピ
+1. [Google Sheets](https://sheets.google.com/)で新しいスプレッドシートを作成してください
+2. **拡張機能 > Apps Script**を選択してください
+3. `GAS/src/`内のファイルをコピーして配置してください
 
-### 2. 必要なファイル構成だっピ
+### 2. 必要なファイル構成
 
 ```
 Google Apps Script プロジェクト/
@@ -257,33 +257,33 @@ Google Apps Script プロジェクト/
 └── Test.gs                 # テスト関数
 ```
 
-### 3. 初期設定実行だっピ
+### 3. 初期設定実行
 
 ```javascript
-// GASエディタで実行するっピ
+// GASエディタで実行してください
 function initialSetup() {
-  // 必要な設定を初期化するっピ
-  // Discord Webhook URL設定 (オプションだっピ)
+  // 必要な設定を初期化します
+  // Discord Webhook URL設定 (オプション)
   setScriptProperty("DISCORD_WEBHOOK_URL", "your_discord_webhook_url");
 
-  // 監視システム初期化するっピ
+  // 監視システムを初期化します
   setupTriggers();
 }
 ```
 
-### 4. WebApp デプロイだっピ
+### 4. WebApp デプロイ
 
-1. **デプロイ > 新しいデプロイ**を選択するっピ
-2. 種類：**ウェブアプリ**だっピ
-3. 実行者：**自分**だっピ
-4. アクセス：**全員**だっピ
-5. デプロイして WebApp URL を取得するっピ
-6. フロントエンドの`.env`に設定するっピ
+1. **デプロイ > 新しいデプロイ**を選択してください
+2. 種類：**ウェブアプリ**
+3. 実行者：**自分**
+4. アクセス：**全員**
+5. デプロイして WebApp URL を取得してください
+6. フロントエンドの`.env`に設定してください
 
-### 5. Discord 通知設定 (オプションだっピ)
+### 5. Discord 通知設定 (オプション)
 
 ```javascript
-// Discord Webhook URL設定するっピ
+// Discord Webhook URL設定
 function setupDiscordNotification() {
   const webhookUrl = "https://discord.com/api/webhooks/.../...";
   setScriptProperty("DISCORD_WEBHOOK_URL", webhookUrl);
@@ -292,35 +292,35 @@ function setupDiscordNotification() {
 
 ## 🚀 デプロイメント
 
-### 本番ビルドだっピ
+### 本番ビルド
 
 ```bash
 cd vehicle-tracker
 npm run build
-# dist/ フォルダが生成されるっピ
+# dist/ フォルダが生成されます
 ```
 
-### Vercel デプロイだっピ
+### Vercel デプロイ
 
-1. [Vercel](https://vercel.com/)アカウント作成するっピ
-2. GitHub リポジトリを接続するっピ
-3. 環境変数を設定するっピ：
+1. [Vercel](https://vercel.com/)アカウントを作成してください
+2. GitHub リポジトリを接続してください
+3. 環境変数を設定してください：
    ```
    VITE_GMAPS_API_KEY=production_api_key
    VITE_GAS_ENDPOINT=production_gas_url
    VITE_APP_PASSWORD=production_password
    ```
-4. 自動デプロイ開始するっピ
+4. 自動デプロイを開始してください
 
-### その他のデプロイ先だっピ
+### その他のデプロイ先
 
-- **Netlify**: 同様の手順で簡単デプロイできるっピ
-- **GitHub Pages**: 静的サイトホスティングだっピ
-- **自前サーバー**: dist/フォルダをウェブサーバーに配置するっピ
+- **Netlify**: 同様の手順で簡単にデプロイできます
+- **GitHub Pages**: 静的サイトホスティングに対応しています
+- **自前サーバー**: dist/フォルダをウェブサーバーに配置してください
 
 ## 📱 操作ガイド
 
-### 基本操作だっピ
+### 基本操作
 
 | 操作               | 方法                             |
 | ------------------ | -------------------------------- |
@@ -332,25 +332,25 @@ npm run build
 | 詳細表示           | マーカークリックまたは情報ボタン |
 | パネル閉じる       | `ESC`キーまたは × ボタン         |
 
-### 予測機能操作だっピ
+### 予測機能操作
 
-個別機体表示時に右上「Prediction」コントロールだっピ：
+個別機体表示時に右上「Prediction」コントロールを使用できます：
 
-- **予測時間**: 1, 2, 5, 10, 15, 30, 60 分から選択するっピ
-- **参照ポイント数**: 2, 3, 4, 5, 6, 8, 10 点から選択するっピ
-- **表示切り替え**: 予測表示のオン/オフだっピ
+- **予測時間**: 1, 2, 5, 10, 15, 30, 60 分から選択できます
+- **参照ポイント数**: 2, 3, 4, 5, 6, 8, 10 点から選択できます
+- **表示切り替え**: 予測表示のオン/オフを切り替えます
 
-### レスポンシブデザインだっピ
+### レスポンシブデザイン
 
-- **デスクトップ (1280px+)**: 地図＋固定サイドパネルだっピ
-- **タブレット (1024-1279px)**: 地図メイン＋オーバーレイパネルだっピ
-- **モバイル (~1023px)**: フルスクリーン地図＋モーダルパネルだっピ
+- **デスクトップ (1280px+)**: 地図＋固定サイドパネル
+- **タブレット (1024-1279px)**: 地図メイン＋オーバーレイパネル
+- **モバイル (~1023px)**: フルスクリーン地図＋モーダルパネル
 
 ---
 
 ## 🏛️ アーキテクチャ詳細
 
-### フロントエンド構成だっピ
+### フロントエンド構成
 
 ```
 src/
@@ -367,7 +367,7 @@ src/
 └── constants/           # 設定定数
 ```
 
-### 状態管理 (Zustand)だっピ
+### 状態管理 (Zustand)
 
 ```typescript
 interface AppState {
@@ -396,12 +396,12 @@ sequenceDiagram
     API->>SWR: JSONレスポンス
     SWR->>Hook: データ更新
     Hook->>Store: 状態更新
-    Store->>UI: 再レンダリングするっピ
+    Store->>UI: 再レンダリング
 ```
 
 ## 📄 API 仕様
 
-### エンドポイントだっピ
+### エンドポイント
 
 | エンドポイント                         | 説明                   | パラメータ |
 | -------------------------------------- | ---------------------- | ---------- |
@@ -410,9 +410,9 @@ sequenceDiagram
 | `GET ?action=getMachineList`           | 機体一覧取得           | なし       |
 | `POST`                                 | テレメトリーデータ送信 | JSON Body  |
 
-### データ形式だっピ
+### データ形式
 
-#### テレメトリーデータ構造だっピ
+#### テレメトリーデータ構造
 
 ```typescript
 interface TelemetryDataPoint {
@@ -430,7 +430,7 @@ interface TelemetryDataPoint {
 }
 ```
 
-#### API レスポンス例だっピ
+#### API レスポンス例
 
 ```json
 {
@@ -464,38 +464,38 @@ interface TelemetryDataPoint {
 
 ## 🔧 開発ガイド
 
-### 開発コマンドだっピ
+### 開発コマンド
 
 ```bash
 # 開発サーバー起動
-npm run dev           # http://localhost:4000 だっピ
+npm run dev           # http://localhost:4000
 
 # ビルド・品質チェック
-npm run build         # 本番用ビルドだっピ
-npm run lint          # ESLintチェックするっピ
-npm run preview       # ビルド結果プレビューするっピ
+npm run build         # 本番用ビルド
+npm run lint          # ESLintチェック
+npm run preview       # ビルド結果プレビュー
 ```
 
-### 新機能追加手順だっピ
+### 新機能追加手順
 
-1. **型定義追加**: `src/types/index.ts`だっピ
-2. **コンポーネント作成**: 適切なディレクトリに配置するっピ
-3. **状態管理統合**: `src/store/index.ts`に追加するっピ
-4. **API 統合**: `src/api/gas.ts`にエンドポイント追加するっピ
+1. **型定義追加**: `src/types/index.ts`
+2. **コンポーネント作成**: 適切なディレクトリに配置します
+3. **状態管理統合**: `src/store/index.ts`に追加します
+4. **API 統合**: `src/api/gas.ts`にエンドポイントを追加します
 
-### コーディング規約だっピ
+### コーディング規約
 
-- **TypeScript**: strict mode 使用するっピ
-- **インポート順序**: React → サードパーティ → 内部モジュールだっピ
-- **命名規則**: PascalCase (コンポーネント)、camelCase (ファイル)だっピ
-- **パフォーマンス**: React.memo、useMemo を適切に使用するっピ
+- **TypeScript**: strict mode を使用します
+- **インポート順序**: React → サードパーティ → 内部モジュール
+- **命名規則**: PascalCase (コンポーネント)、camelCase (ファイル)
+- **パフォーマンス**: React.memo、useMemo を適切に使用します
 
-### パフォーマンス最適化だっピ
+### パフォーマンス最適化
 
 ```typescript
 // 1. メモ化
 const MachineMarker = React.memo<Props>(({ ... }) => {
-  // ...だっピ
+  // ...
 });
 
 // 2. 計算値キャッシュ
@@ -509,7 +509,7 @@ const limitedWaypoints = waypoints.slice(-10);
 
 ## 🧪 テスト・デバッグ
 
-### GAS バックエンドテストだっピ
+### GAS バックエンドテスト
 
 ```bash
 cd GAS/examples/python
@@ -525,7 +525,7 @@ python test_notification_system.py   # 通知システム
 python test_realistic_scenario.py    # リアルシナリオ
 ```
 
-### フロントエンドデバッグだっピ
+### フロントエンドデバッグ
 
 ```typescript
 // 1. Zustand状態確認
@@ -538,7 +538,7 @@ useAppStore.getState();
 console.error("API Error:", error);
 ```
 
-### よくある問題だっピ
+### よくある問題
 
 | 問題              | 原因       | 解決方法                             |
 | ----------------- | ---------- | ------------------------------------ |
@@ -585,9 +585,8 @@ console.error("API Error:", error);
 
 ---
 
-**Created by**: Shintaro Matsumoto  
-**Version**: 2.4.0  
+**Created by**: Shintaro Matsumoto
+**Version**: 2.4.0
 **Last Updated**: 2025-08-03
 
-このシステムは機体の安全で効率的な運用をサポートし、リアルタイムでの状況把握を可能にするっピ！
-みんなでタコピーみたいに「〜だっピ」って言いながら開発するっピ〜🐙
+このシステムは機体の安全で効率的な運用をサポートし、リアルタイムでの状況把握を可能にします。
