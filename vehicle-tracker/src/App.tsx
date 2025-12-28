@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MachineTabs } from './components/features/MachineTabs';
 import { ViewToggle } from './components/ui/ViewToggle';
@@ -18,10 +18,10 @@ import { MapTypeToggle } from './components/ui/MapTypeToggle';
 
 function MainApplication() {
   const { machineTracks, error, isLoading } = useMachineData();
-  const { 
-    setSelectedMachine, 
-    selectedMachineId, 
-    getMachineIds, 
+  const {
+    setSelectedMachine,
+    selectedMachineId,
+    getMachineIds,
     currentView,
     connectionStatus,
     selectedDataPoint,
@@ -35,6 +35,29 @@ function MainApplication() {
     mapMarkerLimit,
     setMapMarkerLimit
   } = useAppStore();
+
+  // JST clock state
+  const [jstTime, setJstTime] = useState<{ time: string; ms: string }>({ time: '', ms: '' });
+
+  // Update JST clock every 10ms for millisecond precision
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const jst = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+      const ms = now.getMilliseconds().toString().padStart(3, '0');
+      const timeStr = jst.toLocaleTimeString('ja-JP', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      setJstTime({ time: timeStr, ms });
+    };
+
+    updateClock();
+    const interval = setInterval(updateClock, 10);
+    return () => clearInterval(interval);
+  }, []);
 
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
@@ -244,9 +267,12 @@ function MainApplication() {
                     <span className="font-medium text-light-accent dark:text-dark-accent">{getSelectedMachineData().length}</span> selected
                   </div>
                 )}
-                
-                <div className="text-light-muted dark:text-dark-muted">
-                  Created by Shintaro Matsumoto
+
+                {/* JST Clock */}
+                <div className="font-mono flex items-baseline">
+                  <span className="text-light-muted dark:text-dark-muted text-xs tracking-widest mr-2">JST:</span>
+                  <span className="text-green-500 font-medium">{jstTime.time}</span>
+                  <span className="text-light-muted dark:text-dark-muted text-xs">.{jstTime.ms}</span>
                 </div>
               </div>
               
