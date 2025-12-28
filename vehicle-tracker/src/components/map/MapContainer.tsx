@@ -80,10 +80,18 @@ export const MapContainer: React.FC = () => {
       }
     } else if (viewMode === 'individual' && selectedMachineId) {
       const track = currentTracks[selectedMachineId];
-      const latestPoint = track && track.length > 0 ? track[track.length - 1] : undefined;
-      
-      if (latestPoint && isValidGPSData(latestPoint.comment)) {
-        map.panTo({ lat: latestPoint.latitude, lng: latestPoint.longitude });
+      if (!track || track.length === 0) return;
+
+      // Get the displayed points (respecting mapMarkerLimit)
+      const displayedPoints = track.slice(mapMarkerLimit === 'Unlimited' ? 0 : -mapMarkerLimit);
+      const validPoints = displayedPoints.filter(p => isValidGPSData(p.comment));
+
+      if (validPoints.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        validPoints.forEach(point => {
+          bounds.extend({ lat: point.latitude, lng: point.longitude });
+        });
+        map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
       }
     }
 
@@ -92,7 +100,7 @@ export const MapContainer: React.FC = () => {
       programmaticChangeRef.current = false;
     }, 200);
     // This effect should only run when the view changes, not when data updates.
-  }, [viewMode, selectedMachineId, map, userInteracted]); // Dependency array is now clean
+  }, [viewMode, selectedMachineId, map, userInteracted, mapMarkerLimit]);
 
   // Reset interaction flag when view changes, allowing auto-center to run again
   useEffect(() => {
