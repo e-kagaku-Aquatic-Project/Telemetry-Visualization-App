@@ -26,11 +26,17 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
 }) => {
   const getGPSErrorStatusFromComment = (comment: string | undefined): string | undefined => {
     if (!comment) return undefined;
-    const match = comment.match(/GPS_ERROR:([A-Z_]+)/);
+    const match = comment.match(/GPS_ERROR:([A-Z_\/]+)/);
     return match ? match[1] : undefined;
   };
 
-  const filteredData = data.filter(p => getGPSErrorStatusFromComment(p.comment) === 'NONE');
+  // GPS data is valid unless GPS_ERROR is explicitly ERROR
+  const isValidGPSData = (comment: string | undefined): boolean => {
+    const status = getGPSErrorStatusFromComment(comment);
+    return status !== 'ERROR';
+  };
+
+  const filteredData = data.filter(p => isValidGPSData(p.comment));
 
   const { getMachineIds } = useAppStore();
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
@@ -53,22 +59,19 @@ export const DirectGradientPolyline: React.FC<DirectGradientPolylineProps> = ({
     clearPolylines();
 
     if (!gradientParameter) {
-      // Create regular polyline
+      // Standard Trajectory style from map_design_summary.md:
+      // Solid white line, Opacity 50%, Weight 2px
       const path = filteredData.map(point => ({
         lat: point.latitude,
         lng: point.longitude,
       }));
 
-      const machineIds = getMachineIds();
-      const machineIndex = machineIds.indexOf(machineId);
-      const machineColor = MACHINE_COLORS[machineIndex % MACHINE_COLORS.length];
-
       const polyline = new google.maps.Polyline({
         path,
         geodesic: true,
-        strokeColor: machineColor,
-        strokeOpacity: isSelected ? 0.9 : 0.6,
-        strokeWeight: isSelected ? 4 : 2,
+        strokeColor: '#ffffff', // White
+        strokeOpacity: isSelected ? 0.7 : 0.5, // Ghostly appearance
+        strokeWeight: isSelected ? 3 : 2,
         zIndex: isSelected ? 100 : 50,
         map,
       });

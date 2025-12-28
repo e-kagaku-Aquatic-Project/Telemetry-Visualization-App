@@ -63,13 +63,14 @@ export const MachineMarker: React.FC<MachineMarkerProps> = ({
         anchor: new google.maps.Point(isSelected ? 24 : 18, isSelected ? 48 : 36), // Anchor at bottom center
       };
     } else {
+      // Current Position style (using machine color for differentiation)
       return {
         path: google.maps.SymbolPath.CIRCLE,
-        fillColor: machineColor,
+        fillColor: machineColor, // Machine-specific color
         fillOpacity: 1,
-        strokeColor: '#0d1117',
-        strokeWeight: 3,
-        scale: isSelected ? 14 : 10,
+        strokeColor: '#ffffff', // White stroke
+        strokeWeight: 2,
+        scale: isSelected ? 10 : 8,
       };
     }
   };
@@ -85,7 +86,6 @@ export const MachineMarker: React.FC<MachineMarkerProps> = ({
       onClick={handleMarkerClick}
       icon={markerIcon}
       title={`${machineId} - ${formatTimestamp(dataPoint.timestamp)}`}
-      animation={isSelected ? google.maps.Animation.BOUNCE : undefined}
       zIndex={isSelected ? 1000 : 100}
     />
   );

@@ -41,23 +41,23 @@ export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
   const machineIndex = machineIds.indexOf(machineId);
   const machineColor = MACHINE_COLORS[machineIndex % MACHINE_COLORS.length];
 
-  // Create different marker styles for waypoints vs current position
+  // Create different marker styles based on map_design_summary.md
   const markerIcon = isLatest ? {
-    // Current position marker (larger, animated)
+    // Current Position: Large circle with machine color
     path: google.maps.SymbolPath.CIRCLE,
-    fillColor: machineColor,
+    fillColor: machineColor, // Machine-specific color
     fillOpacity: 1,
-    strokeColor: '#0d1117',
-    strokeWeight: 3,
-    scale: isSelected ? 14 : 10,
+    strokeColor: '#ffffff',
+    strokeWeight: 2,
+    scale: isSelected ? 10 : 8,
   } : {
-    // Waypoint marker (smaller, subtle)
+    // Standard Points: Small circle, Fill Black, Stroke White 1px, Scale 3
     path: google.maps.SymbolPath.CIRCLE,
-    fillColor: machineColor,
-    fillOpacity: 0.7,
-    strokeColor: '#0d1117',
+    fillColor: '#000000',
+    fillOpacity: 1,
+    strokeColor: '#ffffff',
     strokeWeight: 1,
-    scale: isSelected ? 6 : 4,
+    scale: isSelected ? 4 : 3,
   };
 
   return (
@@ -69,7 +69,6 @@ export const WaypointMarker: React.FC<WaypointMarkerProps> = ({
       onClick={handleMarkerClick}
       icon={markerIcon}
       title={`${machineId} - ${formatTimestamp(dataPoint.timestamp)}`}
-      animation={isSelected && isLatest ? google.maps.Animation.BOUNCE : undefined}
       zIndex={isLatest ? 1000 : (isSelected ? 500 : 100)}
     />
   );

@@ -35,17 +35,14 @@ export const TrackPolyline: React.FC<TrackPolylineProps> = ({
     lng: point.longitude,
   }));
 
-  // Get consistent color for this machine
-  const machineIds = getMachineIds();
-  const machineIndex = machineIds.indexOf(machineId);
-  const machineColor = MACHINE_COLORS[machineIndex % MACHINE_COLORS.length];
-
+  // Standard Trajectory style from map_design_summary.md:
+  // Solid white line, Opacity 50%, Weight 2px
   const polylineOptions: google.maps.PolylineOptions = {
     path,
     geodesic: true,
-    strokeColor: machineColor,
-    strokeOpacity: isSelected ? 0.9 : 0.6,
-    strokeWeight: isSelected ? 4 : 2,
+    strokeColor: '#ffffff', // White
+    strokeOpacity: isSelected ? 0.7 : 0.5, // Ghostly appearance
+    strokeWeight: isSelected ? 3 : 2,
     zIndex: isSelected ? 100 : 50,
   };
 
