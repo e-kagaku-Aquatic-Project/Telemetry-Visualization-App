@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a machine tracking visualization webapp (リアルタイム機体追跡 Web アプリケーション) that consists of two main components:
 
-1. **Google Apps Script backend** (`SpreadSheets_GAS.gs`) - Handles data storage in Google Sheets and provides REST API endpoints
+1. **Google Apps Script backend** (`GAS/src/`) - Modular backend handling data storage in Google Sheets and providing REST API endpoints
 2. **React frontend** (`vehicle-tracker/`) - Real-time web application that visualizes machine telemetry data on Google Maps
 
 The system receives sensor telemetry data via POST requests, stores it in Google Sheets organized by machine ID, and provides real-time visualization with automatic data polling.
@@ -32,9 +32,21 @@ npm run preview      # Preview production build (uses serve)
 
 ### Google Apps Script Backend
 
-- Deploy by copying `SpreadSheets_GAS.gs` content to Google Sheets' Apps Script editor
-- Use `testFunction()` and `testWebAppAPI()` in GAS editor for testing
-- Python test scripts available in `GAS/` directory for API testing
+The backend is modularized in `GAS/src/`:
+- `Main.gs` - Entry points: `doGet()`, `doPost()`
+- `Config.gs` - Configuration and webhook settings
+- `DataManager.gs` - Data storage and retrieval logic
+- `MachineMonitor.gs` - Machine monitoring system
+- `WebhookNotification.gs` - Discord webhook integration
+- `Utils.gs` - Helper functions
+- `Test.gs` - Testing functions (`testFunction()`, `testWebAppAPI()`)
+
+Deploy by copying all `GAS/src/*.gs` files to Google Sheets' Apps Script editor.
+
+Python test scripts available in `GAS/examples/python/`:
+- `simple_sender.py` - Test POST endpoint
+- `simple_getter.py` - Test GET endpoints
+- `register_machine.py` - Test machine registration
 
 ## Architecture
 
@@ -48,10 +60,10 @@ npm run preview      # Preview production build (uses serve)
 ### Key Components
 
 **Backend (GAS)**:
-- `doGet()`: Handles API requests (`getAllMachines`, `getMachine`, `getMachineList`)
-- `doPost()`: Processes incoming telemetry data
+- `doGet()`: Handles API requests (`getAllMachines`, `getMachine`, `getMachineList`, `getMonitoringStats`)
+- `doPost()`: Processes incoming telemetry data and machine registration
 - Auto-creates machine sheets with standardized headers
-- Deploy by pasting `SpreadSheets_GAS.gs` into Google Sheets' Apps Script editor
+- Discord webhook notifications for machine status changes
 
 **Frontend Architecture**:
 - **State Management**: Zustand store (`src/store/index.ts`) for global app state
@@ -95,7 +107,7 @@ interface TelemetryDataPoint {
 
 ### Key Technical Decisions
 
-- **Monochrome Map Styling**: Custom dark theme defined in `src/constants/map.ts`
+- **Map Styling**: Custom dark/light themes defined in `src/constants/map.ts` (`DARK_MAP_STYLE`, `LIGHT_MAP_STYLE`)
 - **Real-time Updates**: Configurable polling intervals (5s, 10s, 30s, 60s)
 - **Export Functionality**: CSV/JSON export via PapaParse
 - **Error Handling**: Custom `GASApiError` class with retry logic
@@ -119,13 +131,13 @@ interface TelemetryDataPoint {
 
 ### Working with Maps
 
-The app uses a custom monochrome map style. Modify `MONOCHROME_MAP_STYLE` in `src/constants/map.ts` to change appearance.
+The app uses custom map styles with theme support. Modify `DARK_MAP_STYLE` or `LIGHT_MAP_STYLE` in `src/constants/map.ts` to change appearance.
 
 ### Adding New Machine Data Fields
 
 1. Update `TelemetryDataPoint` interface in `src/types/index.ts`
-2. Modify GAS sheet headers in `createNewSheet()` function
-3. Update data parsing in `getMachineDataFromSheet()`
+2. Modify GAS sheet headers in `DataManager.gs` (`createNewSheet()` function)
+3. Update data parsing in `DataManager.gs` (`getMachineDataFromSheet()`)
 4. Add UI elements in relevant components
 
 ### Authentication Setup
@@ -138,9 +150,7 @@ The application includes password-based authentication:
 
 ### Testing GAS Functions
 
-Use `testFunction()` and `testWebAppAPI()` functions in the GAS editor for manual testing. Python test scripts available in `GAS/` directory:
-- `test_post.py` - Test POST endpoint
-- `test_api.py` - Test GET endpoints
+Use `testFunction()` and `testWebAppAPI()` functions in `GAS/src/Test.gs` for manual testing via the GAS editor.
 
 ### Recent Architecture Changes
 
@@ -163,7 +173,7 @@ The project uses **Webpack** (not Vite) for the build system:
 ## Deployment
 
 - **Frontend**: Supports Vercel, Netlify, or GitHub Pages deployment
-- **Backend**: Deploy GAS by pasting code into Google Sheets' Apps Script editor
+- **Backend**: Deploy GAS by pasting all `GAS/src/*.gs` files into Google Sheets' Apps Script editor
 - **CI/CD**: GitHub Actions workflow (`workflows/deploy.yml`) for automated deployment
 
 ## Data Format Differences
@@ -222,7 +232,7 @@ Currently no test framework is configured. The project focuses on integration te
 4. Check response format matches `TelemetryDataPoint` interface
 
 ### Modifying Map Styles
-Edit `MONOCHROME_MAP_STYLE` in `src/constants/map.ts`. Use [Google Maps Styling Wizard](https://mapstyle.withgoogle.com/) for visual editing.
+Edit `DARK_MAP_STYLE` or `LIGHT_MAP_STYLE` in `src/constants/map.ts`. Use [Google Maps Styling Wizard](https://mapstyle.withgoogle.com/) for visual editing.
 
 ### Adding New Keyboard Shortcuts
 1. Update `useKeyboardShortcuts` hook in `src/hooks/useKeyboardShortcuts.ts`

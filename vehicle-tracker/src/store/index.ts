@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { TelemetryDataPoint, MachineTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
-import { PredictionConfig, PredictedPosition, predictPosition, DEFAULT_PREDICTION_CONFIG } from '../utils/prediction';
+import type { TelemetryDataPoint, MachineTracks, ConnectionStatus, GradientVisualizationState, GradientParameter } from '../types';
+import type { PredictionConfig, PredictedPosition } from '../utils/prediction';
+import { predictPosition, DEFAULT_PREDICTION_CONFIG } from '../utils/prediction';
 import { clearSession, checkAuthStatus as checkAuthStatusUtil } from '../utils/auth'; // Import only necessary auth functions
 
 export type Theme = 'light' | 'dark';

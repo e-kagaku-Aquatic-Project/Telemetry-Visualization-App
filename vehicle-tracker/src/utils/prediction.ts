@@ -10,7 +10,7 @@ export interface PredictedPosition {
 }
 
 export interface PredictionConfig {
-  referencePoints: number; // Number of past points to use (default: 2)
+  referencePoints: number | 'Unlimited'; // Number of past points to use (default: 2), 'Unlimited' means all points
   predictionMinutes: number; // Minutes into the future (default: 5)
   isEnabled: boolean; // Whether to show predictions
 }
@@ -120,7 +120,8 @@ export function predictPosition(
 
   // Determine the actual number of reference points to use.
   // It should be at most config.referencePoints, but at least 2 if available.
-  const actualReferencePoints = Math.min(config.referencePoints, allNoneSortedPoints.length);
+  const maxPoints = config.referencePoints === 'Unlimited' ? allNoneSortedPoints.length : config.referencePoints;
+  const actualReferencePoints = Math.min(maxPoints, allNoneSortedPoints.length);
 
   // If we don't have at least 2 valid points, we cannot predict.
   if (actualReferencePoints < 2) {

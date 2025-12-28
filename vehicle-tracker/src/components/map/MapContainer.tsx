@@ -68,7 +68,7 @@ export const MapContainer: React.FC = () => {
       Object.values(currentTracks).forEach(track => {
         if (track.length > 0) {
           const latestPoint = track[track.length - 1];
-          if (getGPSErrorStatusFromComment(latestPoint.comment) === 'NONE') {
+          if (isValidGPSData(latestPoint.comment)) {
             bounds.extend({ lat: latestPoint.latitude, lng: latestPoint.longitude });
             hasPoints = true;
           }
@@ -82,7 +82,7 @@ export const MapContainer: React.FC = () => {
       const track = currentTracks[selectedMachineId];
       const latestPoint = track && track.length > 0 ? track[track.length - 1] : undefined;
       
-      if (latestPoint && getGPSErrorStatusFromComment(latestPoint.comment) === 'NONE') {
+      if (latestPoint && isValidGPSData(latestPoint.comment)) {
         map.panTo({ lat: latestPoint.latitude, lng: latestPoint.longitude });
       }
     }
@@ -119,8 +119,16 @@ export const MapContainer: React.FC = () => {
 
   const getGPSErrorStatusFromComment = (comment: string | undefined): string | undefined => {
     if (!comment) return undefined;
-    const match = comment.match(/GPS_ERROR:([A-Z_]+)/);
+    const match = comment.match(/GPS_ERROR:([A-Z_\/]+)/);
     return match ? match[1] : undefined;
+  };
+
+  // GPS data is valid unless GPS_ERROR is explicitly ERROR
+  // Valid: undefined, NONE, N/A, or no GPS_ERROR tag
+  // Invalid: ERROR only
+  const isValidGPSData = (comment: string | undefined): boolean => {
+    const status = getGPSErrorStatusFromComment(comment);
+    return status !== 'ERROR';
   };
 
   if (loadError) {
@@ -160,7 +168,7 @@ export const MapContainer: React.FC = () => {
           .slice(0, mapMarkerLimit === Infinity ? undefined : mapMarkerLimit)
           .map(([machineId, data]) => {
             const latestPoint = data[data.length - 1];
-            if (!latestPoint || getGPSErrorStatusFromComment(latestPoint.comment) !== 'NONE') return null;
+            if (!latestPoint || !isValidGPSData(latestPoint.comment)) return null;
             
             return (
               <MachineMarker
@@ -175,7 +183,7 @@ export const MapContainer: React.FC = () => {
         {viewMode === 'individual' && selectedMachineId && machineTracks[selectedMachineId] && (
           machineTracks[selectedMachineId]
             .slice(mapMarkerLimit === Infinity ? 0 : -mapMarkerLimit, -1)
-            .filter(dataPoint => getGPSErrorStatusFromComment(dataPoint.comment) === 'NONE')
+            .filter(dataPoint => isValidGPSData(dataPoint.comment))
             .map((dataPoint, index) => (
               <WaypointMarker
                 key={`${selectedMachineId}-waypoint-${index}`}
