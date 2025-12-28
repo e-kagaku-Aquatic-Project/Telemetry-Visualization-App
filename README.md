@@ -206,7 +206,7 @@ cp .env.example .env
 
 ### 3. 環境変数設定
 
-`.env`ファイルを編集してください：
+`.env`ファイルを編集してください(GitHub側の設定も必要)：
 
 ```bash
 # Google Maps APIキー（必須）
